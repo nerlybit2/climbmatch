@@ -165,13 +165,14 @@ export default function DiscoverPage() {
           <h1 className="text-[26px] font-extrabold tracking-tight text-slate-900 leading-tight mb-3">{t.discover.title}</h1>
           <button
             onClick={() => setShowFilters(f => !f)}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left transition-all duration-200 active:scale-[0.98] ${
+            className={`w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-left transition-all duration-200 active:scale-[0.98] ${
               showFilters || activeFilterCount > 0
-                ? 'bg-gradient-to-br from-blue-500 to-indigo-700 text-white shadow-lg shadow-blue-500/30'
-                : 'bg-white text-gray-400 shadow-sm border border-gray-100'
+                ? 'bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-md shadow-blue-400/25'
+                : 'bg-white text-gray-500 shadow-md border border-gray-150 ring-1 ring-gray-200/60'
             }`}
+            style={!(showFilters || activeFilterCount > 0) ? { boxShadow: '0 2px 12px rgba(79,142,247,0.10), 0 1px 3px rgba(0,0,0,0.06)' } : {}}
           >
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className={`w-5 h-5 flex-shrink-0 ${showFilters || activeFilterCount > 0 ? 'text-white' : 'text-blue-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <span className={`text-sm font-semibold flex-1 ${showFilters || activeFilterCount > 0 ? 'text-white' : 'text-gray-400'}`}>
@@ -265,7 +266,7 @@ export default function DiscoverPage() {
                   <button key={tc.value} type="button" onClick={() => setTimeOfDay(tc.value)}
                     className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-200 ${
                       timeOfDay === tc.value
-                        ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/20'
+                        ? 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white shadow-sm shadow-blue-400/20'
                         : 'bg-slate-50 text-gray-500 ring-1 ring-gray-200 hover:ring-gray-300'
                     }`}
                   >{tc.label}</button>
@@ -277,7 +278,7 @@ export default function DiscoverPage() {
             <div className="flex gap-2 pt-1">
               <button
                 onClick={handleApplyFilters}
-                className="flex-1 bg-gradient-to-br from-blue-500 to-indigo-700 text-white text-sm font-bold rounded-2xl py-3 shadow-lg shadow-blue-500/30 active:scale-[0.97] transition-transform"
+                className="flex-1 bg-gradient-to-br from-blue-400 to-indigo-500 text-white text-sm font-bold rounded-2xl py-3 shadow-sm shadow-blue-400/20 active:scale-[0.97] transition-transform"
               >
                 Apply Filters
               </button>

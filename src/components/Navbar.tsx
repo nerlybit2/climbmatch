@@ -38,7 +38,7 @@ export function Navbar() {
                 <div
                   className={`relative flex flex-col items-center gap-[3px] px-3 py-2 rounded-2xl transition-all duration-200 ${
                     isActive
-                      ? 'bg-gradient-to-b from-blue-500 to-indigo-700 text-white shadow-lg shadow-blue-500/30'
+                      ? 'bg-gradient-to-b from-blue-400 to-indigo-500 text-white shadow-md shadow-blue-400/25'
                       : 'text-gray-400 hover:text-gray-600'
                   }`}
                 >
