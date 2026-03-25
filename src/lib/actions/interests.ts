@@ -77,7 +77,7 @@ export async function getInbox(): Promise<InboxItem[]> {
       interest,
       fromProfile: profile,
       request: requestMap.get(interest.request_id)!,
-      phone: interest.status === 'accepted' ? profile?.phone : null,
+      phone: profile?.phone ?? null,
     }
   }).filter(item => item.fromProfile && item.request)
 }

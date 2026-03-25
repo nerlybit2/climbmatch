@@ -198,7 +198,7 @@ describe('getInbox', () => {
     expect(items[0].request.location_name).toBe('Siurana')
   })
 
-  it('hides phone for pending interests', async () => {
+  it('exposes phone for pending interests (request owner can contact applicants)', async () => {
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
@@ -208,7 +208,7 @@ describe('getInbox', () => {
     } as never)
 
     const items = await getInbox()
-    expect(items[0].phone).toBeNull()
+    expect(items[0].phone).toBe('+972501234')
   })
 
   it('exposes phone for accepted interests', async () => {

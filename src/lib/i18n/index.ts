@@ -51,6 +51,7 @@ export interface Translations {
     matched: string
     declined: string
     whatsapp: string
+    sms: string
     at: string
     applicants: string
     myApplications: string
@@ -268,6 +269,7 @@ export const en: Translations = {
     matched: 'Matched',
     declined: 'Declined',
     whatsapp: 'WhatsApp',
+    sms: 'SMS',
     at: 'at',
     applicants: 'Applicants',
     myApplications: 'My Applications',
@@ -485,6 +487,7 @@ export const he: Translations = {
     matched: 'הותאם',
     declined: 'נדחה',
     whatsapp: 'WhatsApp',
+    sms: 'SMS',
     at: 'ב',
     applicants: 'מועמדים',
     myApplications: 'הגשות שלי',

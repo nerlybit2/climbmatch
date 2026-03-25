@@ -136,31 +136,23 @@ export default function InboxPage() {
                   </p>
                   <p className="text-[10px] text-gray-300 font-medium mt-0.5">{item.request.date}</p>
 
-                  <div className="mt-3">
+                  <div className="mt-3 space-y-2">
                     {item.interest.status === 'pending' && tab === 'applicants' && (
-                      <div className="flex gap-2">
-                        <Button onClick={() => handleAccept(item.interest.id)} className="text-xs !px-4 !py-2">{t.inbox.accept}</Button>
-                        <Button variant="secondary" onClick={() => handleDecline(item.interest.id)} className="text-xs !px-4 !py-2">{t.inbox.decline}</Button>
-                      </div>
+                      <>
+                        <div className="flex gap-2">
+                          <Button onClick={() => handleAccept(item.interest.id)} className="text-xs !px-4 !py-2">{t.inbox.accept}</Button>
+                          <Button variant="secondary" onClick={() => handleDecline(item.interest.id)} className="text-xs !px-4 !py-2">{t.inbox.decline}</Button>
+                        </div>
+                        <ContactButtons phone={item.phone} location={item.request.location_name} waLabel={t.inbox.whatsapp} smsLabel={t.inbox.sms} />
+                      </>
                     )}
                     {item.interest.status === 'pending' && tab === 'applications' && (
                       <span className="text-xs text-amber-600 bg-amber-50 px-3 py-1 rounded-full font-bold">{t.inbox.pending}</span>
                     )}
                     {item.interest.status === 'accepted' && (
-                      <div className="flex items-center gap-2">
+                      <div className="space-y-2">
                         <span className="text-xs text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full font-bold">{t.inbox.accepted}</span>
-                        {item.phone && (
-                          <a
-                            href={`https://wa.me/${item.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hey! I matched with you on ClimbMatch at ${item.request.location_name} on ${item.request.date}. Let's climb!`)}`}
-                            target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 bg-[#25D366] text-white text-xs px-3 py-1 rounded-full font-bold active:scale-95 transition-all">
-                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                              <path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 00.611.611l4.458-1.495A11.96 11.96 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-2.359 0-4.55-.822-6.262-2.192l-.438-.362-2.657.891.891-2.657-.362-.438A9.955 9.955 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
-                            </svg>
-                            {t.inbox.whatsapp}
-                          </a>
-                        )}
+                        <ContactButtons phone={item.phone} location={item.request.location_name} waLabel={t.inbox.whatsapp} smsLabel={t.inbox.sms} />
                       </div>
                     )}
                     {item.interest.status === 'declined' && (
@@ -181,6 +173,34 @@ export default function InboxPage() {
           closeLabel={t.inbox.backToInbox}
         />
       )}
+    </div>
+  )
+}
+
+function ContactButtons({ phone, location, waLabel, smsLabel }: { phone: string | null; location: string; waLabel: string; smsLabel: string }) {
+  if (!phone) return null
+  const clean = phone.replace(/[^0-9]/g, '')
+  const msg = encodeURIComponent(`Hey! I saw your ClimbMatch request at ${location}. Let's connect! 🧗`)
+  return (
+    <div className="flex gap-2 flex-wrap">
+      <a
+        href={`https://wa.me/${clean}?text=${msg}`}
+        target="_blank" rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 bg-[#25D366] text-white text-xs px-3 py-1.5 rounded-full font-bold active:scale-95 transition-all">
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+          <path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 00.611.611l4.458-1.495A11.96 11.96 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-2.359 0-4.55-.822-6.262-2.192l-.438-.362-2.657.891.891-2.657-.362-.438A9.955 9.955 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+        </svg>
+        {waLabel}
+      </a>
+      <a
+        href={`sms:+${clean}`}
+        className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-700 text-xs px-3 py-1.5 rounded-full font-bold active:scale-95 transition-all">
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+        {smsLabel}
+      </a>
     </div>
   )
 }
