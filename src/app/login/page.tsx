@@ -34,7 +34,10 @@ export default function LoginPage() {
           email,
           password,
         })
-        if (signUpError) throw signUpError
+        if (signUpError) {
+          if (signUpError.code === 'user_already_exists') throw new Error('Incorrect email or password. Please try again.')
+          throw signUpError
+        }
 
         // If session returned, we're good (email confirmation disabled)
         if (data.session) {
