@@ -220,7 +220,7 @@ export interface Translations {
 
 export const en: Translations = {
   nav: {
-    discover: 'Discover',
+    discover: 'Find',
     post: 'Post',
     inbox: 'Inbox',
     myPosts: 'My Posts',
@@ -228,8 +228,8 @@ export const en: Translations = {
     settings: 'Settings',
   },
   discover: {
-    title: 'Discover',
-    subtitle: 'Find your climbing partner',
+    title: 'Find a Partner',
+    subtitle: 'Browse open climbing requests',
     dateFrom: 'From',
     dateTo: 'To',
     location: 'Location',
