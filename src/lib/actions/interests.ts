@@ -3,7 +3,21 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import type { Interest, PartnerRequest, Profile } from '@/lib/types/database'
 
-export async function createInterest(requestId: string, toUserId: string) {
+export interface MatchResult {
+  matched: boolean
+  matchedProfile?: {
+    display_name: string
+    photo_url: string
+    phone: string | null
+  }
+  requestDetails?: {
+    climbing_type: string
+    location_name: string
+    date: string
+  }
+}
+
+export async function createInterest(requestId: string, toUserId: string): Promise<MatchResult> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
@@ -15,12 +29,58 @@ export async function createInterest(requestId: string, toUserId: string) {
   })
 
   if (error && error.code !== '23505') throw new Error(error.message)
+
+  // Check for mutual interest
+  const { data: mutualInterest } = await supabase
+    .from('interests')
+    .select('id, request_id')
+    .eq('from_user_id', toUserId)
+    .eq('to_user_id', user.id)
+    .eq('status', 'pending')
+    .limit(1)
+    .single()
+
+  if (mutualInterest) {
+    // Auto-accept both interests
+    await Promise.all([
+      supabase.from('interests').update({ status: 'accepted' as const }).eq('from_user_id', toUserId).eq('to_user_id', user.id).eq('status', 'pending'),
+      supabase.from('interests').update({ status: 'accepted' as const }).eq('from_user_id', user.id).eq('to_user_id', toUserId).eq('request_id', requestId),
+    ])
+
+    // Mark both requests as matched
+    await Promise.all([
+      supabase.from('partner_requests').update({ status: 'matched' as const }).eq('id', requestId),
+      supabase.from('partner_requests').update({ status: 'matched' as const }).eq('id', mutualInterest.request_id),
+    ])
+
+    // Get matched profile with phone for messaging
+    const { data: matchedProfile } = await supabase
+      .from('profiles')
+      .select('display_name, photo_url, phone')
+      .eq('id', toUserId)
+      .single()
+
+    const { data: request } = await supabase
+      .from('partner_requests')
+      .select('climbing_type, location_name, date')
+      .eq('id', requestId)
+      .single()
+
+    return {
+      matched: true,
+      matchedProfile: matchedProfile || undefined,
+      requestDetails: request || undefined,
+    }
+  }
+
+  return { matched: false }
 }
 
 export interface InboxItem {
   interest: Interest
   fromProfile: Profile
   request: PartnerRequest
+  phone: string | null
 }
 
 export async function getInbox(): Promise<InboxItem[]> {
@@ -47,11 +107,15 @@ export async function getInbox(): Promise<InboxItem[]> {
   const profileMap = new Map((profiles || []).map(p => [p.id, p]))
   const requestMap = new Map((requests || []).map(r => [r.id, r]))
 
-  return interests.map(interest => ({
-    interest,
-    fromProfile: profileMap.get(interest.from_user_id)!,
-    request: requestMap.get(interest.request_id)!,
-  })).filter(item => item.fromProfile && item.request)
+  return interests.map(interest => {
+    const profile = profileMap.get(interest.from_user_id)!
+    return {
+      interest,
+      fromProfile: profile,
+      request: requestMap.get(interest.request_id)!,
+      phone: interest.status === 'accepted' ? profile?.phone : null,
+    }
+  }).filter(item => item.fromProfile && item.request)
 }
 
 export async function getSentInterests(): Promise<InboxItem[]> {
@@ -78,11 +142,15 @@ export async function getSentInterests(): Promise<InboxItem[]> {
   const profileMap = new Map((profiles || []).map(p => [p.id, p]))
   const requestMap = new Map((requests || []).map(r => [r.id, r]))
 
-  return interests.map(interest => ({
-    interest,
-    fromProfile: profileMap.get(interest.to_user_id)!,
-    request: requestMap.get(interest.request_id)!,
-  })).filter(item => item.fromProfile && item.request)
+  return interests.map(interest => {
+    const profile = profileMap.get(interest.to_user_id)!
+    return {
+      interest,
+      fromProfile: profile,
+      request: requestMap.get(interest.request_id)!,
+      phone: interest.status === 'accepted' ? profile?.phone : null,
+    }
+  }).filter(item => item.fromProfile && item.request)
 }
 
 export async function acceptInterest(interestId: string) {
@@ -150,4 +218,18 @@ export async function getAcceptedContactInfo(interestId: string): Promise<{ phon
     .single()
 
   return profile ? { phone: profile.phone, displayName: profile.display_name } : null
+}
+
+export async function getPendingInterestCount(): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return 0
+
+  const { count } = await supabase
+    .from('interests')
+    .select('*', { count: 'exact', head: true })
+    .eq('to_user_id', user.id)
+    .eq('status', 'pending')
+
+  return count || 0
 }

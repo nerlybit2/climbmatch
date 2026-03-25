@@ -9,32 +9,36 @@ import { GearCheckboxes } from '@/components/GearCheckboxes'
 import { Button } from '@/components/Button'
 import { createClient } from '@/lib/supabase/client'
 import type { GearSet, ClimbingType, LocationType, GoalType } from '@/lib/types/database'
-
-const CLIMBING_TYPE_OPTIONS = [
-  { value: 'indoor', label: 'Indoor' },
-  { value: 'sport', label: 'Sport' },
-  { value: 'boulder', label: 'Boulder' },
-  { value: 'trad', label: 'Trad' },
-  { value: 'multi_pitch', label: 'Multi-pitch' },
-]
-
-const LOCATION_TYPE_OPTIONS = [
-  { value: 'gym', label: 'Gym' },
-  { value: 'crag', label: 'Crag' },
-]
-
-const GOAL_OPTIONS = [
-  { value: 'any', label: 'Any' },
-  { value: 'project', label: 'Project' },
-  { value: 'mileage', label: 'Mileage' },
-  { value: 'easy_day', label: 'Easy Day' },
-  { value: 'training', label: 'Training' },
-]
+import { useToast } from '@/hooks/useToast'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 const DEFAULT_GEAR: GearSet = { rope: false, quickdraws: false, belayDevice: false, crashPad: false, helmet: false }
 
 export default function NewRequestPage() {
   const router = useRouter()
+  const toast = useToast()
+  const { t } = useLanguage()
+
+  const CLIMBING_TYPE_OPTIONS = [
+    { value: 'indoor', label: t.climbingTypes.indoor },
+    { value: 'sport', label: t.climbingTypes.sport },
+    { value: 'boulder', label: t.climbingTypes.boulder },
+    { value: 'trad', label: t.climbingTypes.trad },
+    { value: 'multi_pitch', label: t.climbingTypes.multiPitch },
+  ]
+
+  const LOCATION_TYPE_OPTIONS = [
+    { value: 'gym', label: t.locationTypes.gym },
+    { value: 'crag', label: t.locationTypes.crag },
+  ]
+
+  const GOAL_OPTIONS = [
+    { value: 'any', label: t.goalTypes.any },
+    { value: 'project', label: t.goalTypes.project },
+    { value: 'mileage', label: t.goalTypes.mileage },
+    { value: 'easy_day', label: t.goalTypes.easyDay },
+    { value: 'training', label: t.goalTypes.training },
+  ]
   const today = new Date().toISOString().split('T')[0]
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -57,10 +61,13 @@ export default function NewRequestPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!date || !locationName.trim() || !climbingType) {
-      setError('Date, location, and climbing type are required'); return
+      setError(t.newRequest.errors.required); return
     }
     if (!flexible && !startTime) {
-      setError('Set a start time or mark as flexible'); return
+      setError(t.newRequest.errors.noTime); return
+    }
+    if (weightRelevant && maxWeightDiff && (parseFloat(maxWeightDiff) < 1 || parseFloat(maxWeightDiff) > 100)) {
+      setError(t.newRequest.errors.weightRange); return
     }
 
     setLoading(true)
@@ -70,6 +77,17 @@ export default function NewRequestPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
 
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single()
+
+      if (!profile) {
+        router.push('/profile')
+        return
+      }
+
       const { count } = await supabase
         .from('partner_requests')
         .select('*', { count: 'exact', head: true })
@@ -77,7 +95,7 @@ export default function NewRequestPage() {
         .eq('status', 'active')
 
       if (count && count >= 2) {
-        setError('Maximum 2 active requests allowed. Cancel an existing one first.')
+        setError(t.newRequest.errors.maxRequests)
         setLoading(false)
         return
       }
@@ -101,6 +119,7 @@ export default function NewRequestPage() {
       })
 
       if (insertError) throw insertError
+      toast.addToast(t.toasts.requestCreated, 'success')
       router.push('/requests')
       router.refresh()
     } catch (err: unknown) {
@@ -112,53 +131,53 @@ export default function NewRequestPage() {
 
   return (
     <div>
-      <PageHeader title="Post Request" subtitle="Find a climbing partner" />
+      <PageHeader title={t.newRequest.title} subtitle={t.newRequest.subtitle} />
       <form onSubmit={handleSubmit} className="px-5 space-y-5 pb-8">
-        <Input label="Date *" type="date" value={date} onChange={e => setDate(e.target.value)} min={today} required />
+        <Input label={t.newRequest.date} type="date" value={date} onChange={e => setDate(e.target.value)} min={today} required />
 
         <label className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm ring-1 ring-gray-100 cursor-pointer">
           <input type="checkbox" checked={flexible} onChange={e => setFlexible(e.target.checked)} className="rounded border-gray-300 text-orange-500 focus:ring-orange-500 w-5 h-5" />
-          <span className="text-sm font-semibold text-gray-700">Flexible time</span>
+          <span className="text-sm font-semibold text-gray-700">{t.newRequest.flexibleTime}</span>
         </label>
 
         {!flexible && (
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Start Time *" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
-            <Input label="End Time" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
+            <Input label={t.newRequest.startTime} type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
+            <Input label={t.newRequest.endTime} type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
           </div>
         )}
 
-        <Select label="Location Type *" value={locationType} onChange={e => setLocationType(e.target.value)} options={LOCATION_TYPE_OPTIONS} />
-        <Input label="Location Name *" value={locationName} onChange={e => setLocationName(e.target.value)} placeholder="e.g., Vertical Playground, Ein Prat" required />
-        <Select label="Climbing Type *" value={climbingType} onChange={e => setClimbingType(e.target.value)} options={CLIMBING_TYPE_OPTIONS} />
-        <Select label="Goal" value={goalType} onChange={e => setGoalType(e.target.value)} options={GOAL_OPTIONS} />
-        <Input label="Desired Grade Range" value={desiredGrade} onChange={e => setDesiredGrade(e.target.value)} placeholder="e.g., 6a-6c" />
+        <Select label={t.newRequest.locationType} value={locationType} onChange={e => setLocationType(e.target.value)} options={LOCATION_TYPE_OPTIONS} />
+        <Input label={t.newRequest.locationName} value={locationName} onChange={e => setLocationName(e.target.value)} placeholder={t.newRequest.locationPlaceholder} required />
+        <Select label={t.newRequest.climbingType} value={climbingType} onChange={e => setClimbingType(e.target.value)} options={CLIMBING_TYPE_OPTIONS} />
+        <Select label={t.newRequest.goal} value={goalType} onChange={e => setGoalType(e.target.value)} options={GOAL_OPTIONS} />
+        <Input label={t.newRequest.gradeRange} value={desiredGrade} onChange={e => setDesiredGrade(e.target.value)} placeholder={t.newRequest.gradePlaceholder} />
 
         <div className="space-y-1.5">
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Notes</label>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">{t.newRequest.notes}</label>
           <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
             className="w-full rounded-2xl border-0 bg-white px-4 py-3.5 text-sm shadow-sm ring-1 ring-gray-200 placeholder:text-gray-300 focus:ring-2 focus:ring-orange-500 outline-none resize-none transition-all"
-            placeholder="Any additional info..." />
+            placeholder={t.newRequest.notesPlaceholder} />
         </div>
 
-        <GearCheckboxes label="Gear Needed From Partner" gear={needsGear} onChange={setNeedsGear} />
+        <GearCheckboxes label={t.newRequest.gearNeeded} gear={needsGear} onChange={setNeedsGear} />
 
         <label className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm ring-1 ring-gray-100 cursor-pointer">
           <input type="checkbox" checked={carpoolNeeded} onChange={e => setCarpoolNeeded(e.target.checked)} className="rounded border-gray-300 text-orange-500 focus:ring-orange-500 w-5 h-5" />
-          <span className="text-sm font-semibold text-gray-700">Need a ride / carpool</span>
+          <span className="text-sm font-semibold text-gray-700">{t.newRequest.carpoolNeeded}</span>
         </label>
 
         <label className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm ring-1 ring-gray-100 cursor-pointer">
           <input type="checkbox" checked={weightRelevant} onChange={e => setWeightRelevant(e.target.checked)} className="rounded border-gray-300 text-orange-500 focus:ring-orange-500 w-5 h-5" />
-          <span className="text-sm font-semibold text-gray-700">Weight matching relevant</span>
+          <span className="text-sm font-semibold text-gray-700">{t.newRequest.weightRelevant}</span>
         </label>
 
         {weightRelevant && (
-          <Input label="Max Weight Difference (kg)" type="number" value={maxWeightDiff} onChange={e => setMaxWeightDiff(e.target.value)} placeholder="e.g., 15" />
+          <Input label={t.newRequest.maxWeightDiff} type="number" value={maxWeightDiff} onChange={e => setMaxWeightDiff(e.target.value)} placeholder={t.newRequest.maxWeightPlaceholder} min={1} max={100} />
         )}
 
         {error && <p className="text-sm text-red-500 bg-red-50 p-4 rounded-2xl font-medium">{error}</p>}
-        <Button type="submit" loading={loading} className="w-full !py-4 !text-base">Post Request</Button>
+        <Button type="submit" loading={loading} className="w-full !py-4 !text-base">{t.newRequest.submit}</Button>
       </form>
     </div>
   )

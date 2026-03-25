@@ -1,42 +1,91 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { SwipeCard } from '@/components/SwipeCard'
+import { useState, useCallback, useRef, useEffect } from 'react'
+import Image from 'next/image'
+import { EmptyState } from '@/components/EmptyState'
 import { CardDetails } from '@/components/CardDetails'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
-import { discoverRequests, type ScoredCard, type DiscoverFilters } from '@/lib/actions/discover'
+import { discoverRequests, searchLocations, type ScoredCard, type DiscoverFilters } from '@/lib/actions/discover'
 import { createInterest } from '@/lib/actions/interests'
-
-const TIME_CHIPS = [
-  { value: '', label: 'Any Time' },
-  { value: 'morning', label: 'Morning' },
-  { value: 'afternoon', label: 'Afternoon' },
-  { value: 'evening', label: 'Evening' },
-  { value: 'flexible', label: 'Flexible' },
-]
-
-const CLIMBING_TYPES = [
-  { value: '', label: 'All Types' },
-  { value: 'indoor', label: 'Indoor' },
-  { value: 'sport', label: 'Sport' },
-  { value: 'boulder', label: 'Boulder' },
-  { value: 'trad', label: 'Trad' },
-  { value: 'multi_pitch', label: 'Multi-pitch' },
-]
+import type { MatchResult } from '@/lib/actions/interests'
+import { MatchCelebration } from '@/components/MatchCelebration'
+import { useToast } from '@/hooks/useToast'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export default function DiscoverPage() {
+  const { t } = useLanguage()
+
+  const TIME_CHIPS = [
+    { value: '', label: t.timeChips.anyTime },
+    { value: 'morning', label: t.timeChips.morning },
+    { value: 'afternoon', label: t.timeChips.afternoon },
+    { value: 'evening', label: t.timeChips.evening },
+    { value: 'flexible', label: t.timeChips.flexible },
+  ]
+
+  const CLIMBING_TYPES = [
+    { value: '', label: t.climbingTypes.allTypes },
+    { value: 'indoor', label: t.climbingTypes.indoor },
+    { value: 'sport', label: t.climbingTypes.sport },
+    { value: 'boulder', label: t.climbingTypes.boulder },
+    { value: 'trad', label: t.climbingTypes.trad },
+    { value: 'multi_pitch', label: t.climbingTypes.multiPitch },
+  ]
+
+  const CLIMBING_LABELS: Record<string, string> = {
+    indoor: t.climbingTypes.indoor, sport: t.climbingTypes.sport, boulder: t.climbingTypes.boulder,
+    trad: t.climbingTypes.trad, multi_pitch: t.climbingTypes.multiPitch,
+  }
+
   const [showFilters, setShowFilters] = useState(true)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [loading, setLoading] = useState(false)
   const [cards, setCards] = useState<ScoredCard[]>([])
-  const [currentIndex, setCurrentIndex] = useState(0)
   const [detailCard, setDetailCard] = useState<ScoredCard | null>(null)
+  const [matchResult, setMatchResult] = useState<MatchResult | null>(null)
+  const toast = useToast()
 
   const today = new Date().toISOString().split('T')[0]
   const [date, setDate] = useState(today)
   const [locationName, setLocationName] = useState('')
+  const [locationSuggestions, setLocationSuggestions] = useState<string[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const suggestionsRef = useRef<HTMLDivElement>(null)
   const [climbingType, setClimbingType] = useState('')
   const [timeOfDay, setTimeOfDay] = useState('')
+
+  const handleLocationChange = (value: string) => {
+    setLocationName(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (value.length < 2) {
+      setLocationSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+    debounceRef.current = setTimeout(async () => {
+      const results = await searchLocations(value)
+      setLocationSuggestions(results)
+      setShowSuggestions(results.length > 0)
+    }, 250)
+  }
+
+  const selectLocation = (loc: string) => {
+    setLocationName(loc)
+    setShowSuggestions(false)
+    setLocationSuggestions([])
+  }
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleSearch = async () => {
     setLoading(true)
@@ -49,7 +98,6 @@ export default function DiscoverPage() {
       }
       const results = await discoverRequests(filters)
       setCards(results)
-      setCurrentIndex(0)
       setShowFilters(false)
     } catch (err) {
       console.error(err)
@@ -58,38 +106,88 @@ export default function DiscoverPage() {
     }
   }
 
-  const currentCard = cards[currentIndex]
-  const remaining = cards.length - currentIndex
+  const removeCard = useCallback((requestId: string) => {
+    setCards(prev => prev.filter(c => c.request.id !== requestId))
+    setDetailCard(null)
+  }, [])
 
-  const handleSwipeRight = useCallback(async () => {
-    if (!currentCard) return
+  const handleInterested = useCallback(async (card: ScoredCard) => {
     try {
-      await createInterest(currentCard.request.id, currentCard.profile.id)
+      const result = await createInterest(card.request.id, card.profile.id)
+      if (result.matched) {
+        setMatchResult(result)
+      } else {
+        toast.addToast(t.toasts.interestSent, 'success')
+      }
     } catch (err) {
       console.error(err)
     }
-    setCurrentIndex(i => i + 1)
-    setDetailCard(null)
-  }, [currentCard])
+    removeCard(card.request.id)
+  }, [removeCard, toast])
 
-  const handleSwipeLeft = useCallback(() => {
-    setCurrentIndex(i => i + 1)
-    setDetailCard(null)
-  }, [])
+  const handlePass = useCallback((card: ScoredCard) => {
+    removeCard(card.request.id)
+  }, [removeCard])
 
   if (showFilters) {
     return (
       <div className="min-h-[80dvh] flex flex-col">
         <div className="px-5 pt-8 pb-2">
-          <h1 className="text-3xl font-extrabold tracking-tight">Discover</h1>
-          <p className="text-gray-400 mt-1 font-medium">Find your climbing partner</p>
+          <h1 className="text-3xl font-extrabold tracking-tight">{t.discover.title}</h1>
+          <p className="text-gray-400 mt-1 font-medium">{t.discover.subtitle}</p>
         </div>
         <div className="px-5 space-y-5 pb-8 flex-1">
-          <Input label="Date" type="date" value={date} onChange={e => setDate(e.target.value)} />
-          <Input label="Location" value={locationName} onChange={e => setLocationName(e.target.value)} placeholder="Gym or crag name..." />
+          <Input label={t.discover.date} type="date" value={date} onChange={e => setDate(e.target.value)} />
 
+          {/* Location autocomplete */}
+          <div className="relative" ref={suggestionsRef}>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">{t.discover.location}</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={locationName}
+                  onChange={e => handleLocationChange(e.target.value)}
+                  onFocus={() => locationSuggestions.length > 0 && setShowSuggestions(true)}
+                  placeholder={t.discover.locationPlaceholder}
+                  className="w-full rounded-2xl border-0 bg-white pl-10 pr-4 py-3.5 text-sm shadow-sm ring-1 ring-gray-200 placeholder:text-gray-300 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+                />
+                <svg className="w-4.5 h-4.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                {locationName && (
+                  <button type="button" onClick={() => { setLocationName(''); setLocationSuggestions([]); setShowSuggestions(false) }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+            {showSuggestions && locationSuggestions.length > 0 && (
+              <div className="absolute z-20 left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-lg ring-1 ring-gray-100 overflow-hidden animate-fade-in">
+                {locationSuggestions.map((loc, i) => (
+                  <button
+                    key={loc + i}
+                    type="button"
+                    onClick={() => selectLocation(loc)}
+                    className="w-full text-left px-4 py-3 text-sm hover:bg-orange-50 transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
+                  >
+                    <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="font-medium">{loc}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Climbing Type */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Climbing Type</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">{t.discover.climbingType}</label>
             <div className="flex flex-wrap gap-2">
               {CLIMBING_TYPES.map(ct => (
                 <button key={ct.value} type="button" onClick={() => setClimbingType(ct.value)}
@@ -103,23 +201,39 @@ export default function DiscoverPage() {
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Time of Day</label>
-            <div className="flex flex-wrap gap-2">
-              {TIME_CHIPS.map(tc => (
-                <button key={tc.value} type="button" onClick={() => setTimeOfDay(tc.value)}
-                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
-                    timeOfDay === tc.value
-                      ? 'bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-md shadow-orange-500/20'
-                      : 'bg-white text-gray-500 ring-1 ring-gray-200 hover:ring-gray-300'
-                  }`}
-                >{tc.label}</button>
-              ))}
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="flex items-center gap-2 text-sm font-semibold text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <svg className={`w-4 h-4 transition-transform duration-200 ${showAdvanced ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+            {t.discover.advancedFilters}
+            {timeOfDay && <span className="w-2 h-2 rounded-full bg-orange-500" />}
+          </button>
+
+          {showAdvanced && (
+            <div className="space-y-5 animate-fade-in">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">{t.discover.timeOfDay}</label>
+                <div className="flex flex-wrap gap-2">
+                  {TIME_CHIPS.map(tc => (
+                    <button key={tc.value} type="button" onClick={() => setTimeOfDay(tc.value)}
+                      className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                        timeOfDay === tc.value
+                          ? 'bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-md shadow-orange-500/20'
+                          : 'bg-white text-gray-500 ring-1 ring-gray-200 hover:ring-gray-300'
+                      }`}
+                    >{tc.label}</button>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
 
           <Button onClick={handleSearch} loading={loading} className="w-full !py-4 !text-base mt-4">
-            Search Partners
+            {t.discover.searchPartners}
           </Button>
         </div>
       </div>
@@ -127,73 +241,128 @@ export default function DiscoverPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-4rem)]">
+    <div className="flex flex-col min-h-[80dvh]">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3">
-        <h1 className="text-xl font-extrabold gradient-text">Discover</h1>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-400 font-medium">{remaining} left</span>
-          <button onClick={() => setShowFilters(true)}
-            className="w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center text-gray-500 hover:text-orange-500 transition-colors">
-            <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-          </button>
+      <div className="flex items-center justify-between px-5 py-3 sticky top-0 bg-white/90 backdrop-blur-xl z-10 border-b border-gray-100">
+        <div>
+          <h1 className="text-xl font-extrabold gradient-text">{t.discover.title}</h1>
+          <p className="text-xs text-gray-400 font-medium">{cards.length} {t.discover.searchPartners.toLowerCase()}</p>
         </div>
+        <button onClick={() => setShowFilters(true)}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white shadow-sm ring-1 ring-gray-200 text-sm font-semibold text-gray-500 hover:text-orange-500 transition-colors">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          {t.discover.filters}
+        </button>
       </div>
 
-      {/* Card area */}
-      <div className="flex-1 relative mx-3 mb-2">
-        {currentCard ? (
-          <>
-            {cards[currentIndex + 1] && (
-              <div className="absolute inset-0 scale-[0.94] opacity-40 translate-y-2">
-                <div className="w-full h-full rounded-3xl overflow-hidden bg-gray-200">
-                  <img src={cards[currentIndex + 1].profile.photo_url} alt="" className="w-full h-full object-cover" draggable={false} />
-                </div>
-              </div>
-            )}
-            <SwipeCard
-              key={currentCard.request.id}
-              profile={currentCard.profile}
-              request={currentCard.request}
-              onSwipeRight={handleSwipeRight}
-              onSwipeLeft={handleSwipeLeft}
-              onTap={() => setDetailCard(currentCard)}
+      {/* Results list */}
+      <div className="flex-1 px-4 py-3 space-y-3">
+        {cards.length === 0 ? (
+          <div className="pt-10">
+            <EmptyState
+              icon={
+                <svg className="w-10 h-10 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+              }
+              title={t.discover.noClimbersTitle}
+              subtitle={t.discover.noClimbersSubtitle}
+              actionLabel={t.discover.postRequest}
+              actionHref="/requests/new"
             />
-          </>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center px-8">
-            <div className="w-20 h-20 bg-stone-100 rounded-3xl flex items-center justify-center mb-5">
-              <span className="text-3xl">🧗</span>
-            </div>
-            <h3 className="text-xl font-extrabold text-gray-700 mb-2">No more climbers</h3>
-            <p className="text-sm text-gray-400 mb-6 leading-relaxed">Try adjusting your filters or check back later for new partners</p>
-            <Button variant="secondary" onClick={() => setShowFilters(true)}>Change Filters</Button>
           </div>
+        ) : (
+          cards.map(card => (
+            <button
+              key={card.request.id}
+              type="button"
+              onClick={() => setDetailCard(card)}
+              className="w-full text-left bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 overflow-hidden hover:shadow-md hover:ring-orange-200 transition-all duration-200 active:scale-[0.98]"
+            >
+              <div className="flex items-center gap-3 p-3">
+                {/* Avatar */}
+                <div className="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
+                  <Image
+                    src={card.profile.photo_url || '/default-avatar.svg'}
+                    alt={card.profile.display_name}
+                    fill
+                    sizes="64px"
+                    className="object-cover"
+                  />
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-gray-900 truncate">{card.profile.display_name}</span>
+                    {card.score > 0 && (
+                      <span className="flex-shrink-0 text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">
+                        {card.score}pts
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                    <span className="text-xs font-semibold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">
+                      {CLIMBING_LABELS[card.request.climbing_type] || card.request.climbing_type}
+                    </span>
+                    {card.profile.experience_level && (
+                      <span className="text-xs text-gray-400 font-medium capitalize">{card.profile.experience_level}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 mt-1 text-xs text-gray-400">
+                    <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="truncate">{card.request.location_name}</span>
+                    <span className="mx-1">·</span>
+                    <span>{card.request.date}</span>
+                  </div>
+                </div>
+
+                {/* Chevron */}
+                <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+
+              {/* Compatibility badges */}
+              {(card.compatibility.gearMatches.length > 0 || card.compatibility.gradeOverlap || card.compatibility.carpoolAvailable) && (
+                <div className="flex gap-2 px-3 pb-3 flex-wrap">
+                  {card.compatibility.gradeOverlap && (
+                    <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{t.discover.gradeMatch}</span>
+                  )}
+                  {card.compatibility.carpoolAvailable && (
+                    <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{t.discover.canOfferRide}</span>
+                  )}
+                  {card.compatibility.gearMatches.slice(0, 2).map(g => (
+                    <span key={g} className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{t.cardDetails.youHave}: {g}</span>
+                  ))}
+                </div>
+              )}
+            </button>
+          ))
         )}
       </div>
 
-      {/* Tinder-style action buttons */}
-      {currentCard && (
-        <div className="flex justify-center items-center gap-6 pb-4 px-5">
-          <button onClick={handleSwipeLeft}
-            className="w-16 h-16 rounded-full bg-white shadow-xl flex items-center justify-center text-rose-400 border-2 border-rose-100 hover:border-rose-300 active:scale-90 transition-all duration-200">
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <button onClick={handleSwipeRight}
-            className="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-orange-400 to-rose-500 shadow-xl shadow-orange-500/30 flex items-center justify-center text-white active:scale-90 transition-all duration-200">
-            <svg className="w-9 h-9" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-            </svg>
-          </button>
-        </div>
+      {detailCard && (
+        <CardDetails
+          profile={detailCard.profile}
+          request={detailCard.request}
+          compatibility={detailCard.compatibility}
+          onClose={() => setDetailCard(null)}
+          onInterested={() => handleInterested(detailCard)}
+          onPass={() => handlePass(detailCard)}
+        />
       )}
 
-      {detailCard && (
-        <CardDetails profile={detailCard.profile} request={detailCard.request} onClose={() => setDetailCard(null)} onInterested={handleSwipeRight} onPass={handleSwipeLeft} />
+      {matchResult?.matched && (
+        <MatchCelebration
+          result={matchResult}
+          onClose={() => setMatchResult(null)}
+        />
       )}
     </div>
   )

@@ -1,29 +1,16 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Input } from '@/components/Input'
-import { Select } from '@/components/Select'
 import { MultiSelect } from '@/components/MultiSelect'
 import { GearCheckboxes } from '@/components/GearCheckboxes'
 import { Button } from '@/components/Button'
-import type { Profile, GearSet, ClimbingType, ExperienceLevel } from '@/lib/types/database'
+import type { Profile, GearSet, ClimbingType } from '@/lib/types/database'
 import { signOut } from '@/lib/actions/auth'
-
-const CLIMBING_TYPE_OPTIONS = [
-  { value: 'indoor', label: 'Indoor' },
-  { value: 'sport', label: 'Sport' },
-  { value: 'boulder', label: 'Boulder' },
-  { value: 'trad', label: 'Trad' },
-  { value: 'multi_pitch', label: 'Multi-pitch' },
-]
-
-const EXPERIENCE_OPTIONS = [
-  { value: 'beginner', label: 'Beginner' },
-  { value: 'intermediate', label: 'Intermediate' },
-  { value: 'advanced', label: 'Advanced' },
-]
+import { useLanguage } from '@/contexts/LanguageContext'
 
 const DEFAULT_GEAR: GearSet = { rope: false, quickdraws: false, belayDevice: false, crashPad: false, helmet: false }
 
@@ -35,13 +22,21 @@ interface Props {
 export function ProfileForm({ profile, userEmail }: Props) {
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
+  const { t } = useLanguage()
+
+  const CLIMBING_TYPE_OPTIONS = [
+    { value: 'indoor', label: t.climbingTypes.indoor },
+    { value: 'sport', label: t.climbingTypes.sport },
+    { value: 'boulder', label: t.climbingTypes.boulder },
+    { value: 'trad', label: t.climbingTypes.trad },
+    { value: 'multi_pitch', label: t.climbingTypes.multiPitch },
+  ]
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [photoUrl, setPhotoUrl] = useState(profile?.photo_url || '')
   const [displayName, setDisplayName] = useState(profile?.display_name || '')
   const [homeArea, setHomeArea] = useState(profile?.home_area || '')
   const [climbingTypes, setClimbingTypes] = useState<string[]>(profile?.climbing_types || [])
-  const [experienceLevel, setExperienceLevel] = useState(profile?.experience_level || '')
   const [sportGrade, setSportGrade] = useState(profile?.sport_grade_range || '')
   const [boulderGrade, setBoulderGrade] = useState(profile?.boulder_grade_range || '')
   const [weightKg, setWeightKg] = useState(profile?.weight_kg?.toString() || '')
@@ -76,8 +71,10 @@ export function ProfileForm({ profile, userEmail }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!displayName.trim()) { setError('Display name is required'); return }
-    if (!photoUrl) { setError('Photo is required'); return }
+    if (!displayName.trim()) { setError(t.profile.errors.displayName); return }
+    if (!photoUrl) { setError(t.profile.errors.photo); return }
+    if (!phone.trim()) { setError(t.profile.errors.phone); return }
+    if (weightKg && (parseFloat(weightKg) < 30 || parseFloat(weightKg) > 200)) { setError(t.profile.errors.weight); return }
     setLoading(true)
     setError('')
     try {
@@ -90,7 +87,7 @@ export function ProfileForm({ profile, userEmail }: Props) {
         photo_url: photoUrl,
         home_area: homeArea.trim() || null,
         climbing_types: climbingTypes as ClimbingType[],
-        experience_level: (experienceLevel as ExperienceLevel) || null,
+        experience_level: null,
         sport_grade_range: sportGrade.trim() || null,
         boulder_grade_range: boulderGrade.trim() || null,
         weight_kg: weightKg ? parseFloat(weightKg) : null,
@@ -113,11 +110,16 @@ export function ProfileForm({ profile, userEmail }: Props) {
   }
 
   return (
+    <>
+    <div className="pt-6 pb-3">
+      <h1 className="text-2xl font-extrabold tracking-tight">{profile ? t.profile.editTitle : t.profile.createTitle}</h1>
+      <p className="text-sm text-gray-400 mt-0.5 font-medium">{profile ? t.profile.editSubtitle : t.profile.createSubtitle}</p>
+    </div>
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* Photo */}
       <div className="flex items-center gap-5">
         {photoUrl ? (
-          <img src={photoUrl} alt="Avatar" className="w-24 h-24 rounded-3xl object-cover shadow-lg" />
+          <Image src={photoUrl || '/default-avatar.svg'} alt="Avatar" width={96} height={96} className="w-24 h-24 rounded-3xl object-cover shadow-lg" />
         ) : (
           <div className="w-24 h-24 rounded-3xl bg-stone-100 flex items-center justify-center text-gray-300">
             <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -128,62 +130,73 @@ export function ProfileForm({ profile, userEmail }: Props) {
         <div>
           <input ref={fileRef} type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
           <Button type="button" variant="secondary" onClick={() => fileRef.current?.click()} loading={uploading}>
-            {photoUrl ? 'Change Photo' : 'Upload Photo'}
+            {photoUrl ? t.profile.changePhoto : t.profile.uploadPhoto}
           </Button>
-          <p className="text-[10px] text-gray-400 mt-1 font-medium">Required</p>
+          <p className="text-[10px] text-gray-400 mt-1 font-medium">{t.profile.required}</p>
         </div>
       </div>
 
-      <Input label="Display Name *" value={displayName} onChange={e => setDisplayName(e.target.value)} required placeholder="Your climbing name" />
-      <Input label="Phone (WhatsApp)" type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+972..." />
-      <Input label="Home Area" value={homeArea} onChange={e => setHomeArea(e.target.value)} placeholder="e.g., Tel Aviv" />
-      <MultiSelect label="Climbing Types" options={CLIMBING_TYPE_OPTIONS} selected={climbingTypes} onChange={setClimbingTypes} />
-      <Select label="Experience Level" value={experienceLevel} onChange={e => setExperienceLevel(e.target.value)} options={EXPERIENCE_OPTIONS} />
+      <Input label={t.profile.displayName} value={displayName} onChange={e => setDisplayName(e.target.value)} required placeholder={t.profile.displayNamePlaceholder} />
+      <Input label={t.profile.phone} type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder={t.profile.phonePlaceholder} required />
+      <Input label={t.profile.homeArea} value={homeArea} onChange={e => setHomeArea(e.target.value)} placeholder={t.profile.homeAreaPlaceholder} />
+      <MultiSelect label={t.profile.climbingTypes} options={CLIMBING_TYPE_OPTIONS} selected={climbingTypes} onChange={setClimbingTypes} />
 
       <div className="grid grid-cols-2 gap-3">
-        <Input label="Sport Grade" value={sportGrade} onChange={e => setSportGrade(e.target.value)} placeholder="e.g., 6a-7a" />
-        <Input label="Boulder Grade" value={boulderGrade} onChange={e => setBoulderGrade(e.target.value)} placeholder="e.g., V3-V6" />
+        <Input label={t.profile.sportGrade} value={sportGrade} onChange={e => setSportGrade(e.target.value)} placeholder={t.profile.sportGradePlaceholder} />
+        <Input label={t.profile.boulderGrade} value={boulderGrade} onChange={e => setBoulderGrade(e.target.value)} placeholder={t.profile.boulderGradePlaceholder} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 items-end">
-        <Input label="Weight (kg)" type="number" value={weightKg} onChange={e => setWeightKg(e.target.value)} placeholder="kg" />
-        <label className="flex items-center gap-3 bg-white rounded-2xl p-3.5 shadow-sm ring-1 ring-gray-100 cursor-pointer">
+      <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+          </svg>
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t.profile.weightPrivate}</span>
+        </div>
+        <Input label="" type="number" value={weightKg} onChange={e => setWeightKg(e.target.value)} placeholder={t.profile.weightPlaceholder} min={30} max={200} />
+        <label className="flex items-center gap-3 cursor-pointer">
           <input type="checkbox" checked={shareWeight} onChange={e => setShareWeight(e.target.checked)} className="rounded border-gray-300 text-orange-500 focus:ring-orange-500 w-5 h-5" />
-          <span className="text-sm font-semibold text-gray-700">Share</span>
+          <div>
+            <span className="text-sm font-semibold text-gray-700">{t.profile.showWeight}</span>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              {shareWeight ? t.profile.weightVisible : t.profile.weightHidden}
+            </p>
+          </div>
         </label>
       </div>
 
-      <GearCheckboxes label="Gear I Have" gear={gear} onChange={setGear} />
+      <GearCheckboxes label={t.profile.gearIHave} gear={gear} onChange={setGear} />
 
       <label className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm ring-1 ring-gray-100 cursor-pointer">
         <input type="checkbox" checked={hasCar} onChange={e => setHasCar(e.target.checked)} className="rounded border-gray-300 text-orange-500 focus:ring-orange-500 w-5 h-5" />
-        <span className="text-sm font-semibold text-gray-700">I have a car</span>
+        <span className="text-sm font-semibold text-gray-700">{t.profile.hasCar}</span>
       </label>
 
       <div className="space-y-1.5">
-        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Bio</label>
+        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">{t.profile.bio}</label>
         <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3}
           className="w-full rounded-2xl border-0 bg-white px-4 py-3.5 text-sm shadow-sm ring-1 ring-gray-200 placeholder:text-gray-300 focus:ring-2 focus:ring-orange-500 outline-none resize-none transition-all"
-          placeholder="Tell others about yourself..."
+          placeholder={t.profile.bioPlaceholder}
         />
       </div>
 
-      <Input label="Languages" value={languages} onChange={e => setLanguages(e.target.value)} placeholder="English, Hebrew" />
+      <Input label={t.profile.languages} value={languages} onChange={e => setLanguages(e.target.value)} placeholder={t.profile.languagesPlaceholder} />
 
       {error && <p className="text-sm text-red-500 bg-red-50 p-4 rounded-2xl font-medium">{error}</p>}
 
       <Button type="submit" loading={loading} className="w-full !py-4 !text-base">
-        {profile ? 'Save Profile' : 'Create Profile'}
+        {profile ? t.profile.save : t.profile.create}
       </Button>
 
-      {profile && (
-        <div className="pt-5 border-t border-gray-100">
-          <p className="text-xs text-gray-400 mb-3 font-medium">Signed in as {userEmail}</p>
-          <form action={signOut}>
-            <Button type="submit" variant="ghost" className="w-full !text-red-400">Sign Out</Button>
-          </form>
-        </div>
-      )}
     </form>
+    {profile && (
+      <div className="pt-5 border-t border-gray-100">
+        <p className="text-xs text-gray-400 mb-3 font-medium">{t.profile.signedInAs} {userEmail}</p>
+        <form action={signOut}>
+          <Button type="submit" variant="ghost" className="w-full !text-red-400">{t.profile.signOut}</Button>
+        </form>
+      </div>
+    )}
+    </>
   )
 }

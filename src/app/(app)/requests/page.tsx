@@ -1,15 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { EmptyState } from '@/components/EmptyState'
+import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/Button'
-import { createClient } from '@/lib/supabase/client'
 import type { PartnerRequest } from '@/lib/types/database'
 import Link from 'next/link'
-
-const CLIMBING_LABELS: Record<string, string> = {
-  indoor: 'Indoor', sport: 'Sport', boulder: 'Boulder', trad: 'Trad', multi_pitch: 'Multi-pitch',
-}
+import { useToast } from '@/hooks/useToast'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { getMyRequests, cancelRequest } from '@/lib/actions/requests'
 
 const STATUS_STYLES: Record<string, string> = {
   active: 'bg-emerald-50 text-emerald-600',
@@ -19,23 +19,33 @@ const STATUS_STYLES: Record<string, string> = {
 }
 
 export default function MyRequestsPage() {
+  const { t } = useLanguage()
+
+  const CLIMBING_LABELS: Record<string, string> = {
+    indoor: t.climbingTypes.indoor, sport: t.climbingTypes.sport, boulder: t.climbingTypes.boulder,
+    trad: t.climbingTypes.trad, multi_pitch: t.climbingTypes.multiPitch,
+  }
+
   const [requests, setRequests] = useState<PartnerRequest[]>([])
   const [loading, setLoading] = useState(true)
+  const [cancellingId, setCancellingId] = useState<string | null>(null)
+  const toast = useToast()
+
+  const handlePullRefresh = useCallback(async () => {
+    await loadRequests()
+  }, [])
+
+  const { containerRef: pullRef, indicatorElement } = usePullToRefresh({
+    onRefresh: handlePullRefresh,
+  })
 
   useEffect(() => { loadRequests() }, [])
 
   const loadRequests = async () => {
     setLoading(true)
     try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data } = await supabase
-        .from('partner_requests')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-      setRequests(data || [])
+      const data = await getMyRequests()
+      setRequests(data)
     } catch (err) {
       console.error(err)
     } finally {
@@ -44,10 +54,10 @@ export default function MyRequestsPage() {
   }
 
   const handleCancel = async (id: string) => {
-    if (!confirm('Cancel this request?')) return
     try {
-      const supabase = createClient()
-      await supabase.from('partner_requests').update({ status: 'cancelled' }).eq('id', id)
+      await cancelRequest(id)
+      setCancellingId(null)
+      toast.addToast(t.toasts.requestCancelled, 'info')
       await loadRequests()
     } catch (err) {
       console.error(err)
@@ -55,22 +65,27 @@ export default function MyRequestsPage() {
   }
 
   return (
-    <div>
-      <PageHeader title="My Requests" subtitle="Manage your partner requests" />
+    <div ref={pullRef}>
+      {indicatorElement}
+      <PageHeader title={t.requests.title} subtitle={t.requests.subtitle} />
       <div className="px-5 space-y-3 pb-8">
         {loading ? (
           <div className="text-center py-16">
             <div className="w-12 h-12 rounded-2xl bg-stone-100 animate-pulse mx-auto mb-3" />
-            <p className="text-gray-300 font-medium">Loading...</p>
+            <p className="text-gray-300 font-medium">{t.requests.loading}</p>
           </div>
         ) : requests.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 bg-stone-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">📋</span>
-            </div>
-            <p className="text-gray-400 font-medium mb-5">No requests yet</p>
-            <Link href="/requests/new"><Button>Create Your First Request</Button></Link>
-          </div>
+          <EmptyState
+            icon={
+              <svg className="w-10 h-10 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+            }
+            title={t.requests.noRequestsTitle}
+            subtitle={t.requests.noRequestsSubtitle}
+            actionLabel={t.requests.createFirst}
+            actionHref="/requests/new"
+          />
         ) : (
           requests.map((req) => (
             <div key={req.id} className="bg-white rounded-2xl p-4 card-shadow">
@@ -78,16 +93,24 @@ export default function MyRequestsPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1.5">
                     <h3 className="font-bold text-sm">{CLIMBING_LABELS[req.climbing_type]}</h3>
-                    <span className={`text-[10px] px-2.5 py-0.5 rounded-full capitalize font-bold ${STATUS_STYLES[req.status]}`}>{req.status}</span>
+                    <span className={`text-[10px] px-2.5 py-0.5 rounded-full capitalize font-bold ${STATUS_STYLES[req.status]}`}>{t.requests.status[req.status as keyof typeof t.requests.status] || req.status}</span>
                   </div>
                   <p className="text-sm text-gray-600 font-medium">{req.location_name}</p>
                   <p className="text-xs text-gray-400 mt-1 font-medium">
-                    {req.date} {req.flexible ? '(Flexible)' : `${req.start_time?.slice(0, 5) || ''} - ${req.end_time?.slice(0, 5) || ''}`}
+                    {req.date} {req.flexible ? `(${t.requests.flexible})` : `${req.start_time?.slice(0, 5) || ''} - ${req.end_time?.slice(0, 5) || ''}`}
                   </p>
-                  {req.desired_grade_range && <p className="text-xs text-gray-400 mt-0.5">Grade: {req.desired_grade_range}</p>}
+                  {req.desired_grade_range && <p className="text-xs text-gray-400 mt-0.5">{t.requests.grade}: {req.desired_grade_range}</p>}
                 </div>
                 {req.status === 'active' && (
-                  <Button variant="ghost" onClick={() => handleCancel(req.id)} className="text-xs !text-red-400 !px-3 !py-1.5">Cancel</Button>
+                  cancellingId === req.id ? (
+                    <div className="flex items-center gap-2 animate-fade-in">
+                      <span className="text-xs text-gray-500 font-medium">{t.requests.areYouSure}</span>
+                      <Button variant="danger" onClick={() => handleCancel(req.id)} className="text-xs !px-3 !py-1.5">{t.requests.yesCancel}</Button>
+                      <Button variant="ghost" onClick={() => setCancellingId(null)} className="text-xs !px-3 !py-1.5">{t.requests.no}</Button>
+                    </div>
+                  ) : (
+                    <Button variant="ghost" onClick={() => setCancellingId(req.id)} className="text-xs !text-red-400 !px-3 !py-1.5">{t.requests.cancel}</Button>
+                  )
                 )}
               </div>
             </div>

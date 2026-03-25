@@ -1,11 +1,15 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Image from 'next/image'
 import type { Profile, PartnerRequest, GearSet } from '@/lib/types/database'
+import type { CompatibilityInfo } from '@/lib/actions/discover'
+import { hapticFeedback } from '@/lib/capacitor/haptics'
 
 interface SwipeCardProps {
   profile: Profile
   request: PartnerRequest
+  compatibility?: CompatibilityInfo
   onSwipeRight: () => void
   onSwipeLeft: () => void
   onTap: () => void
@@ -19,13 +23,15 @@ const GOAL_LABELS: Record<string, string> = {
   project: 'Project', mileage: 'Mileage', easy_day: 'Easy Day', training: 'Training', any: 'Any',
 }
 
-export function SwipeCard({ profile, request, onSwipeRight, onSwipeLeft, onTap }: SwipeCardProps) {
+export function SwipeCard({ profile, request, compatibility, onSwipeRight, onSwipeLeft, onTap }: SwipeCardProps) {
   const cardRef = useRef<HTMLDivElement>(null)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const [isLeaving, setIsLeaving] = useState<'left' | 'right' | null>(null)
+  const [imgSrc, setImgSrc] = useState(profile.photo_url || '/default-avatar.svg')
   const startPos = useRef({ x: 0, y: 0 })
   const hasMoved = useRef(false)
+  const hapticFired = useRef(false)
 
   const SWIPE_THRESHOLD = 100
 
@@ -33,6 +39,7 @@ export function SwipeCard({ profile, request, onSwipeRight, onSwipeLeft, onTap }
     if ((e.target as HTMLElement).closest('button')) return
     setIsDragging(true)
     hasMoved.current = false
+    hapticFired.current = false
     startPos.current = { x: e.clientX, y: e.clientY }
     cardRef.current?.setPointerCapture(e.pointerId)
   }
@@ -42,6 +49,10 @@ export function SwipeCard({ profile, request, onSwipeRight, onSwipeLeft, onTap }
     const dx = e.clientX - startPos.current.x
     const dy = e.clientY - startPos.current.y
     if (Math.abs(dx) > 5 || Math.abs(dy) > 5) hasMoved.current = true
+    if (Math.abs(dx) > 40 && !hapticFired.current) {
+      hapticFired.current = true
+      hapticFeedback('light')
+    }
     setOffset({ x: dx, y: dy * 0.3 })
   }
 
@@ -56,9 +67,11 @@ export function SwipeCard({ profile, request, onSwipeRight, onSwipeLeft, onTap }
     }
 
     if (offset.x > SWIPE_THRESHOLD) {
+      hapticFeedback('medium')
       setIsLeaving('right')
       setTimeout(onSwipeRight, 300)
     } else if (offset.x < -SWIPE_THRESHOLD) {
+      hapticFeedback('medium')
       setIsLeaving('left')
       setTimeout(onSwipeLeft, 300)
     } else {
@@ -93,7 +106,7 @@ export function SwipeCard({ profile, request, onSwipeRight, onSwipeLeft, onTap }
       }}
     >
       <div className="relative w-full h-full rounded-3xl overflow-hidden card-shadow-lg bg-gray-900">
-        <img src={profile.photo_url} alt={profile.display_name} className="w-full h-full object-cover" draggable={false} />
+        <Image src={imgSrc} alt={profile.display_name} fill sizes="(max-width: 512px) 100vw, 512px" className="object-cover" draggable={false} priority onError={() => setImgSrc('/default-avatar.svg')} />
 
         {/* INTERESTED stamp */}
         {offset.x > 40 && (
@@ -110,6 +123,35 @@ export function SwipeCard({ profile, request, onSwipeRight, onSwipeLeft, onTap }
 
         {/* Bottom gradient info */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-5 pt-28">
+          {/* Compatibility pills */}
+          {compatibility && (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {compatibility.gearMatches.length > 0 && (
+                <span className="bg-emerald-500/80 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                  🎒 Has {compatibility.gearMatches.length === 1 ? compatibility.gearMatches[0] : `${compatibility.gearMatches.length} gear items`}
+                </span>
+              )}
+              {compatibility.gradeOverlap && (
+                <span className="bg-blue-500/80 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                  ✓ Grade match
+                </span>
+              )}
+              {compatibility.carpoolAvailable ? (
+                <span className="bg-emerald-500/80 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                  🚗 You can drive
+                </span>
+              ) : compatibility.carpoolNeeded ? (
+                <span className="bg-amber-500/80 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                  🚗 Needs ride
+                </span>
+              ) : null}
+              {compatibility.timeMatch && (
+                <span className="bg-violet-500/80 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                  ⏰ Time match
+                </span>
+              )}
+            </div>
+          )}
           <div className="flex items-end justify-between">
             <div className="flex-1 min-w-0">
               <h2 className="text-white text-2xl font-extrabold tracking-tight">{profile.display_name}</h2>
@@ -119,9 +161,6 @@ export function SwipeCard({ profile, request, onSwipeRight, onSwipeLeft, onTap }
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     {profile.home_area}
                   </span>
-                )}
-                {profile.experience_level && (
-                  <span className="text-white/40 text-xs capitalize">· {profile.experience_level}</span>
                 )}
               </div>
               <div className="flex flex-wrap gap-1.5 mt-3">

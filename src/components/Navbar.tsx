@@ -2,17 +2,22 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-
-const tabs = [
-  { href: '/discover', label: 'Discover', icon: 'discover' },
-  { href: '/requests/new', label: 'Post', icon: 'post' },
-  { href: '/inbox', label: 'Inbox', icon: 'inbox' },
-  { href: '/requests', label: 'My Posts', icon: 'list' },
-  { href: '/profile', label: 'Profile', icon: 'profile' },
-]
+import { useUnreadCount } from '@/hooks/useUnreadCount'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export function Navbar() {
   const pathname = usePathname()
+  const { count } = useUnreadCount()
+  const { t } = useLanguage()
+
+  const tabs = [
+    { href: '/discover', label: t.nav.discover, icon: 'discover' },
+    { href: '/requests/new', label: t.nav.post, icon: 'post' },
+    { href: '/inbox', label: t.nav.inbox, icon: 'inbox' },
+    { href: '/requests', label: t.nav.myPosts, icon: 'list' },
+    { href: '/profile', label: t.nav.profile, icon: 'profile' },
+    { href: '/settings', label: t.nav.settings, icon: 'settings' },
+  ]
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 glass border-t border-gray-200/50 pb-safe z-50">
@@ -23,14 +28,21 @@ export function Navbar() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`relative flex flex-col items-center justify-center flex-1 h-full text-[10px] font-semibold tracking-wide transition-all duration-200 ${
+              className={`relative flex flex-col items-center justify-center flex-1 h-full text-[9px] font-semibold tracking-wide transition-all duration-200 ${
                 isActive ? 'text-orange-500' : 'text-gray-400'
               }`}
             >
               {isActive && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-gradient-to-r from-orange-500 to-rose-500 rounded-full" />
               )}
-              <NavIcon type={tab.icon} active={isActive} />
+              <div className="relative">
+                <NavIcon type={tab.icon} active={isActive} />
+                {tab.icon === 'inbox' && count > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-gradient-to-r from-orange-500 to-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-md shadow-orange-500/30">
+                    {count > 9 ? '9+' : count}
+                  </span>
+                )}
+              </div>
               <span className="mt-0.5">{tab.label}</span>
             </Link>
           )
@@ -81,6 +93,13 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
         <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="8" r="4" fill={active ? "currentColor" : "none"} opacity={active ? 0.15 : 1} />
           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+        </svg>
+      )
+    case 'settings':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3" fill={active ? "currentColor" : "none"} opacity={active ? 0.8 : 1} />
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
         </svg>
       )
     default:
