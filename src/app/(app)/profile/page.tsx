@@ -13,10 +13,19 @@ export default async function ProfilePage() {
     .eq('id', user.id)
     .single()
 
+  const meta = user.user_metadata as { full_name?: string; name?: string; avatar_url?: string; picture?: string } | undefined
+
   return (
     <div>
       <div className="px-5 pb-8">
-        <ProfileForm profile={profile} userEmail={user.email || ''} />
+        <ProfileForm
+          profile={profile}
+          userEmail={user.email || ''}
+          prefill={profile ? undefined : {
+            displayName: meta?.full_name || meta?.name || '',
+            photoUrl: meta?.avatar_url || meta?.picture || '',
+          }}
+        />
       </div>
     </div>
   )

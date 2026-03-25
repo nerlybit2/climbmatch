@@ -17,17 +17,18 @@ const DEFAULT_GEAR: GearSet = { rope: false, quickdraws: false, belayDevice: fal
 interface Props {
   profile: Profile | null
   userEmail: string
+  prefill?: { displayName: string; photoUrl: string }
 }
 
-export function ProfileForm({ profile, userEmail }: Props) {
+export function ProfileForm({ profile, userEmail, prefill }: Props) {
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
   const { t, language, setLanguage } = useLanguage()
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [photoUrl, setPhotoUrl] = useState(profile?.photo_url || '')
-  const [displayName, setDisplayName] = useState(profile?.display_name || '')
+  const [photoUrl, setPhotoUrl] = useState(profile?.photo_url || prefill?.photoUrl || '')
+  const [displayName, setDisplayName] = useState(profile?.display_name || prefill?.displayName || '')
   const [homeArea, setHomeArea] = useState(profile?.home_area || '')
   const [sportGrade, setSportGrade] = useState(profile?.sport_grade_range || '')
   const [boulderGrade, setBoulderGrade] = useState(profile?.boulder_grade_range || '')
