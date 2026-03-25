@@ -1,11 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -26,8 +24,7 @@ export default function LoginPage() {
       })
 
       if (!signInError) {
-        router.push('/discover')
-        router.refresh()
+        window.location.href = '/discover'
         return
       }
 
@@ -41,8 +38,7 @@ export default function LoginPage() {
 
         // If session returned, we're good (email confirmation disabled)
         if (data.session) {
-          router.push('/discover')
-          router.refresh()
+          window.location.href = '/discover'
           return
         }
 
@@ -52,12 +48,11 @@ export default function LoginPage() {
           password,
         })
         if (!retryError) {
-          router.push('/discover')
-          router.refresh()
+          window.location.href = '/discover'
           return
         }
 
-        throw new Error('Account created but email confirmation is required. Please disable "Confirm email" in your Supabase dashboard under Authentication > Providers > Email.')
+        throw new Error('Incorrect email or password. Please try again.')
       }
 
       throw signInError
