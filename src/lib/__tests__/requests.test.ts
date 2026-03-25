@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getMyRequests, cancelRequest } from '@/lib/actions/requests'
+import { getMyRequests, cancelRequest, getRequestById, updateRequest } from '@/lib/actions/requests'
+import type { RequestPayload } from '@/lib/actions/requests'
 
 vi.mock('@/lib/supabase/server', () => ({
   createServerSupabaseClient: vi.fn(),
@@ -163,5 +164,136 @@ describe('cancelRequest', () => {
     const eqCalls = (chain.eq as ReturnType<typeof vi.fn>).mock.calls
     expect(eqCalls).toContainEqual(['id', 'req-1'])
     expect(eqCalls).toContainEqual(['user_id', 'user-1'])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getRequestById
+// ---------------------------------------------------------------------------
+
+const payloadFixture: RequestPayload = {
+  date: '2025-07-10',
+  start_time: '10:00',
+  end_time: '13:00',
+  flexible: false,
+  location_type: 'gym',
+  location_name: 'Blochaus',
+  goal_type: 'project',
+  desired_grade_range: '7a-7b',
+  notes: null,
+  needs_gear: { rope: false, quickdraws: false, belayDevice: false, crashPad: false, helmet: false },
+  carpool_needed: false,
+  weight_relevant: false,
+  max_weight_difference_kg: null,
+}
+
+describe('getRequestById', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('returns null when not authenticated', async () => {
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(null),
+      from: vi.fn(),
+    } as never)
+
+    expect(await getRequestById('req-1')).toBeNull()
+  })
+
+  it('returns the request when found', async () => {
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn().mockReturnValueOnce(q({ data: requestFixture, error: null })),
+    } as never)
+
+    const result = await getRequestById('req-1')
+    expect(result).not.toBeNull()
+    expect(result?.id).toBe('req-1')
+    expect(result?.location_name).toBe('Siurana')
+  })
+
+  it('returns null when request not found', async () => {
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn().mockReturnValueOnce(q({ data: null, error: null })),
+    } as never)
+
+    expect(await getRequestById('nonexistent')).toBeNull()
+  })
+
+  it('scopes the query to the authenticated user', async () => {
+    const chain = q({ data: requestFixture, error: null })
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs('user-1'),
+      from: vi.fn().mockReturnValueOnce(chain),
+    } as never)
+
+    await getRequestById('req-1')
+
+    const eqCalls = (chain.eq as ReturnType<typeof vi.fn>).mock.calls
+    expect(eqCalls).toContainEqual(['id', 'req-1'])
+    expect(eqCalls).toContainEqual(['user_id', 'user-1'])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// updateRequest
+// ---------------------------------------------------------------------------
+
+describe('updateRequest', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('throws when not authenticated', async () => {
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(null),
+      from: vi.fn(),
+    } as never)
+
+    await expect(updateRequest('req-1', payloadFixture)).rejects.toThrow('Not authenticated')
+  })
+
+  it('resolves when update succeeds', async () => {
+    const chain = q({ error: null })
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn().mockReturnValueOnce(chain),
+    } as never)
+
+    await expect(updateRequest('req-1', payloadFixture)).resolves.toBeUndefined()
+  })
+
+  it('throws on database error', async () => {
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn().mockReturnValueOnce(q({ error: new Error('not found') })),
+    } as never)
+
+    await expect(updateRequest('req-1', payloadFixture)).rejects.toThrow()
+  })
+
+  it('calls update with the payload', async () => {
+    const chain = q({ error: null })
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn().mockReturnValueOnce(chain),
+    } as never)
+
+    await updateRequest('req-1', payloadFixture)
+
+    expect(chain.update).toHaveBeenCalledWith(payloadFixture)
+  })
+
+  it('scopes the update to the owner and active status', async () => {
+    const chain = q({ error: null })
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs('user-1'),
+      from: vi.fn().mockReturnValueOnce(chain),
+    } as never)
+
+    await updateRequest('req-1', payloadFixture)
+
+    const eqCalls = (chain.eq as ReturnType<typeof vi.fn>).mock.calls
+    expect(eqCalls).toContainEqual(['id', 'req-1'])
+    expect(eqCalls).toContainEqual(['user_id', 'user-1'])
+    expect(eqCalls).toContainEqual(['status', 'active'])
   })
 })

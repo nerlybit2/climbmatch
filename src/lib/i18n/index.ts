@@ -105,6 +105,9 @@ export interface Translations {
     maxWeightDiff: string
     maxWeightPlaceholder: string
     submit: string
+    editTitle: string
+    editSubtitle: string
+    editSubmit: string
     errors: {
       required: string
       noTime: string
@@ -201,6 +204,7 @@ export interface Translations {
     interestDeclined: string
     requestCancelled: string
     requestCreated: string
+    requestUpdated: string
   }
   goalTypes: {
     project: string
@@ -327,6 +331,9 @@ export const en: Translations = {
     maxWeightDiff: 'Max Weight Difference (kg)',
     maxWeightPlaceholder: 'e.g., 15',
     submit: 'Post Request',
+    editTitle: 'Edit Request',
+    editSubtitle: 'Update your climbing request',
+    editSubmit: 'Save Changes',
     errors: {
       required: 'Date and location are required',
       noTime: 'Set a start time or mark as flexible',
@@ -423,6 +430,7 @@ export const en: Translations = {
     interestDeclined: 'Interest declined',
     requestCancelled: 'Request cancelled',
     requestCreated: 'Request created!',
+    requestUpdated: 'Request updated!',
   },
   goalTypes: {
     project: 'Project',
@@ -549,6 +557,9 @@ export const he: Translations = {
     maxWeightDiff: 'הפרש משקל מקסימלי (ק"ג)',
     maxWeightPlaceholder: 'לדוגמה, 15',
     submit: 'פרסם בקשה',
+    editTitle: 'ערוך בקשה',
+    editSubtitle: 'עדכן את בקשת הטיפוס שלך',
+    editSubmit: 'שמור שינויים',
     errors: {
       required: 'תאריך ומיקום הם שדות חובה',
       noTime: 'הגדר שעת התחלה או סמן כגמיש',
@@ -645,6 +656,7 @@ export const he: Translations = {
     interestDeclined: 'עניין נדחה',
     requestCancelled: 'הבקשה בוטלה',
     requestCreated: 'הבקשה נוצרה!',
+    requestUpdated: 'הבקשה עודכנה!',
   },
   goalTypes: {
     project: 'פרויקט',

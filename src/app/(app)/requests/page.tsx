@@ -116,7 +116,10 @@ export default function MyRequestsPage() {
                       <Button variant="ghost" onClick={() => setCancellingId(null)} className="text-xs !px-3 !py-1.5">{t.requests.no}</Button>
                     </div>
                   ) : (
-                    <Button variant="ghost" onClick={() => setCancellingId(req.id)} className="text-xs !text-red-400 !px-3 !py-1.5">{t.requests.cancel}</Button>
+                    <div className="flex items-center gap-1.5">
+                      <Link href={`/requests/${req.id}/edit`} className="text-xs font-bold text-blue-500 px-3 py-1.5 rounded-xl hover:bg-blue-50 transition-colors">Edit</Link>
+                      <Button variant="ghost" onClick={() => setCancellingId(req.id)} className="text-xs !text-red-400 !px-3 !py-1.5">{t.requests.cancel}</Button>
+                    </div>
                   )
                 )}
               </div>
