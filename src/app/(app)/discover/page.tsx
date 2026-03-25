@@ -147,20 +147,17 @@ export default function DiscoverPage() {
           </div>
           <button
             onClick={() => setShowFilters(f => !f)}
-            className={`relative flex items-center gap-1.5 px-4 py-2 rounded-2xl text-sm font-bold transition-all duration-200 ${
+            className={`relative flex items-center justify-center w-10 h-10 rounded-2xl transition-all duration-200 ${
               showFilters || activeFilterCount > 0
                 ? 'bg-gradient-to-br from-blue-500 to-indigo-700 text-white shadow-lg shadow-blue-500/30'
-                : 'bg-white text-gray-500 shadow-sm border border-gray-100 hover:border-gray-200'
+                : 'bg-white text-gray-400 shadow-sm border border-gray-100 hover:border-gray-200 hover:text-gray-600'
             }`}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
-            {t.discover.filters}
             {activeFilterCount > 0 && (
-              <span className={`min-w-[18px] h-[18px] text-[10px] font-black rounded-full flex items-center justify-center px-1 ${
-                showFilters || activeFilterCount > 0 ? 'bg-white/25 text-white' : 'bg-blue-600 text-white'
-              }`}>
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
                 {activeFilterCount}
               </span>
             )}
@@ -348,13 +345,8 @@ export default function DiscoverPage() {
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
                     <span className="font-bold text-slate-900 truncate">{card.profile.display_name}</span>
-                    {card.score > 0 && (
-                      <span className="flex-shrink-0 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                        {card.score}pts
-                      </span>
-                    )}
                   </div>
                   <div className="flex items-center gap-1 mt-0.5 text-xs text-slate-500 font-medium">
                     <svg className="w-3 h-3 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
