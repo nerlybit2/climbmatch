@@ -131,10 +131,13 @@ export default function InboxPage() {
                 <Image src={item.fromProfile.photo_url || '/default-avatar.svg'} alt={item.fromProfile.display_name} width={56} height={56} className="w-14 h-14 rounded-2xl object-cover flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-sm">{item.fromProfile.display_name}</h3>
-                  <p className="text-xs text-gray-500 truncate mt-0.5">
-                    {item.request.location_name}
-                  </p>
-                  <p className="text-[10px] text-gray-300 font-medium mt-0.5">{item.request.date}</p>
+                  <p className="text-xs text-gray-500 truncate mt-0.5">{item.request.location_name}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <svg className="w-3.5 h-3.5 text-orange-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-xs font-bold text-gray-700">{new Date(item.request.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                  </div>
 
                   <div className="mt-3 space-y-2">
                     {item.interest.status === 'pending' && tab === 'applicants' && (
@@ -156,7 +159,10 @@ export default function InboxPage() {
                       </div>
                     )}
                     {item.interest.status === 'declined' && (
-                      <span className="text-xs text-red-400 bg-red-50 px-3 py-1 rounded-full font-bold">{t.inbox.declined}</span>
+                      <div className="space-y-2">
+                        <span className="text-xs text-red-400 bg-red-50 px-3 py-1 rounded-full font-bold">{t.inbox.declined}</span>
+                        <ContactButtons phone={item.phone} location={item.request.location_name} waLabel={t.inbox.whatsapp} smsLabel={t.inbox.sms} />
+                      </div>
                     )}
                   </div>
                 </div>
