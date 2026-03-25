@@ -10,6 +10,7 @@ import { Button } from '@/components/Button'
 import type { Profile, GearSet } from '@/lib/types/database'
 import { signOut } from '@/lib/actions/auth'
 import { useLanguage } from '@/contexts/LanguageContext'
+import type { Language } from '@/lib/i18n'
 
 const DEFAULT_GEAR: GearSet = { rope: false, quickdraws: false, belayDevice: false, crashPad: false, helmet: false }
 
@@ -21,7 +22,7 @@ interface Props {
 export function ProfileForm({ profile, userEmail }: Props) {
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
-  const { t } = useLanguage()
+  const { t, language, setLanguage } = useLanguage()
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -178,14 +179,40 @@ export function ProfileForm({ profile, userEmail }: Props) {
       </Button>
 
     </form>
-    {profile && (
-      <div className="pt-5 border-t border-gray-100">
-        <p className="text-xs text-gray-400 mb-3 font-medium">{t.profile.signedInAs} {userEmail}</p>
-        <form action={signOut}>
-          <Button type="submit" variant="ghost" className="w-full !text-red-400">{t.profile.signOut}</Button>
-        </form>
+    <div className="pt-5 border-t border-gray-100 space-y-3">
+      <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-50">
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t.settings.language}</span>
+        </div>
+        {([['en', '🇺🇸', t.settings.english], ['he', '🇮🇱', t.settings.hebrew]] as [Language, string, string][]).map(([code, flag, label]) => (
+          <button
+            key={code}
+            type="button"
+            onClick={() => setLanguage(code)}
+            className={`w-full flex items-center justify-between px-4 py-3.5 border-b border-gray-50 last:border-0 transition-colors ${language === code ? 'bg-orange-50' : 'hover:bg-stone-50'}`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl">{flag}</span>
+              <span className="font-semibold text-sm text-gray-800">{label}</span>
+            </div>
+            {language === code && (
+              <svg className="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </button>
+        ))}
       </div>
-    )}
+
+      {profile && (
+        <>
+          <p className="text-xs text-gray-400 font-medium">{t.profile.signedInAs} {userEmail}</p>
+          <form action={signOut}>
+            <Button type="submit" variant="ghost" className="w-full !text-red-400">{t.profile.signOut}</Button>
+          </form>
+        </>
+      )}
+    </div>
     </>
   )
 }

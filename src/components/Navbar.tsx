@@ -16,7 +16,6 @@ export function Navbar() {
     { href: '/inbox', label: t.nav.inbox, icon: 'inbox' },
     { href: '/requests', label: t.nav.myPosts, icon: 'list' },
     { href: '/profile', label: t.nav.profile, icon: 'profile' },
-    { href: '/settings', label: t.nav.settings, icon: 'settings' },
   ]
 
   return (
