@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Input } from '@/components/Input'
+import { PhoneInput } from '@/components/PhoneInput'
 import { GearCheckboxes } from '@/components/GearCheckboxes'
 import { Button } from '@/components/Button'
 import type { Profile, GearSet } from '@/lib/types/database'
@@ -132,7 +133,7 @@ export function ProfileForm({ profile, userEmail, prefill }: Props) {
       </div>
 
       <Input label={t.profile.displayName} value={displayName} onChange={e => setDisplayName(e.target.value)} required placeholder={t.profile.displayNamePlaceholder} />
-      <Input label={t.profile.phone} type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder={t.profile.phonePlaceholder} required />
+      <PhoneInput label={t.profile.phone} value={phone} onChange={setPhone} required />
       <div className="grid grid-cols-2 gap-3">
         <Input label={t.profile.instagram} value={instagram} onChange={e => setInstagram(e.target.value)} placeholder={t.profile.instagramPlaceholder} />
         <Input label={t.profile.facebook} value={facebook} onChange={e => setFacebook(e.target.value)} placeholder={t.profile.facebookPlaceholder} />
