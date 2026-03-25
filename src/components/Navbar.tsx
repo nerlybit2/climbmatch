@@ -19,33 +19,45 @@ export function Navbar() {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 glass border-t border-gray-200/50 pb-safe z-50">
-      <div className="flex justify-around items-center h-14 max-w-lg mx-auto">
-        {tabs.map((tab) => {
-          const isActive = pathname === tab.href || (tab.href !== '/requests/new' && pathname.startsWith(tab.href + '/'))
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className={`relative flex flex-col items-center justify-center flex-1 h-full text-[9px] font-semibold tracking-wide transition-all duration-200 ${
-                isActive ? 'text-blue-600' : 'text-gray-400'
-              }`}
-            >
-              {isActive && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full" />
-              )}
-              <div className="relative">
-                <NavIcon type={tab.icon} active={isActive} />
-                {tab.icon === 'inbox' && count > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-md shadow-blue-500/30">
-                    {count > 9 ? '9+' : count}
+    <nav className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+      <div
+        className="px-4 pointer-events-auto"
+        style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+      >
+        <div className="glass nav-pill-shadow rounded-[28px] flex items-center h-[62px] px-1.5">
+          {tabs.map((tab) => {
+            const isActive =
+              pathname === tab.href ||
+              (tab.href !== '/requests/new' && pathname.startsWith(tab.href + '/'))
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                className="flex-1 flex items-center justify-center h-full"
+              >
+                <div
+                  className={`relative flex flex-col items-center gap-[3px] px-3 py-2 rounded-2xl transition-all duration-200 ${
+                    isActive
+                      ? 'bg-gradient-to-b from-blue-500 to-indigo-700 text-white shadow-lg shadow-blue-500/30'
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  <div className="relative">
+                    <NavIcon type={tab.icon} active={isActive} />
+                    {tab.icon === 'inbox' && count > 0 && (
+                      <span className="absolute -top-1 -right-1.5 min-w-[16px] h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center px-0.5 shadow-sm">
+                        {count > 9 ? '9+' : count}
+                      </span>
+                    )}
+                  </div>
+                  <span className={`text-[9px] font-bold tracking-wide leading-none ${isActive ? 'text-white/90' : ''}`}>
+                    {tab.label}
                   </span>
-                )}
-              </div>
-              <span className="mt-0.5">{tab.label}</span>
-            </Link>
-          )
-        })}
+                </div>
+              </Link>
+            )
+          })}
+        </div>
       </div>
     </nav>
   )

@@ -73,7 +73,7 @@ export default function MyRequestsPage() {
       <div className="px-5 space-y-3 pb-8">
         {loading ? (
           <div className="text-center py-16">
-            <div className="w-12 h-12 rounded-2xl bg-stone-100 animate-pulse mx-auto mb-3" />
+            <div className="w-12 h-12 rounded-2xl bg-slate-200 animate-pulse mx-auto mb-3" />
             <p className="text-gray-300 font-medium">{t.requests.loading}</p>
           </div>
         ) : requests.length === 0 ? (
@@ -90,7 +90,7 @@ export default function MyRequestsPage() {
           />
         ) : (
           requests.map((req) => (
-            <div key={req.id} className="bg-white rounded-2xl p-4 card-shadow">
+            <div key={req.id} className="bg-white rounded-3xl p-4 card-shadow border border-gray-50">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1.5">

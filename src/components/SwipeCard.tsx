@@ -118,26 +118,26 @@ export function SwipeCard({ profile, request, compatibility, onSwipeRight, onSwi
         )}
 
         {/* Bottom gradient info */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-5 pt-28">
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/55 to-transparent p-5 pt-32">
           {/* Compatibility pills */}
           {compatibility && (
-            <div className="flex flex-wrap gap-1.5 mb-2">
+            <div className="flex flex-wrap gap-1.5 mb-3">
               {compatibility.gearMatches.length > 0 && (
-                <span className="bg-emerald-500/80 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                <span className="bg-emerald-500/90 backdrop-blur-sm text-white text-[10px] px-2.5 py-1 rounded-full font-bold tracking-wide">
                   🎒 Has {compatibility.gearMatches.length === 1 ? compatibility.gearMatches[0] : `${compatibility.gearMatches.length} gear items`}
                 </span>
               )}
               {compatibility.carpoolAvailable ? (
-                <span className="bg-emerald-500/80 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                <span className="bg-emerald-500/90 backdrop-blur-sm text-white text-[10px] px-2.5 py-1 rounded-full font-bold tracking-wide">
                   🚗 You can drive
                 </span>
               ) : compatibility.carpoolNeeded ? (
-                <span className="bg-amber-500/80 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                <span className="bg-amber-500/90 backdrop-blur-sm text-white text-[10px] px-2.5 py-1 rounded-full font-bold tracking-wide">
                   🚗 Needs ride
                 </span>
               ) : null}
               {compatibility.timeMatch && (
-                <span className="bg-violet-500/80 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                <span className="bg-blue-500/90 backdrop-blur-sm text-white text-[10px] px-2.5 py-1 rounded-full font-bold tracking-wide">
                   ⏰ Time match
                 </span>
               )}
@@ -145,18 +145,18 @@ export function SwipeCard({ profile, request, compatibility, onSwipeRight, onSwi
           )}
           <div className="flex items-end justify-between">
             <div className="flex-1 min-w-0">
-              <h2 className="text-white text-2xl font-extrabold tracking-tight">{profile.display_name}</h2>
-              <div className="flex items-center gap-2 mt-1">
+              <h2 className="text-white text-[26px] font-extrabold tracking-tight leading-tight">{profile.display_name}</h2>
+              <div className="flex items-center gap-2 mt-0.5">
                 {profile.home_area && (
-                  <span className="text-white/60 text-sm flex items-center gap-1">
+                  <span className="text-white/50 text-sm flex items-center gap-1 font-medium">
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     {profile.home_area}
                   </span>
                 )}
               </div>
-              <div className="flex flex-wrap gap-1.5 mt-3">
+              <div className="flex flex-wrap gap-1.5 mt-2.5">
                 {request.desired_grade_range && (
-                  <span className="bg-white/15 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm font-medium">{request.desired_grade_range}</span>
+                  <span className="bg-white/20 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm font-semibold border border-white/10">{request.desired_grade_range}</span>
                 )}
                 {request.goal_type && request.goal_type !== 'any' && (
                   <span className="bg-white/15 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm font-medium">{GOAL_LABELS[request.goal_type]}</span>

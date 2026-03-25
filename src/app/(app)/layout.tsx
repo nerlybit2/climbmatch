@@ -6,9 +6,9 @@ import { ToastContainer } from '@/components/Toast'
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <LanguageProvider>
-      <div className="min-h-[100dvh] flex flex-col bg-stone-50">
+      <div className="min-h-[100dvh] flex flex-col bg-[#EDF1F7]">
         <ToastProvider>
-          <main className="flex-1 pb-20 overflow-y-auto">
+          <main className="flex-1 pb-28 overflow-y-auto">
             {children}
           </main>
           <ToastContainer />

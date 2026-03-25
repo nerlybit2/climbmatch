@@ -81,13 +81,13 @@ export default function InboxPage() {
       {indicatorElement}
       <PageHeader title={t.inbox.title} subtitle={t.inbox.subtitle} />
 
-      <div className="flex gap-1 mx-5 mb-5 bg-stone-100 rounded-2xl p-1">
+      <div className="flex gap-1 mx-5 mb-5 bg-white/70 rounded-2xl p-1 shadow-sm border border-gray-100">
         <button onClick={() => setTab('applicants')}
-          className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${tab === 'applicants' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400'}`}>
-          {t.inbox.applicants} {pendingCount > 0 && <span className="ml-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[10px] w-5 h-5 rounded-full inline-flex items-center justify-center">{pendingCount}</span>}
+          className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${tab === 'applicants' ? 'bg-gradient-to-br from-blue-500 to-indigo-700 text-white shadow-md shadow-blue-500/25' : 'text-gray-400'}`}>
+          {t.inbox.applicants} {pendingCount > 0 && <span className={`ml-1 text-[10px] w-5 h-5 rounded-full inline-flex items-center justify-center ${tab === 'applicants' ? 'bg-white/25' : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white'}`}>{pendingCount}</span>}
         </button>
         <button onClick={() => setTab('applications')}
-          className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${tab === 'applications' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400'}`}>
+          className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${tab === 'applications' ? 'bg-gradient-to-br from-blue-500 to-indigo-700 text-white shadow-md shadow-blue-500/25' : 'text-gray-400'}`}>
           {t.inbox.myApplications} ({sent.length})
         </button>
       </div>
@@ -95,7 +95,7 @@ export default function InboxPage() {
       <div className="px-5 space-y-3 pb-8">
         {loading ? (
           <div className="text-center py-16">
-            <div className="w-12 h-12 rounded-2xl bg-stone-100 animate-pulse mx-auto mb-3" />
+            <div className="w-12 h-12 rounded-2xl bg-slate-200 animate-pulse mx-auto mb-3" />
             <p className="text-gray-300 font-medium">{t.inbox.loading}</p>
           </div>
         ) : items.length === 0 ? (
@@ -126,9 +126,9 @@ export default function InboxPage() {
           )
         ) : (
           items.map((item) => (
-            <div key={item.interest.id} className="bg-white rounded-2xl p-4 card-shadow animate-fade-in">
+            <div key={item.interest.id} className="bg-white rounded-3xl p-4 card-shadow animate-fade-in border border-gray-50">
               <div className="flex items-start gap-3">
-                <Image src={item.fromProfile.photo_url || '/default-avatar.svg'} alt={item.fromProfile.display_name} width={56} height={56} className="w-14 h-14 rounded-2xl object-cover flex-shrink-0" />
+                <Image src={item.fromProfile.photo_url || '/default-avatar.svg'} alt={item.fromProfile.display_name} width={56} height={56} className={`w-14 h-14 rounded-2xl object-cover flex-shrink-0 ${item.interest.status === 'accepted' ? 'ring-2 ring-emerald-400 ring-offset-1' : ''}`} />
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-sm">{item.fromProfile.display_name}</h3>
                   <p className="text-xs text-gray-500 truncate mt-0.5">{item.request.location_name}</p>
