@@ -154,6 +154,10 @@ export interface Translations {
     displayNamePlaceholder: string
     phone: string
     phonePlaceholder: string
+    instagram: string
+    instagramPlaceholder: string
+    facebook: string
+    facebookPlaceholder: string
     homeArea: string
     homeAreaPlaceholder: string
     sportGrade: string
@@ -372,6 +376,10 @@ export const en: Translations = {
     displayNamePlaceholder: 'Your climbing name',
     phone: 'Phone (WhatsApp) *',
     phonePlaceholder: '+972...',
+    instagram: 'Instagram',
+    instagramPlaceholder: '@your_username',
+    facebook: 'Facebook',
+    facebookPlaceholder: 'facebook.com/yourname',
     homeArea: 'Home Area',
     homeAreaPlaceholder: 'e.g., Tel Aviv',
     sportGrade: 'Sport Grade',
@@ -590,6 +598,10 @@ export const he: Translations = {
     displayNamePlaceholder: 'שם הטיפוס שלך',
     phone: 'טלפון (WhatsApp) *',
     phonePlaceholder: '+972...',
+    instagram: 'אינסטגרם',
+    instagramPlaceholder: '@שם_משתמש',
+    facebook: 'פייסבוק',
+    facebookPlaceholder: 'facebook.com/yourname',
     homeArea: 'אזור מגורים',
     homeAreaPlaceholder: 'לדוגמה, תל אביב',
     sportGrade: 'רמת ספורט',

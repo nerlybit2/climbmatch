@@ -9,6 +9,8 @@ export interface MatchResult {
     display_name: string
     photo_url: string
     phone: string | null
+    instagram: string | null
+    facebook: string | null
   }
   requestDetails?: {
     location_name: string
@@ -33,7 +35,7 @@ export async function createInterest(requestId: string, toUserId: string): Promi
   if (error && error.code !== '23505') throw new Error(error.message)
 
   const [{ data: matchedProfile }, { data: requestDetails }] = await Promise.all([
-    supabase.from('profiles').select('display_name, photo_url, phone').eq('id', toUserId).single(),
+    supabase.from('profiles').select('display_name, photo_url, phone, instagram, facebook').eq('id', toUserId).single(),
     supabase.from('partner_requests').select('location_name, date').eq('id', requestId).single(),
   ])
 
@@ -45,6 +47,8 @@ export interface InboxItem {
   fromProfile: Profile
   request: PartnerRequest
   phone: string | null
+  instagram: string | null
+  facebook: string | null
 }
 
 export async function getInbox(): Promise<InboxItem[]> {
@@ -78,6 +82,8 @@ export async function getInbox(): Promise<InboxItem[]> {
       fromProfile: profile,
       request: requestMap.get(interest.request_id)!,
       phone: profile?.phone ?? null,
+      instagram: profile?.instagram ?? null,
+      facebook: profile?.facebook ?? null,
     }
   }).filter(item => item.fromProfile && item.request)
 }
@@ -108,11 +114,14 @@ export async function getSentInterests(): Promise<InboxItem[]> {
 
   return interests.map(interest => {
     const profile = profileMap.get(interest.to_user_id)!
+    const accepted = interest.status === 'accepted'
     return {
       interest,
       fromProfile: profile,
       request: requestMap.get(interest.request_id)!,
-      phone: interest.status === 'accepted' ? profile?.phone : null,
+      phone: accepted ? profile?.phone ?? null : null,
+      instagram: accepted ? profile?.instagram ?? null : null,
+      facebook: accepted ? profile?.facebook ?? null : null,
     }
   }).filter(item => item.fromProfile && item.request)
 }
@@ -139,7 +148,7 @@ export async function acceptInterest(interestId: string): Promise<MatchResult> {
   if (!interest) return { matched: true }
 
   const [{ data: matchedProfile }, { data: requestDetails }] = await Promise.all([
-    supabase.from('profiles').select('display_name, photo_url, phone').eq('id', interest.from_user_id).single(),
+    supabase.from('profiles').select('display_name, photo_url, phone, instagram, facebook').eq('id', interest.from_user_id).single(),
     supabase.from('partner_requests').select('location_name, date').eq('id', interest.request_id).single(),
   ])
 

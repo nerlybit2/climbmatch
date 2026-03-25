@@ -38,6 +38,8 @@ export function ProfileForm({ profile, userEmail, prefill }: Props) {
   const [bio, setBio] = useState(profile?.bio || '')
   const [languages, setLanguages] = useState(profile?.languages?.join(', ') || '')
   const [phone, setPhone] = useState(profile?.phone || '')
+  const [instagram, setInstagram] = useState(profile?.instagram || '')
+  const [facebook, setFacebook] = useState(profile?.facebook || '')
   const [uploading, setUploading] = useState(false)
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,6 +90,8 @@ export function ProfileForm({ profile, userEmail, prefill }: Props) {
         bio: bio.trim() || null,
         languages: languages ? languages.split(',').map(l => l.trim()).filter(Boolean) : [],
         phone: phone.trim() || null,
+        instagram: instagram.trim() || null,
+        facebook: facebook.trim() || null,
       }
       const { error: upsertError } = await supabase.from('profiles').upsert(profileData)
       if (upsertError) throw upsertError
@@ -129,6 +133,10 @@ export function ProfileForm({ profile, userEmail, prefill }: Props) {
 
       <Input label={t.profile.displayName} value={displayName} onChange={e => setDisplayName(e.target.value)} required placeholder={t.profile.displayNamePlaceholder} />
       <Input label={t.profile.phone} type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder={t.profile.phonePlaceholder} required />
+      <div className="grid grid-cols-2 gap-3">
+        <Input label={t.profile.instagram} value={instagram} onChange={e => setInstagram(e.target.value)} placeholder={t.profile.instagramPlaceholder} />
+        <Input label={t.profile.facebook} value={facebook} onChange={e => setFacebook(e.target.value)} placeholder={t.profile.facebookPlaceholder} />
+      </div>
       <Input label={t.profile.homeArea} value={homeArea} onChange={e => setHomeArea(e.target.value)} placeholder={t.profile.homeAreaPlaceholder} />
 
       <div className="grid grid-cols-2 gap-3">

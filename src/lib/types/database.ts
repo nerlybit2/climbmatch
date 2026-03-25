@@ -29,6 +29,8 @@ export interface Profile {
   bio: string | null
   languages: string[]
   phone: string | null
+  instagram: string | null
+  facebook: string | null
   created_at: string
   updated_at: string
 }
