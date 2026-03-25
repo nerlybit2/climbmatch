@@ -25,11 +25,15 @@ export default function DiscoverPage() {
 
   const today = new Date().toISOString().split('T')[0]
 
+  const PAGE_SIZE = 20
+
   const [loading, setLoading] = useState(true)
   const [cards, setCards] = useState<ScoredCard[]>([])
+  const [displayCount, setDisplayCount] = useState(PAGE_SIZE)
   const [detailCard, setDetailCard] = useState<ScoredCard | null>(null)
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null)
   const [showFilters, setShowFilters] = useState(false)
+  const sentinelRef = useRef<HTMLDivElement>(null)
   const toast = useToast()
 
   // Filter state
@@ -86,6 +90,25 @@ export default function DiscoverPage() {
   // Load all on mount
   useEffect(() => { loadData() }, [loadData])
 
+  // Reset display count when cards change (new search)
+  useEffect(() => { setDisplayCount(PAGE_SIZE) }, [cards])
+
+  // Infinite scroll sentinel
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setDisplayCount(prev => Math.min(prev + PAGE_SIZE, cards.length))
+        }
+      },
+      { threshold: 0.1 }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [cards.length])
+
   const handleApplyFilters = () => {
     loadData({
       date_from: dateFrom || undefined,
@@ -138,30 +161,33 @@ export default function DiscoverPage() {
 
       {/* Sticky header */}
       <div className="sticky top-0 z-10 bg-[#EDF1F7]/90 backdrop-blur-xl px-5 pt-7 pb-3">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h1 className="text-[26px] font-extrabold tracking-tight text-slate-900 leading-tight">{t.discover.title}</h1>
-            <p className="text-sm text-slate-400 font-medium">
-              {loading ? 'Loading…' : `${cards.length} partner${cards.length !== 1 ? 's' : ''} available`}
-            </p>
-          </div>
+        <div className="mb-3">
+          <h1 className="text-[26px] font-extrabold tracking-tight text-slate-900 leading-tight mb-3">{t.discover.title}</h1>
           <button
             onClick={() => setShowFilters(f => !f)}
-            className={`relative flex items-center justify-center w-10 h-10 rounded-2xl transition-all duration-200 ${
+            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left transition-all duration-200 active:scale-[0.98] ${
               showFilters || activeFilterCount > 0
                 ? 'bg-gradient-to-br from-blue-500 to-indigo-700 text-white shadow-lg shadow-blue-500/30'
-                : 'bg-white text-gray-400 shadow-sm border border-gray-100 hover:border-gray-200 hover:text-gray-600'
+                : 'bg-white text-gray-400 shadow-sm border border-gray-100'
             }`}
           >
-            <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
+            <span className={`text-sm font-semibold flex-1 ${showFilters || activeFilterCount > 0 ? 'text-white' : 'text-gray-400'}`}>
+              {activeFilterCount > 0 ? `${activeFilterCount} filter${activeFilterCount > 1 ? 's' : ''} active` : 'Search by location, date, time…'}
+            </span>
             {activeFilterCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
+              <span className="bg-white/25 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
                 {activeFilterCount}
               </span>
             )}
           </button>
+          {!loading && (
+            <p className="text-xs text-slate-400 font-medium mt-2 px-1">
+              {cards.length} partner{cards.length !== 1 ? 's' : ''} available
+            </p>
+          )}
         </div>
 
         {/* Collapsible filter panel */}
@@ -324,7 +350,7 @@ export default function DiscoverPage() {
             />
           </div>
         ) : (
-          cards.map(card => (
+          cards.slice(0, displayCount).map(card => (
             <button
               key={card.request.id}
               type="button"
@@ -389,6 +415,13 @@ export default function DiscoverPage() {
               )}
             </button>
           ))
+        )}
+
+        {/* Infinite scroll sentinel */}
+        {cards.length > displayCount && (
+          <div ref={sentinelRef} className="py-4 flex justify-center">
+            <div className="w-6 h-6 rounded-full border-2 border-blue-300 border-t-blue-600 animate-spin" />
+          </div>
         )}
       </div>
 
