@@ -102,27 +102,38 @@ const interestFixture = {
 describe('createInterest', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('returns { matched: false } when no mutual interest exists', async () => {
+  it('returns matched: true with poster profile and request details', async () => {
+    const posterProfile = { display_name: 'Alice', photo_url: '/alice.jpg', phone: '+972501234' }
+    const reqDetails = { location_name: 'Siurana', date: '2025-07-01' }
+
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
         .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null })) // profile check
-        .mockReturnValueOnce(q({ error: null })),                         // insert interest
+        .mockReturnValueOnce(q({ error: null }))                         // insert interest
+        .mockReturnValueOnce(q({ data: posterProfile, error: null }))    // poster profile
+        .mockReturnValueOnce(q({ data: reqDetails, error: null })),      // request details
     } as never)
 
     const result = await createInterest('req-1', 'user-2')
-    expect(result).toEqual({ matched: false })
+    expect(result).toMatchObject({ matched: true, matchedProfile: posterProfile, requestDetails: reqDetails })
   })
 
   it('handles duplicate insert (code 23505) without throwing', async () => {
+    const posterProfile = { display_name: 'Alice', photo_url: '/alice.jpg', phone: '+972501234' }
+    const reqDetails = { location_name: 'Siurana', date: '2025-07-01' }
+
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null })) // profile check
-        .mockReturnValueOnce(q({ error: { code: '23505', message: 'duplicate' } })),
+        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null }))
+        .mockReturnValueOnce(q({ error: { code: '23505', message: 'duplicate' } }))
+        .mockReturnValueOnce(q({ data: posterProfile, error: null }))
+        .mockReturnValueOnce(q({ data: reqDetails, error: null })),
     } as never)
 
-    await expect(createInterest('req-1', 'user-2')).resolves.toEqual({ matched: false })
+    const result = await createInterest('req-1', 'user-2')
+    expect(result.matched).toBe(true)
   })
 
   it('throws on unexpected insert error', async () => {

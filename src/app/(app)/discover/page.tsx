@@ -8,7 +8,8 @@ import { CardDetails } from '@/components/CardDetails'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { discoverRequests, searchLocations, type ScoredCard, type DiscoverFilters } from '@/lib/actions/discover'
-import { createInterest } from '@/lib/actions/interests'
+import { createInterest, type MatchResult } from '@/lib/actions/interests'
+import { MatchCelebration } from '@/components/MatchCelebration'
 import { useToast } from '@/hooks/useToast'
 import { useLanguage } from '@/contexts/LanguageContext'
 
@@ -29,6 +30,7 @@ export default function DiscoverPage() {
   const [loading, setLoading] = useState(false)
   const [cards, setCards] = useState<ScoredCard[]>([])
   const [detailCard, setDetailCard] = useState<ScoredCard | null>(null)
+  const [matchResult, setMatchResult] = useState<MatchResult | null>(null)
   const toast = useToast()
 
   const today = new Date().toISOString().split('T')[0]
@@ -98,17 +100,23 @@ export default function DiscoverPage() {
 
   const handleInterested = useCallback(async (card: ScoredCard) => {
     try {
-      await createInterest(card.request.id, card.profile.id)
-      toast.addToast(t.toasts.interestSent, 'success')
+      const result = await createInterest(card.request.id, card.profile.id)
+      removeCard(card.request.id)
+      setDetailCard(null)
+      if (result.matchedProfile) {
+        setMatchResult(result)
+      } else {
+        toast.addToast(t.toasts.interestSent, 'success')
+      }
     } catch (err) {
       if (err instanceof Error && err.message === 'PROFILE_REQUIRED') {
+        toast.addToast('Complete your profile to connect with climbers', 'error')
         router.push('/profile')
         return
       }
       console.error(err)
     }
-    removeCard(card.request.id)
-  }, [removeCard, toast, router])
+  }, [removeCard, toast, router, t])
 
   const handlePass = useCallback((card: ScoredCard) => {
     removeCard(card.request.id)
@@ -321,6 +329,14 @@ export default function DiscoverPage() {
           onClose={() => setDetailCard(null)}
           onInterested={() => handleInterested(detailCard)}
           onPass={() => handlePass(detailCard)}
+        />
+      )}
+
+      {matchResult && (
+        <MatchCelebration
+          result={matchResult}
+          onClose={() => setMatchResult(null)}
+          closeLabel="Keep Browsing"
         />
       )}
 

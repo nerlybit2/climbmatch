@@ -32,7 +32,12 @@ export async function createInterest(requestId: string, toUserId: string): Promi
 
   if (error && error.code !== '23505') throw new Error(error.message)
 
-  return { matched: false }
+  const [{ data: matchedProfile }, { data: requestDetails }] = await Promise.all([
+    supabase.from('profiles').select('display_name, photo_url, phone').eq('id', toUserId).single(),
+    supabase.from('partner_requests').select('location_name, date').eq('id', requestId).single(),
+  ])
+
+  return { matched: true, matchedProfile: matchedProfile ?? undefined, requestDetails: requestDetails ?? undefined }
 }
 
 export interface InboxItem {
