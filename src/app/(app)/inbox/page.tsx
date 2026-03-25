@@ -81,13 +81,18 @@ export default function InboxPage() {
       {indicatorElement}
       <PageHeader title={t.inbox.title} subtitle={t.inbox.subtitle} />
 
-      <div className="flex gap-1 mx-5 mb-5 bg-white/70 rounded-2xl p-1 shadow-sm border border-gray-100">
+      <div className="flex gap-1 mx-5 mb-5 bg-slate-100 rounded-2xl p-1">
         <button onClick={() => setTab('applicants')}
-          className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${tab === 'applicants' ? 'bg-gradient-to-br from-blue-500 to-indigo-700 text-white shadow-md shadow-blue-500/25' : 'text-gray-400'}`}>
-          {t.inbox.applicants} {pendingCount > 0 && <span className={`ml-1 text-[10px] w-5 h-5 rounded-full inline-flex items-center justify-center ${tab === 'applicants' ? 'bg-white/25' : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white'}`}>{pendingCount}</span>}
+          className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${tab === 'applicants' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+          {t.inbox.applicants}
+          {pendingCount > 0 && (
+            <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full inline-flex items-center justify-center ${tab === 'applicants' ? 'bg-blue-500 text-white' : 'bg-slate-300 text-slate-600'}`}>
+              {pendingCount}
+            </span>
+          )}
         </button>
         <button onClick={() => setTab('applications')}
-          className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${tab === 'applications' ? 'bg-gradient-to-br from-blue-500 to-indigo-700 text-white shadow-md shadow-blue-500/25' : 'text-gray-400'}`}>
+          className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${tab === 'applications' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
           {t.inbox.myApplications} ({sent.length})
         </button>
       </div>
