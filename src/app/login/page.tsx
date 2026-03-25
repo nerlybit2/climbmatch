@@ -13,9 +13,10 @@ export default function LoginPage() {
 
   const handleOAuth = async (provider: 'google' | 'facebook') => {
     const supabase = createClient()
+    const origin = window.location.origin.includes('localhost') ? 'https://climbmatch.vercel.app' : window.location.origin
     await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${origin}/auth/callback` },
     })
   }
 
@@ -28,8 +29,9 @@ export default function LoginPage() {
       const supabase = createClient()
 
       if (mode === 'reset') {
+        const origin = window.location.origin.includes('localhost') ? 'https://climbmatch.vercel.app' : window.location.origin
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
+          redirectTo: `${origin}/auth/callback?next=/auth/reset-password`,
         })
         if (resetError) throw resetError
         setResetSent(true)
