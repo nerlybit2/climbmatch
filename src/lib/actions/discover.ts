@@ -6,8 +6,8 @@ import { timeOverlap, gearCompatibility, experienceLevelScore } from '@/lib/scor
 import { WORLD_CRAGS } from '@/lib/crags'
 
 export interface DiscoverFilters {
-  date_from: string
-  date_to: string
+  date_from?: string
+  date_to?: string
   location_name?: string
   time_of_day?: string
 }
@@ -120,12 +120,17 @@ export async function discoverRequests(filters: DiscoverFilters): Promise<Scored
 
   const swipedRequestIds = new Set((myInterests || []).map(i => i.request_id))
 
+  const today = new Date().toISOString().split('T')[0]
+  const oneYearAhead = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const dateFrom = filters.date_from || today
+  const dateTo = filters.date_to || oneYearAhead
+
   const { data: requests } = await supabase
     .from('partner_requests')
     .select('*')
     .eq('status', 'active')
-    .gte('date', filters.date_from)
-    .lte('date', filters.date_to)
+    .gte('date', dateFrom)
+    .lte('date', dateTo)
     .neq('user_id', user.id)
     .order('date', { ascending: true })
     .order('created_at', { ascending: false })
