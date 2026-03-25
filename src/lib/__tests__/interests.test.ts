@@ -48,6 +48,8 @@ const profileFixture = {
   display_name: 'Alice',
   photo_url: '/alice.jpg',
   phone: '+972501234',
+  instagram: '@alice_climbs',
+  facebook: 'alice.climbs',
   home_area: 'Tel Aviv',
   climbing_types: ['sport'],
   experience_level: 'intermediate',
@@ -103,7 +105,7 @@ describe('createInterest', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('returns matched: true with poster profile and request details', async () => {
-    const posterProfile = { display_name: 'Alice', photo_url: '/alice.jpg', phone: '+972501234' }
+    const posterProfile = { display_name: 'Alice', photo_url: '/alice.jpg', phone: '+972501234', instagram: '@alice', facebook: null }
     const reqDetails = { location_name: 'Siurana', date: '2025-07-01' }
 
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
@@ -119,8 +121,26 @@ describe('createInterest', () => {
     expect(result).toMatchObject({ matched: true, matchedProfile: posterProfile, requestDetails: reqDetails })
   })
 
+  it('includes instagram and facebook in matchedProfile', async () => {
+    const posterProfile = { display_name: 'Alice', photo_url: '/alice.jpg', phone: '+972501234', instagram: '@alice_climbs', facebook: 'alice.climbs' }
+    const reqDetails = { location_name: 'Siurana', date: '2025-07-01' }
+
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null }))
+        .mockReturnValueOnce(q({ error: null }))
+        .mockReturnValueOnce(q({ data: posterProfile, error: null }))
+        .mockReturnValueOnce(q({ data: reqDetails, error: null })),
+    } as never)
+
+    const result = await createInterest('req-1', 'user-2')
+    expect(result.matchedProfile?.instagram).toBe('@alice_climbs')
+    expect(result.matchedProfile?.facebook).toBe('alice.climbs')
+  })
+
   it('handles duplicate insert (code 23505) without throwing', async () => {
-    const posterProfile = { display_name: 'Alice', photo_url: '/alice.jpg', phone: '+972501234' }
+    const posterProfile = { display_name: 'Alice', photo_url: '/alice.jpg', phone: '+972501234', instagram: null, facebook: null }
     const reqDetails = { location_name: 'Siurana', date: '2025-07-01' }
 
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
@@ -272,6 +292,76 @@ describe('getSentInterests', () => {
     expect(items).toHaveLength(1)
     expect(items[0].interest.status).toBe('pending')
     expect(items[0].phone).toBeNull() // pending → no phone
+  })
+
+  it('hides instagram and facebook when interest is pending', async () => {
+    const sentInterest = { ...interestFixture, from_user_id: 'user-1', to_user_id: 'user-2', status: 'pending' }
+
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: [sentInterest], error: null }))
+        .mockReturnValueOnce(q({ data: [profileFixture], error: null }))
+        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),
+    } as never)
+
+    const items = await getSentInterests()
+    expect(items[0].instagram).toBeNull()
+    expect(items[0].facebook).toBeNull()
+  })
+
+  it('exposes instagram and facebook when interest is accepted', async () => {
+    const sentInterest = { ...interestFixture, from_user_id: 'user-1', to_user_id: 'user-2', status: 'accepted' }
+
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: [sentInterest], error: null }))
+        .mockReturnValueOnce(q({ data: [profileFixture], error: null }))
+        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),
+    } as never)
+
+    const items = await getSentInterests()
+    expect(items[0].instagram).toBe('@alice_climbs')
+    expect(items[0].facebook).toBe('alice.climbs')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getInbox – social contact fields
+// ---------------------------------------------------------------------------
+
+describe('getInbox – social contact fields', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('exposes instagram and facebook for inbox (applicant side)', async () => {
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: [interestFixture], error: null }))
+        .mockReturnValueOnce(q({ data: [profileFixture], error: null }))
+        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),
+    } as never)
+
+    const items = await getInbox()
+    expect(items[0].instagram).toBe('@alice_climbs')
+    expect(items[0].facebook).toBe('alice.climbs')
+  })
+
+  it('returns null instagram/facebook when profile has none', async () => {
+    const profileNoSocial = { ...profileFixture, instagram: null, facebook: null }
+
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: [interestFixture], error: null }))
+        .mockReturnValueOnce(q({ data: [profileNoSocial], error: null }))
+        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),
+    } as never)
+
+    const items = await getInbox()
+    expect(items[0].instagram).toBeNull()
+    expect(items[0].facebook).toBeNull()
   })
 })
 

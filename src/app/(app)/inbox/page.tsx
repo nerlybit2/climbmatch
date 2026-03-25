@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/useToast'
 import { useRealtimeInterests } from '@/hooks/useRealtimeInterests'
 import { createClient } from '@/lib/supabase/client'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { digitsOnly, parseInstagram, parseFacebook } from '@/lib/phone'
 
 export default function InboxPage() {
   const { t } = useLanguage()
@@ -314,15 +315,15 @@ function ContactButtons({
   if (!hasAny) return null
 
   const msg = encodeURIComponent(`Hey! I saw your ClimbMatch request at ${location}. Let's connect! 🧗`)
-  const igHandle = instagram?.replace(/^@/, '').replace(/^(https?:\/\/)?(www\.)?instagram\.com\//, '').replace(/\/$/, '')
-  const fbHandle = facebook?.replace(/^(https?:\/\/)?(www\.)?facebook\.com\//, '').replace(/\/$/, '')
+  const igHandle = instagram ? parseInstagram(instagram) : null
+  const fbHandle = facebook ? parseFacebook(facebook) : null
 
   return (
     <div className="space-y-2">
       {phone && (
         <div className="flex gap-2">
           <a
-            href={`https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${msg}`}
+            href={`https://wa.me/${digitsOnly(phone!)}?text=${msg}`}
             target="_blank" rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] text-white text-sm font-bold rounded-2xl py-3 active:scale-[0.97] transition-transform shadow-sm shadow-green-500/20"
           >
@@ -333,7 +334,7 @@ function ContactButtons({
             {waLabel}
           </a>
           <a
-            href={`sms:+${phone.replace(/[^0-9]/g, '')}`}
+            href={`sms:+${digitsOnly(phone!)}`}
             className="flex-1 flex items-center justify-center gap-2 bg-slate-100 text-slate-700 text-sm font-bold rounded-2xl py-3 active:scale-[0.97] transition-transform"
           >
             <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
