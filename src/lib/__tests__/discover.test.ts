@@ -11,7 +11,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 // Chainable query builder
 function q(result: unknown) {
   const self: Record<string, unknown> = {}
-  for (const m of ['select', 'insert', 'update', 'eq', 'neq', 'in', 'ilike', 'not', 'order', 'limit']) {
+  for (const m of ['select', 'insert', 'update', 'eq', 'neq', 'gte', 'lte', 'in', 'ilike', 'not', 'order', 'limit']) {
     self[m] = vi.fn(() => self)
   }
   self.single = vi.fn(() => Promise.resolve(result))
@@ -125,7 +125,7 @@ describe('discoverRequests', () => {
       rpc: vi.fn().mockResolvedValue({ error: null }),
     } as never)
 
-    expect(await discoverRequests({ date: today })).toEqual([])
+    expect(await discoverRequests({ date_from: today, date_to: today })).toEqual([])
   })
 
   it('returns empty array when no requests found for the date', async () => {
@@ -140,7 +140,7 @@ describe('discoverRequests', () => {
       rpc: vi.fn().mockResolvedValue({ error: null }),
     } as never)
 
-    expect(await discoverRequests({ date: today })).toEqual([])
+    expect(await discoverRequests({ date_from: today, date_to: today })).toEqual([])
   })
 
   it('filters out requests from blocked users', async () => {
@@ -165,7 +165,7 @@ describe('discoverRequests', () => {
       rpc: vi.fn().mockResolvedValue({ error: null }),
     } as never)
 
-    expect(await discoverRequests({ date: today })).toEqual([])
+    expect(await discoverRequests({ date_from: today, date_to: today })).toEqual([])
   })
 
   it('filters out already-swiped requests', async () => {
@@ -189,7 +189,7 @@ describe('discoverRequests', () => {
       rpc: vi.fn().mockResolvedValue({ error: null }),
     } as never)
 
-    expect(await discoverRequests({ date: today })).toEqual([])
+    expect(await discoverRequests({ date_from: today, date_to: today })).toEqual([])
   })
 
   it('returns scored cards for eligible requests', async () => {
@@ -224,7 +224,7 @@ describe('discoverRequests', () => {
       rpc: vi.fn().mockResolvedValue({ error: null }),
     } as never)
 
-    const cards = await discoverRequests({ date: today })
+    const cards = await discoverRequests({ date_from: today, date_to: today })
     expect(cards).toHaveLength(1)
     expect(cards[0].request.id).toBe('req-1')
     expect(cards[0].profile.display_name).toBe('Alice')
@@ -272,7 +272,7 @@ describe('discoverRequests', () => {
 
     // myProfile is fetched via .single() but our mock returns it via `then`
     // The filter score = -1 should exclude this card
-    const cards = await discoverRequests({ date: today })
+    const cards = await discoverRequests({ date_from: today, date_to: today })
     expect(cards).toHaveLength(0)
   })
 
@@ -319,7 +319,7 @@ describe('discoverRequests', () => {
       rpc: vi.fn().mockResolvedValue({ error: null }),
     } as never)
 
-    const cards = await discoverRequests({ date: today, location_name: 'Siurana' })
+    const cards = await discoverRequests({ date_from: today, date_to: today, location_name: 'Siurana' })
     if (cards.length === 2) {
       // Siurana match should rank higher (location boost = +40)
       expect(cards[0].request.location_name).toContain('Siurana')

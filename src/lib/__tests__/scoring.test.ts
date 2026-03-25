@@ -11,7 +11,6 @@ const makeRequest = (overrides: Partial<PartnerRequest> = {}): PartnerRequest =>
   flexible: false,
   location_type: 'gym',
   location_name: 'Test Gym',
-  climbing_type: 'sport',
   goal_type: 'any',
   desired_grade_range: null,
   notes: null,

@@ -11,7 +11,6 @@ export interface MatchResult {
     phone: string | null
   }
   requestDetails?: {
-    climbing_type: string
     location_name: string
     date: string
   }
@@ -22,6 +21,9 @@ export async function createInterest(requestId: string, toUserId: string): Promi
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const { data: myProfile } = await supabase.from('profiles').select('id').eq('id', user.id).single()
+  if (!myProfile) throw new Error('PROFILE_REQUIRED')
+
   const { error } = await supabase.from('interests').insert({
     from_user_id: user.id,
     to_user_id: toUserId,
@@ -29,49 +31,6 @@ export async function createInterest(requestId: string, toUserId: string): Promi
   })
 
   if (error && error.code !== '23505') throw new Error(error.message)
-
-  // Check for mutual interest
-  const { data: mutualInterest } = await supabase
-    .from('interests')
-    .select('id, request_id')
-    .eq('from_user_id', toUserId)
-    .eq('to_user_id', user.id)
-    .eq('status', 'pending')
-    .limit(1)
-    .single()
-
-  if (mutualInterest) {
-    // Auto-accept both interests
-    await Promise.all([
-      supabase.from('interests').update({ status: 'accepted' as const }).eq('from_user_id', toUserId).eq('to_user_id', user.id).eq('status', 'pending'),
-      supabase.from('interests').update({ status: 'accepted' as const }).eq('from_user_id', user.id).eq('to_user_id', toUserId).eq('request_id', requestId),
-    ])
-
-    // Mark both requests as matched
-    await Promise.all([
-      supabase.from('partner_requests').update({ status: 'matched' as const }).eq('id', requestId),
-      supabase.from('partner_requests').update({ status: 'matched' as const }).eq('id', mutualInterest.request_id),
-    ])
-
-    // Get matched profile with phone for messaging
-    const { data: matchedProfile } = await supabase
-      .from('profiles')
-      .select('display_name, photo_url, phone')
-      .eq('id', toUserId)
-      .single()
-
-    const { data: request } = await supabase
-      .from('partner_requests')
-      .select('climbing_type, location_name, date')
-      .eq('id', requestId)
-      .single()
-
-    return {
-      matched: true,
-      matchedProfile: matchedProfile || undefined,
-      requestDetails: request || undefined,
-    }
-  }
 
   return { matched: false }
 }
@@ -153,7 +112,7 @@ export async function getSentInterests(): Promise<InboxItem[]> {
   }).filter(item => item.fromProfile && item.request)
 }
 
-export async function acceptInterest(interestId: string) {
+export async function acceptInterest(interestId: string): Promise<MatchResult> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
@@ -168,16 +127,18 @@ export async function acceptInterest(interestId: string) {
 
   const { data: interest } = await supabase
     .from('interests')
-    .select('request_id')
+    .select('from_user_id, request_id')
     .eq('id', interestId)
     .single()
 
-  if (interest) {
-    await supabase
-      .from('partner_requests')
-      .update({ status: 'matched' as const })
-      .eq('id', interest.request_id)
-  }
+  if (!interest) return { matched: true }
+
+  const [{ data: matchedProfile }, { data: requestDetails }] = await Promise.all([
+    supabase.from('profiles').select('display_name, photo_url, phone').eq('id', interest.from_user_id).single(),
+    supabase.from('partner_requests').select('location_name, date').eq('id', interest.request_id).single(),
+  ])
+
+  return { matched: true, matchedProfile: matchedProfile ?? undefined, requestDetails: requestDetails ?? undefined }
 }
 
 export async function declineInterest(interestId: string) {
@@ -232,4 +193,20 @@ export async function getPendingInterestCount(): Promise<number> {
     .eq('status', 'pending')
 
   return count || 0
+}
+
+export async function getApplicantCounts(requestIds: string[]): Promise<Record<string, number>> {
+  if (requestIds.length === 0) return {}
+  const supabase = await createServerSupabaseClient()
+  const { data } = await supabase
+    .from('interests')
+    .select('request_id')
+    .in('request_id', requestIds)
+    .eq('status', 'pending')
+  if (!data) return {}
+  const counts: Record<string, number> = {}
+  for (const row of data) {
+    counts[row.request_id] = (counts[row.request_id] || 0) + 1
+  }
+  return counts
 }

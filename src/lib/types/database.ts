@@ -8,7 +8,6 @@ export type GearSet = {
   helmet: boolean
 }
 
-export type ClimbingType = 'indoor' | 'sport' | 'boulder' | 'trad' | 'multi_pitch'
 export type ExperienceLevel = 'beginner' | 'intermediate' | 'advanced'
 export type LocationType = 'gym' | 'crag'
 export type GoalType = 'project' | 'mileage' | 'easy_day' | 'training' | 'any'
@@ -20,7 +19,6 @@ export interface Profile {
   display_name: string
   photo_url: string
   home_area: string | null
-  climbing_types: ClimbingType[]
   experience_level: ExperienceLevel | null
   sport_grade_range: string | null
   boulder_grade_range: string | null
@@ -44,7 +42,6 @@ export interface PartnerRequest {
   flexible: boolean
   location_type: LocationType
   location_name: string
-  climbing_type: ClimbingType
   goal_type: GoalType
   desired_grade_range: string | null
   notes: string | null
@@ -115,7 +112,6 @@ export interface Database {
     Enums: {
       experience_level: ExperienceLevel
       location_type: LocationType
-      climbing_type: ClimbingType
       goal_type: GoalType
       request_status: RequestStatus
       interest_status: InterestStatus

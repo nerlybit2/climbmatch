@@ -9,11 +9,12 @@ import { useEffect } from 'react'
 interface MatchCelebrationProps {
   result: MatchResult
   onClose: () => void
+  closeLabel?: string
 }
 
 const CONFETTI_COLORS = ['#f97316', '#fb7185', '#fbbf24', '#ffffff', '#a78bfa', '#34d399']
 
-export function MatchCelebration({ result, onClose }: MatchCelebrationProps) {
+export function MatchCelebration({ result, onClose, closeLabel }: MatchCelebrationProps) {
   const [imgSrc, setImgSrc] = useState(result.matchedProfile?.photo_url || '/default-avatar.svg')
 
   useEffect(() => {
@@ -22,7 +23,7 @@ export function MatchCelebration({ result, onClose }: MatchCelebrationProps) {
 
   const whatsappUrl = result.matchedProfile?.phone
     ? `https://wa.me/${result.matchedProfile.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-        `Hey! We matched on ClimbMatch for ${result.requestDetails?.climbing_type || 'climbing'} at ${result.requestDetails?.location_name || 'the crag'}. Let's plan! 🧗`
+        `Hey! We matched on ClimbMatch at ${result.requestDetails?.location_name || 'the crag'}. Let's plan! 🧗`
       )}`
     : null
 
@@ -67,7 +68,7 @@ export function MatchCelebration({ result, onClose }: MatchCelebrationProps) {
 
         {result.requestDetails && (
           <p className="text-white/60 text-sm mb-8">
-            {result.requestDetails.climbing_type.replace('_', ' ')} at {result.requestDetails.location_name} on{' '}
+            {result.requestDetails.location_name} on{' '}
             {new Date(result.requestDetails.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </p>
         )}
@@ -87,7 +88,7 @@ export function MatchCelebration({ result, onClose }: MatchCelebrationProps) {
             onClick={onClose}
             className="w-full bg-white/10 backdrop-blur-sm text-white font-bold rounded-2xl px-6 py-3.5 active:scale-[0.96] transition-transform"
           >
-            Keep Swiping
+            {closeLabel ?? 'Keep Swiping'}
           </button>
         </div>
       </div>

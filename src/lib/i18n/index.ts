@@ -12,10 +12,10 @@ export interface Translations {
   discover: {
     title: string
     subtitle: string
-    date: string
+    dateFrom: string
+    dateTo: string
     location: string
     locationPlaceholder: string
-    climbingType: string
     advancedFilters: string
     timeOfDay: string
     searchPartners: string
@@ -25,14 +25,6 @@ export interface Translations {
     postRequest: string
     gradeMatch: string
     canOfferRide: string
-  }
-  climbingTypes: {
-    allTypes: string
-    indoor: string
-    sport: string
-    boulder: string
-    trad: string
-    multiPitch: string
   }
   timeChips: {
     anyTime: string
@@ -60,6 +52,14 @@ export interface Translations {
     declined: string
     whatsapp: string
     at: string
+    applicants: string
+    myApplications: string
+    accepted: string
+    backToInbox: string
+    noApplicantsTitle: string
+    noApplicantsSubtitle: string
+    noApplicationsTitle: string
+    noApplicationsSubtitle: string
   }
   requests: {
     title: string
@@ -74,6 +74,8 @@ export interface Translations {
     yesCancel: string
     no: string
     cancel: string
+    applicant: string
+    applicants: string
     status: {
       active: string
       matched: string
@@ -91,7 +93,6 @@ export interface Translations {
     locationType: string
     locationName: string
     locationPlaceholder: string
-    climbingType: string
     goal: string
     gradeRange: string
     gradePlaceholder: string
@@ -125,7 +126,6 @@ export interface Translations {
     date: string
     time: string
     location: string
-    type: string
     goal: string
     grade: string
     flexibleTime: string
@@ -155,7 +155,6 @@ export interface Translations {
     phonePlaceholder: string
     homeArea: string
     homeAreaPlaceholder: string
-    climbingTypes: string
     sportGrade: string
     sportGradePlaceholder: string
     boulderGrade: string
@@ -230,10 +229,10 @@ export const en: Translations = {
   discover: {
     title: 'Discover',
     subtitle: 'Find your climbing partner',
-    date: 'Date',
+    dateFrom: 'From',
+    dateTo: 'To',
     location: 'Location',
     locationPlaceholder: 'Search gyms, crags...',
-    climbingType: 'Climbing Type',
     advancedFilters: 'Advanced Filters',
     timeOfDay: 'Time of Day',
     searchPartners: 'Search Partners',
@@ -243,14 +242,6 @@ export const en: Translations = {
     postRequest: 'Post a Request',
     gradeMatch: 'Grade match',
     canOfferRide: 'Can offer ride',
-  },
-  climbingTypes: {
-    allTypes: 'All Types',
-    indoor: 'Indoor',
-    sport: 'Sport',
-    boulder: 'Boulder',
-    trad: 'Trad',
-    multiPitch: 'Multi-pitch',
   },
   timeChips: {
     anyTime: 'Any Time',
@@ -278,6 +269,14 @@ export const en: Translations = {
     declined: 'Declined',
     whatsapp: 'WhatsApp',
     at: 'at',
+    applicants: 'Applicants',
+    myApplications: 'My Applications',
+    accepted: 'Accepted',
+    backToInbox: 'Back to Inbox',
+    noApplicantsTitle: 'No applicants yet',
+    noApplicantsSubtitle: "When climbers want to partner with you, they'll appear here",
+    noApplicationsTitle: 'No applications yet',
+    noApplicationsSubtitle: 'Browse requests and tap Interested to apply',
   },
   requests: {
     title: 'My Requests',
@@ -292,6 +291,8 @@ export const en: Translations = {
     yesCancel: 'Yes, Cancel',
     no: 'No',
     cancel: 'Cancel',
+    applicant: 'applicant',
+    applicants: 'applicants',
     status: {
       active: 'Active',
       matched: 'Matched',
@@ -309,7 +310,6 @@ export const en: Translations = {
     locationType: 'Location Type *',
     locationName: 'Location Name *',
     locationPlaceholder: 'e.g., Vertical Playground, Ein Prat',
-    climbingType: 'Climbing Type *',
     goal: 'Goal',
     gradeRange: 'Desired Grade Range',
     gradePlaceholder: 'e.g., 6a-6c',
@@ -322,7 +322,7 @@ export const en: Translations = {
     maxWeightPlaceholder: 'e.g., 15',
     submit: 'Post Request',
     errors: {
-      required: 'Date, location, and climbing type are required',
+      required: 'Date and location are required',
       noTime: 'Set a start time or mark as flexible',
       weightRange: 'Max weight difference must be between 1-100 kg',
       maxRequests: 'Maximum 2 active requests allowed. Cancel an existing one first.',
@@ -343,7 +343,6 @@ export const en: Translations = {
     date: 'Date',
     time: 'Time',
     location: 'Location',
-    type: 'Type',
     goal: 'Goal',
     grade: 'Grade',
     flexibleTime: 'Flexible',
@@ -373,7 +372,6 @@ export const en: Translations = {
     phonePlaceholder: '+972...',
     homeArea: 'Home Area',
     homeAreaPlaceholder: 'e.g., Tel Aviv',
-    climbingTypes: 'Climbing Types',
     sportGrade: 'Sport Grade',
     sportGradePlaceholder: 'e.g., 6a-7a',
     boulderGrade: 'Boulder Grade',
@@ -448,10 +446,10 @@ export const he: Translations = {
   discover: {
     title: 'גלה',
     subtitle: 'מצא את שותף הטיפוס שלך',
-    date: 'תאריך',
+    dateFrom: 'מתאריך',
+    dateTo: 'עד תאריך',
     location: 'מיקום',
     locationPlaceholder: 'חפש חדרי כושר, סלעים...',
-    climbingType: 'סוג טיפוס',
     advancedFilters: 'סינון מתקדם',
     timeOfDay: 'שעת היום',
     searchPartners: 'חפש שותפים',
@@ -461,14 +459,6 @@ export const he: Translations = {
     postRequest: 'פרסם בקשה',
     gradeMatch: 'התאמת רמה',
     canOfferRide: 'יכול להסיע',
-  },
-  climbingTypes: {
-    allTypes: 'כל הסוגים',
-    indoor: 'פנים',
-    sport: 'ספורט',
-    boulder: 'בולדר',
-    trad: 'טרד',
-    multiPitch: 'רב-ציר',
   },
   timeChips: {
     anyTime: 'כל שעה',
@@ -496,6 +486,14 @@ export const he: Translations = {
     declined: 'נדחה',
     whatsapp: 'WhatsApp',
     at: 'ב',
+    applicants: 'מועמדים',
+    myApplications: 'הגשות שלי',
+    accepted: 'אושר',
+    backToInbox: 'חזרה לתיבת הדואר',
+    noApplicantsTitle: 'אין מועמדים עדיין',
+    noApplicantsSubtitle: 'כשמטפסים יירצו להצטרף אליך, הם יופיעו כאן',
+    noApplicationsTitle: 'לא הגשת בקשות עדיין',
+    noApplicationsSubtitle: 'עיין בבקשות ולחץ על מעוניין כדי להגיש',
   },
   requests: {
     title: 'הבקשות שלי',
@@ -510,6 +508,8 @@ export const he: Translations = {
     yesCancel: 'כן, בטל',
     no: 'לא',
     cancel: 'ביטול',
+    applicant: 'מועמד',
+    applicants: 'מועמדים',
     status: {
       active: 'פעיל',
       matched: 'הותאם',
@@ -527,7 +527,6 @@ export const he: Translations = {
     locationType: 'סוג מיקום *',
     locationName: 'שם מיקום *',
     locationPlaceholder: 'לדוגמה, גן הורד, עין פרת',
-    climbingType: 'סוג טיפוס *',
     goal: 'מטרה',
     gradeRange: 'טווח רמה רצוי',
     gradePlaceholder: 'לדוגמה, 6a-6c',
@@ -540,7 +539,7 @@ export const he: Translations = {
     maxWeightPlaceholder: 'לדוגמה, 15',
     submit: 'פרסם בקשה',
     errors: {
-      required: 'תאריך, מיקום וסוג טיפוס הם שדות חובה',
+      required: 'תאריך ומיקום הם שדות חובה',
       noTime: 'הגדר שעת התחלה או סמן כגמיש',
       weightRange: 'הפרש המשקל חייב להיות בין 1-100 ק"ג',
       maxRequests: 'מותרות עד 2 בקשות פעילות. בטל בקשה קיימת תחילה.',
@@ -561,7 +560,6 @@ export const he: Translations = {
     date: 'תאריך',
     time: 'שעה',
     location: 'מיקום',
-    type: 'סוג',
     goal: 'מטרה',
     grade: 'רמה',
     flexibleTime: 'גמיש',
@@ -591,7 +589,6 @@ export const he: Translations = {
     phonePlaceholder: '+972...',
     homeArea: 'אזור מגורים',
     homeAreaPlaceholder: 'לדוגמה, תל אביב',
-    climbingTypes: 'סוגי טיפוס',
     sportGrade: 'רמת ספורט',
     sportGradePlaceholder: 'לדוגמה, 6a-7a',
     boulderGrade: 'רמת בולדר',

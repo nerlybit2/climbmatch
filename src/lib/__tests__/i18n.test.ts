@@ -73,11 +73,10 @@ describe('i18n – translation completeness', () => {
     expect(new Set(labels).size).toBe(labels.length)
   })
 
-  it('climbing type values are consistent across sections', () => {
-    // climbingTypes section and cardDetails section should match for Sport/Boulder
-    expect(en.climbingTypes.sport).toBe(en.cardDetails.sport)
-    expect(en.climbingTypes.boulder).toBe(en.cardDetails.boulder)
-    expect(he.climbingTypes.sport).toBe(he.cardDetails.sport)
-    expect(he.climbingTypes.boulder).toBe(he.cardDetails.boulder)
+  it('nav labels are non-empty strings', () => {
+    for (const key of Object.keys(en.nav)) {
+      expect(typeof en.nav[key as keyof typeof en.nav]).toBe('string')
+      expect(en.nav[key as keyof typeof en.nav].length).toBeGreaterThan(0)
+    }
   })
 })

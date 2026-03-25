@@ -3,10 +3,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { EmptyState } from '@/components/EmptyState'
+import { MatchCelebration } from '@/components/MatchCelebration'
 import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/Button'
 import { getInbox, getSentInterests, acceptInterest, declineInterest, type InboxItem } from '@/lib/actions/interests'
+import type { MatchResult } from '@/lib/actions/interests'
 import { useToast } from '@/hooks/useToast'
 import { useRealtimeInterests } from '@/hooks/useRealtimeInterests'
 import { createClient } from '@/lib/supabase/client'
@@ -15,16 +17,12 @@ import { useLanguage } from '@/contexts/LanguageContext'
 export default function InboxPage() {
   const { t } = useLanguage()
 
-  const CLIMBING_LABELS: Record<string, string> = {
-    indoor: t.climbingTypes.indoor, sport: t.climbingTypes.sport, boulder: t.climbingTypes.boulder,
-    trad: t.climbingTypes.trad, multi_pitch: t.climbingTypes.multiPitch,
-  }
-
-  const [tab, setTab] = useState<'received' | 'sent'>('received')
+  const [tab, setTab] = useState<'applicants' | 'applications'>('applicants')
   const [received, setReceived] = useState<InboxItem[]>([])
   const [sent, setSent] = useState<InboxItem[]>([])
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
+  const [acceptResult, setAcceptResult] = useState<MatchResult | null>(null)
   const toast = useToast()
 
   const handlePullRefresh = useCallback(async () => {
@@ -64,14 +62,18 @@ export default function InboxPage() {
   }
 
   const handleAccept = async (interestId: string) => {
-    try { await acceptInterest(interestId); toast.addToast(t.toasts.matchAccepted, 'success'); await loadData() } catch (err) { console.error(err) }
+    try {
+      const result = await acceptInterest(interestId)
+      setAcceptResult(result)
+      await loadData()
+    } catch (err) { console.error(err) }
   }
 
   const handleDecline = async (interestId: string) => {
     try { await declineInterest(interestId); toast.addToast(t.toasts.interestDeclined, 'info'); await loadData() } catch (err) { console.error(err) }
   }
 
-  const items = tab === 'received' ? received : sent
+  const items = tab === 'applicants' ? received : sent
   const pendingCount = received.filter(r => r.interest.status === 'pending').length
 
   return (
@@ -80,13 +82,13 @@ export default function InboxPage() {
       <PageHeader title={t.inbox.title} subtitle={t.inbox.subtitle} />
 
       <div className="flex gap-1 mx-5 mb-5 bg-stone-100 rounded-2xl p-1">
-        <button onClick={() => setTab('received')}
-          className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${tab === 'received' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400'}`}>
-          {t.inbox.received} {pendingCount > 0 && <span className="ml-1 bg-gradient-to-r from-orange-500 to-rose-500 text-white text-[10px] w-5 h-5 rounded-full inline-flex items-center justify-center">{pendingCount}</span>}
+        <button onClick={() => setTab('applicants')}
+          className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${tab === 'applicants' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400'}`}>
+          {t.inbox.applicants} {pendingCount > 0 && <span className="ml-1 bg-gradient-to-r from-orange-500 to-rose-500 text-white text-[10px] w-5 h-5 rounded-full inline-flex items-center justify-center">{pendingCount}</span>}
         </button>
-        <button onClick={() => setTab('sent')}
-          className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${tab === 'sent' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400'}`}>
-          {t.inbox.sent} ({sent.length})
+        <button onClick={() => setTab('applications')}
+          className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${tab === 'applications' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400'}`}>
+          {t.inbox.myApplications} ({sent.length})
         </button>
       </div>
 
@@ -97,15 +99,15 @@ export default function InboxPage() {
             <p className="text-gray-300 font-medium">{t.inbox.loading}</p>
           </div>
         ) : items.length === 0 ? (
-          tab === 'received' ? (
+          tab === 'applicants' ? (
             <EmptyState
               icon={
                 <svg className="w-10 h-10 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 9v.906a2.25 2.25 0 01-1.183 1.981l-6.478 3.488M2.25 9v.906a2.25 2.25 0 001.183 1.981l6.478 3.488m8.839 2.51l-4.66-2.51m0 0l-1.023-.55a2.25 2.25 0 00-2.134 0l-1.022.55m0 0l-4.661 2.51" />
                 </svg>
               }
-              title={t.inbox.noReceivedTitle}
-              subtitle={t.inbox.noReceivedSubtitle}
+              title={t.inbox.noApplicantsTitle}
+              subtitle={t.inbox.noApplicantsSubtitle}
               actionLabel={t.inbox.discoverPartners}
               actionHref="/discover"
             />
@@ -116,8 +118,8 @@ export default function InboxPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
                 </svg>
               }
-              title={t.inbox.noSentTitle}
-              subtitle={t.inbox.noSentSubtitle}
+              title={t.inbox.noApplicationsTitle}
+              subtitle={t.inbox.noApplicationsSubtitle}
               actionLabel={t.inbox.startSwiping}
               actionHref="/discover"
             />
@@ -130,26 +132,26 @@ export default function InboxPage() {
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-sm">{item.fromProfile.display_name}</h3>
                   <p className="text-xs text-gray-500 truncate mt-0.5">
-                    {CLIMBING_LABELS[item.request.climbing_type]} {t.inbox.at} {item.request.location_name}
+                    {item.request.location_name}
                   </p>
                   <p className="text-[10px] text-gray-300 font-medium mt-0.5">{item.request.date}</p>
 
                   <div className="mt-3">
-                    {item.interest.status === 'pending' && tab === 'received' && (
+                    {item.interest.status === 'pending' && tab === 'applicants' && (
                       <div className="flex gap-2">
                         <Button onClick={() => handleAccept(item.interest.id)} className="text-xs !px-4 !py-2">{t.inbox.accept}</Button>
                         <Button variant="secondary" onClick={() => handleDecline(item.interest.id)} className="text-xs !px-4 !py-2">{t.inbox.decline}</Button>
                       </div>
                     )}
-                    {item.interest.status === 'pending' && tab === 'sent' && (
+                    {item.interest.status === 'pending' && tab === 'applications' && (
                       <span className="text-xs text-amber-600 bg-amber-50 px-3 py-1 rounded-full font-bold">{t.inbox.pending}</span>
                     )}
                     {item.interest.status === 'accepted' && (
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full font-bold">{t.inbox.matched}</span>
+                        <span className="text-xs text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full font-bold">{t.inbox.accepted}</span>
                         {item.phone && (
                           <a
-                            href={`https://wa.me/${item.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hey! I matched with you on ClimbMatch for ${item.request.climbing_type} at ${item.request.location_name} on ${item.request.date}. Let's climb!`)}`}
+                            href={`https://wa.me/${item.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hey! I matched with you on ClimbMatch at ${item.request.location_name} on ${item.request.date}. Let's climb!`)}`}
                             target="_blank" rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 bg-[#25D366] text-white text-xs px-3 py-1 rounded-full font-bold active:scale-95 transition-all">
                             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
@@ -171,6 +173,14 @@ export default function InboxPage() {
           ))
         )}
       </div>
+
+      {acceptResult?.matched && (
+        <MatchCelebration
+          result={acceptResult}
+          onClose={() => { setAcceptResult(null); loadData() }}
+          closeLabel={t.inbox.backToInbox}
+        />
+      )}
     </div>
   )
 }

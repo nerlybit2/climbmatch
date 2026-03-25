@@ -26,10 +26,6 @@ export function CardDetails({ profile, request, compatibility, onClose, onIntere
   const toast = useToast()
   const { t } = useLanguage()
 
-  const CLIMBING_LABELS: Record<string, string> = {
-    indoor: t.climbingTypes.indoor, sport: t.climbingTypes.sport, boulder: t.climbingTypes.boulder,
-    trad: t.climbingTypes.trad, multi_pitch: t.climbingTypes.multiPitch,
-  }
   const GOAL_LABELS: Record<string, string> = {
     project: t.goalTypes.project, mileage: t.goalTypes.mileage, easy_day: t.goalTypes.easyDay,
     training: t.goalTypes.training, any: t.goalTypes.any,
@@ -123,7 +119,7 @@ export function CardDetails({ profile, request, compatibility, onClose, onIntere
           )}
 
           {/* Compatibility */}
-          {compatibility && (compatibility.gearMatches.length > 0 || compatibility.gradeOverlap || compatibility.carpoolAvailable || compatibility.carpoolNeeded) && (
+          {compatibility && (compatibility.gearMatches.length > 0 || compatibility.carpoolAvailable || compatibility.carpoolNeeded) && (
             <div className="mb-4">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{t.cardDetails.compatibility}</h3>
               <div className="bg-emerald-50 rounded-2xl p-3 space-y-2">
@@ -131,12 +127,6 @@ export function CardDetails({ profile, request, compatibility, onClose, onIntere
                   <div className="flex items-center gap-2 text-sm text-emerald-700">
                     <span className="text-emerald-500">✓</span>
                     <span>{t.cardDetails.youHave}: {compatibility.gearMatches.join(', ')}</span>
-                  </div>
-                )}
-                {compatibility.gradeOverlap && (
-                  <div className="flex items-center gap-2 text-sm text-emerald-700">
-                    <span className="text-emerald-500">✓</span>
-                    <span>{t.cardDetails.gradeMatches} ({compatibility.requestedGrade})</span>
                   </div>
                 )}
                 {compatibility.carpoolAvailable && (
@@ -169,10 +159,6 @@ export function CardDetails({ profile, request, compatibility, onClose, onIntere
               <div className="bg-orange-50 rounded-2xl p-3">
                 <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">{t.cardDetails.location}</span>
                 <p className="font-semibold text-sm mt-0.5">{request.location_name}</p>
-              </div>
-              <div className="bg-orange-50 rounded-2xl p-3">
-                <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">{t.cardDetails.type}</span>
-                <p className="font-semibold text-sm mt-0.5">{CLIMBING_LABELS[request.climbing_type]}</p>
               </div>
               {request.goal_type && request.goal_type !== 'any' && (
                 <div className="bg-orange-50 rounded-2xl p-3">

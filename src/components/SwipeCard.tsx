@@ -15,10 +15,6 @@ interface SwipeCardProps {
   onTap: () => void
 }
 
-const CLIMBING_LABELS: Record<string, string> = {
-  indoor: 'Indoor', sport: 'Sport', boulder: 'Boulder', trad: 'Trad', multi_pitch: 'Multi-pitch',
-}
-
 const GOAL_LABELS: Record<string, string> = {
   project: 'Project', mileage: 'Mileage', easy_day: 'Easy Day', training: 'Training', any: 'Any',
 }
@@ -131,11 +127,6 @@ export function SwipeCard({ profile, request, compatibility, onSwipeRight, onSwi
                   🎒 Has {compatibility.gearMatches.length === 1 ? compatibility.gearMatches[0] : `${compatibility.gearMatches.length} gear items`}
                 </span>
               )}
-              {compatibility.gradeOverlap && (
-                <span className="bg-blue-500/80 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
-                  ✓ Grade match
-                </span>
-              )}
               {compatibility.carpoolAvailable ? (
                 <span className="bg-emerald-500/80 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
                   🚗 You can drive
@@ -164,9 +155,6 @@ export function SwipeCard({ profile, request, compatibility, onSwipeRight, onSwi
                 )}
               </div>
               <div className="flex flex-wrap gap-1.5 mt-3">
-                <span className="bg-gradient-to-r from-orange-500 to-rose-500 text-white text-xs px-3 py-1 rounded-full font-bold shadow-md">
-                  {CLIMBING_LABELS[request.climbing_type] || request.climbing_type}
-                </span>
                 {request.desired_grade_range && (
                   <span className="bg-white/15 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm font-medium">{request.desired_grade_range}</span>
                 )}

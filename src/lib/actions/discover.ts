@@ -6,17 +6,14 @@ import { timeOverlap, gearCompatibility, experienceLevelScore } from '@/lib/scor
 import { WORLD_CRAGS } from '@/lib/crags'
 
 export interface DiscoverFilters {
-  date: string
+  date_from: string
+  date_to: string
   location_name?: string
-  climbing_type?: string
   time_of_day?: string
 }
 
 export interface CompatibilityInfo {
   gearMatches: string[]       // gear items user has that request needs
-  gradeOverlap: boolean       // does user's grade range match request's desired grade
-  userGradeRange: string | null
-  requestedGrade: string | null
   carpoolAvailable: boolean   // request needs ride AND user has car
   carpoolNeeded: boolean      // request needs a ride
   timeMatch: boolean          // time preferences align
@@ -123,18 +120,15 @@ export async function discoverRequests(filters: DiscoverFilters): Promise<Scored
 
   const swipedRequestIds = new Set((myInterests || []).map(i => i.request_id))
 
-  let query = supabase
+  const { data: requests } = await supabase
     .from('partner_requests')
     .select('*')
     .eq('status', 'active')
-    .eq('date', filters.date)
+    .gte('date', filters.date_from)
+    .lte('date', filters.date_to)
     .neq('user_id', user.id)
-
-  if (filters.climbing_type) {
-    query = query.eq('climbing_type', filters.climbing_type)
-  }
-
-  const { data: requests } = await query.order('created_at', { ascending: false })
+    .order('date', { ascending: true })
+    .order('created_at', { ascending: false })
   if (!requests || requests.length === 0) return []
 
   const eligible = requests.filter(r => !blockedIds.has(r.user_id) && !swipedRequestIds.has(r.id))
@@ -149,7 +143,9 @@ export async function discoverRequests(filters: DiscoverFilters): Promise<Scored
 
   const profileMap = new Map((profiles || []).map(p => [p.id, p]))
 
-  const scored: ScoredCard[] = eligible.map(request => {
+  const scored: ScoredCard[] = eligible
+    .filter(r => profileMap.has(r.user_id))
+    .map(request => {
     const profile = profileMap.get(request.user_id)!
     let score = 0
 
@@ -159,19 +155,8 @@ export async function discoverRequests(filters: DiscoverFilters): Promise<Scored
       score += 40
     }
 
-    if (myProfile && myProfile.climbing_types.includes(request.climbing_type)) {
-      score += 25
-    }
-
     if (myProfile) {
       score += gearCompatibility(myProfile.gear as GearSet, request.needs_gear as GearSet)
-    }
-
-    if (request.desired_grade_range && myProfile) {
-      const myGrade = request.climbing_type === 'boulder' ? myProfile.boulder_grade_range : myProfile.sport_grade_range
-      if (myGrade && request.desired_grade_range === myGrade) {
-        score += 10
-      }
     }
 
     score += experienceLevelScore(myProfile?.experience_level ?? null, profile.experience_level ?? null)
@@ -193,14 +178,8 @@ export async function discoverRequests(filters: DiscoverFilters): Promise<Scored
     }
     const gearMatches = gearKeys.filter(k => (request.needs_gear as GearSet)?.[k] && (myProfile?.gear as GearSet)?.[k]).map(k => gearLabels[k])
 
-    const myGradeForCompat = request.climbing_type === 'boulder' ? myProfile?.boulder_grade_range : myProfile?.sport_grade_range
-    const gradeOverlap = !!(request.desired_grade_range && myGradeForCompat && request.desired_grade_range === myGradeForCompat)
-
     const compatibility: CompatibilityInfo = {
       gearMatches,
-      gradeOverlap,
-      userGradeRange: myGradeForCompat || null,
-      requestedGrade: request.desired_grade_range || null,
       carpoolAvailable: !!(request.carpool_needed && myProfile?.has_car),
       carpoolNeeded: !!request.carpool_needed,
       timeMatch: timeOverlap(request, filters.time_of_day) >= 30,

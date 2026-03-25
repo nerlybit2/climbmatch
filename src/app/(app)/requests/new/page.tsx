@@ -8,7 +8,7 @@ import { Select } from '@/components/Select'
 import { GearCheckboxes } from '@/components/GearCheckboxes'
 import { Button } from '@/components/Button'
 import { createClient } from '@/lib/supabase/client'
-import type { GearSet, ClimbingType, LocationType, GoalType } from '@/lib/types/database'
+import type { GearSet, LocationType, GoalType } from '@/lib/types/database'
 import { useToast } from '@/hooks/useToast'
 import { useLanguage } from '@/contexts/LanguageContext'
 
@@ -18,14 +18,6 @@ export default function NewRequestPage() {
   const router = useRouter()
   const toast = useToast()
   const { t } = useLanguage()
-
-  const CLIMBING_TYPE_OPTIONS = [
-    { value: 'indoor', label: t.climbingTypes.indoor },
-    { value: 'sport', label: t.climbingTypes.sport },
-    { value: 'boulder', label: t.climbingTypes.boulder },
-    { value: 'trad', label: t.climbingTypes.trad },
-    { value: 'multi_pitch', label: t.climbingTypes.multiPitch },
-  ]
 
   const LOCATION_TYPE_OPTIONS = [
     { value: 'gym', label: t.locationTypes.gym },
@@ -49,7 +41,6 @@ export default function NewRequestPage() {
   const [flexible, setFlexible] = useState(false)
   const [locationType, setLocationType] = useState<string>('gym')
   const [locationName, setLocationName] = useState('')
-  const [climbingType, setClimbingType] = useState<string>('indoor')
   const [goalType, setGoalType] = useState<string>('any')
   const [desiredGrade, setDesiredGrade] = useState('')
   const [notes, setNotes] = useState('')
@@ -60,7 +51,7 @@ export default function NewRequestPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!date || !locationName.trim() || !climbingType) {
+    if (!date || !locationName.trim()) {
       setError(t.newRequest.errors.required); return
     }
     if (!flexible && !startTime) {
@@ -108,7 +99,6 @@ export default function NewRequestPage() {
         flexible,
         location_type: locationType as LocationType,
         location_name: locationName.trim(),
-        climbing_type: climbingType as ClimbingType,
         goal_type: (goalType as GoalType) || 'any',
         desired_grade_range: desiredGrade.trim() || null,
         notes: notes.trim() || null,
@@ -149,7 +139,6 @@ export default function NewRequestPage() {
 
         <Select label={t.newRequest.locationType} value={locationType} onChange={e => setLocationType(e.target.value)} options={LOCATION_TYPE_OPTIONS} />
         <Input label={t.newRequest.locationName} value={locationName} onChange={e => setLocationName(e.target.value)} placeholder={t.newRequest.locationPlaceholder} required />
-        <Select label={t.newRequest.climbingType} value={climbingType} onChange={e => setClimbingType(e.target.value)} options={CLIMBING_TYPE_OPTIONS} />
         <Select label={t.newRequest.goal} value={goalType} onChange={e => setGoalType(e.target.value)} options={GOAL_OPTIONS} />
         <Input label={t.newRequest.gradeRange} value={desiredGrade} onChange={e => setDesiredGrade(e.target.value)} placeholder={t.newRequest.gradePlaceholder} />
 

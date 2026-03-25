@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { EmptyState } from '@/components/EmptyState'
 import { CardDetails } from '@/components/CardDetails'
@@ -8,13 +9,12 @@ import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { discoverRequests, searchLocations, type ScoredCard, type DiscoverFilters } from '@/lib/actions/discover'
 import { createInterest } from '@/lib/actions/interests'
-import type { MatchResult } from '@/lib/actions/interests'
-import { MatchCelebration } from '@/components/MatchCelebration'
 import { useToast } from '@/hooks/useToast'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 export default function DiscoverPage() {
   const { t } = useLanguage()
+  const router = useRouter()
 
   const TIME_CHIPS = [
     { value: '', label: t.timeChips.anyTime },
@@ -24,36 +24,21 @@ export default function DiscoverPage() {
     { value: 'flexible', label: t.timeChips.flexible },
   ]
 
-  const CLIMBING_TYPES = [
-    { value: '', label: t.climbingTypes.allTypes },
-    { value: 'indoor', label: t.climbingTypes.indoor },
-    { value: 'sport', label: t.climbingTypes.sport },
-    { value: 'boulder', label: t.climbingTypes.boulder },
-    { value: 'trad', label: t.climbingTypes.trad },
-    { value: 'multi_pitch', label: t.climbingTypes.multiPitch },
-  ]
-
-  const CLIMBING_LABELS: Record<string, string> = {
-    indoor: t.climbingTypes.indoor, sport: t.climbingTypes.sport, boulder: t.climbingTypes.boulder,
-    trad: t.climbingTypes.trad, multi_pitch: t.climbingTypes.multiPitch,
-  }
-
   const [showFilters, setShowFilters] = useState(true)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [loading, setLoading] = useState(false)
   const [cards, setCards] = useState<ScoredCard[]>([])
   const [detailCard, setDetailCard] = useState<ScoredCard | null>(null)
-  const [matchResult, setMatchResult] = useState<MatchResult | null>(null)
   const toast = useToast()
 
   const today = new Date().toISOString().split('T')[0]
-  const [date, setDate] = useState(today)
+  const [dateFrom, setDateFrom] = useState(today)
+  const [dateTo, setDateTo] = useState(today)
   const [locationName, setLocationName] = useState('')
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
-  const [climbingType, setClimbingType] = useState('')
   const [timeOfDay, setTimeOfDay] = useState('')
 
   const handleLocationChange = (value: string) => {
@@ -91,9 +76,9 @@ export default function DiscoverPage() {
     setLoading(true)
     try {
       const filters: DiscoverFilters = {
-        date,
+        date_from: dateFrom,
+        date_to: dateTo < dateFrom ? dateFrom : dateTo,
         location_name: locationName || undefined,
-        climbing_type: climbingType || undefined,
         time_of_day: timeOfDay || undefined,
       }
       const results = await discoverRequests(filters)
@@ -113,17 +98,17 @@ export default function DiscoverPage() {
 
   const handleInterested = useCallback(async (card: ScoredCard) => {
     try {
-      const result = await createInterest(card.request.id, card.profile.id)
-      if (result.matched) {
-        setMatchResult(result)
-      } else {
-        toast.addToast(t.toasts.interestSent, 'success')
-      }
+      await createInterest(card.request.id, card.profile.id)
+      toast.addToast(t.toasts.interestSent, 'success')
     } catch (err) {
+      if (err instanceof Error && err.message === 'PROFILE_REQUIRED') {
+        router.push('/profile')
+        return
+      }
       console.error(err)
     }
     removeCard(card.request.id)
-  }, [removeCard, toast])
+  }, [removeCard, toast, router])
 
   const handlePass = useCallback((card: ScoredCard) => {
     removeCard(card.request.id)
@@ -137,7 +122,10 @@ export default function DiscoverPage() {
           <p className="text-gray-400 mt-1 font-medium">{t.discover.subtitle}</p>
         </div>
         <div className="px-5 space-y-5 pb-8 flex-1">
-          <Input label={t.discover.date} type="date" value={date} onChange={e => setDate(e.target.value)} />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label={t.discover.dateFrom} type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); if (dateTo < e.target.value) setDateTo(e.target.value) }} min={today} />
+            <Input label={t.discover.dateTo} type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} min={dateFrom} />
+          </div>
 
           {/* Location autocomplete */}
           <div className="relative" ref={suggestionsRef}>
@@ -183,22 +171,6 @@ export default function DiscoverPage() {
                 ))}
               </div>
             )}
-          </div>
-
-          {/* Climbing Type */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">{t.discover.climbingType}</label>
-            <div className="flex flex-wrap gap-2">
-              {CLIMBING_TYPES.map(ct => (
-                <button key={ct.value} type="button" onClick={() => setClimbingType(ct.value)}
-                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
-                    climbingType === ct.value
-                      ? 'bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-md shadow-orange-500/20'
-                      : 'bg-white text-gray-500 ring-1 ring-gray-200 hover:ring-gray-300'
-                  }`}
-                >{ct.label}</button>
-              ))}
-            </div>
           </div>
 
           <button
@@ -304,9 +276,6 @@ export default function DiscoverPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                    <span className="text-xs font-semibold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">
-                      {CLIMBING_LABELS[card.request.climbing_type] || card.request.climbing_type}
-                    </span>
                     {card.profile.experience_level && (
                       <span className="text-xs text-gray-400 font-medium capitalize">{card.profile.experience_level}</span>
                     )}
@@ -329,11 +298,8 @@ export default function DiscoverPage() {
               </div>
 
               {/* Compatibility badges */}
-              {(card.compatibility.gearMatches.length > 0 || card.compatibility.gradeOverlap || card.compatibility.carpoolAvailable) && (
+              {(card.compatibility.gearMatches.length > 0 || card.compatibility.carpoolAvailable) && (
                 <div className="flex gap-2 px-3 pb-3 flex-wrap">
-                  {card.compatibility.gradeOverlap && (
-                    <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{t.discover.gradeMatch}</span>
-                  )}
                   {card.compatibility.carpoolAvailable && (
                     <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{t.discover.canOfferRide}</span>
                   )}
@@ -358,12 +324,6 @@ export default function DiscoverPage() {
         />
       )}
 
-      {matchResult?.matched && (
-        <MatchCelebration
-          result={matchResult}
-          onClose={() => setMatchResult(null)}
-        />
-      )}
     </div>
   )
 }

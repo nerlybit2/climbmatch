@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { useToast } from '@/hooks/useToast'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getMyRequests, cancelRequest } from '@/lib/actions/requests'
+import { getApplicantCounts } from '@/lib/actions/interests'
 
 const STATUS_STYLES: Record<string, string> = {
   active: 'bg-emerald-50 text-emerald-600',
@@ -21,14 +22,10 @@ const STATUS_STYLES: Record<string, string> = {
 export default function MyRequestsPage() {
   const { t } = useLanguage()
 
-  const CLIMBING_LABELS: Record<string, string> = {
-    indoor: t.climbingTypes.indoor, sport: t.climbingTypes.sport, boulder: t.climbingTypes.boulder,
-    trad: t.climbingTypes.trad, multi_pitch: t.climbingTypes.multiPitch,
-  }
-
   const [requests, setRequests] = useState<PartnerRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
+  const [applicantCounts, setApplicantCounts] = useState<Record<string, number>>({})
   const toast = useToast()
 
   const handlePullRefresh = useCallback(async () => {
@@ -46,6 +43,11 @@ export default function MyRequestsPage() {
     try {
       const data = await getMyRequests()
       setRequests(data)
+      const activeIds = data.filter(r => r.status === 'active').map(r => r.id)
+      if (activeIds.length > 0) {
+        const counts = await getApplicantCounts(activeIds)
+        setApplicantCounts(counts)
+      }
     } catch (err) {
       console.error(err)
     } finally {
@@ -92,8 +94,13 @@ export default function MyRequestsPage() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1.5">
-                    <h3 className="font-bold text-sm">{CLIMBING_LABELS[req.climbing_type]}</h3>
+                    <h3 className="font-bold text-sm">{req.location_name}</h3>
                     <span className={`text-[10px] px-2.5 py-0.5 rounded-full capitalize font-bold ${STATUS_STYLES[req.status]}`}>{t.requests.status[req.status as keyof typeof t.requests.status] || req.status}</span>
+                    {req.status === 'active' && applicantCounts[req.id] > 0 && (
+                      <Link href="/inbox" className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-orange-50 text-orange-600">
+                        {applicantCounts[req.id]} {applicantCounts[req.id] === 1 ? t.requests.applicant : t.requests.applicants}
+                      </Link>
+                    )}
                   </div>
                   <p className="text-sm text-gray-600 font-medium">{req.location_name}</p>
                   <p className="text-xs text-gray-400 mt-1 font-medium">

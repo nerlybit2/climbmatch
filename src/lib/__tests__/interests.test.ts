@@ -6,6 +6,7 @@ import {
   acceptInterest,
   declineInterest,
   getPendingInterestCount,
+  getApplicantCounts,
 } from '@/lib/actions/interests'
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -105,43 +106,20 @@ describe('createInterest', () => {
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ error: null }))             // insert interest
-        .mockReturnValueOnce(q({ data: null, error: null })), // single – no mutual
+        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null })) // profile check
+        .mockReturnValueOnce(q({ error: null })),                         // insert interest
     } as never)
 
     const result = await createInterest('req-1', 'user-2')
     expect(result).toEqual({ matched: false })
   })
 
-  it('returns { matched: true } with profile and request when mutual interest exists', async () => {
-    const matchedProfile = { display_name: 'Alice', photo_url: '/alice.jpg', phone: '+972501234' }
-    const requestDetails = { climbing_type: 'sport', location_name: 'Siurana', date: '2025-07-01' }
-
-    vi.mocked(createServerSupabaseClient).mockResolvedValue({
-      auth: authAs(),
-      from: vi.fn()
-        .mockReturnValueOnce(q({ error: null }))                                                     // insert
-        .mockReturnValueOnce(q({ data: { id: 'mutual-id', request_id: 'req-mutual' }, error: null })) // single mutual
-        .mockReturnValueOnce(q({ error: null }))                                                     // update interests (mutual)
-        .mockReturnValueOnce(q({ error: null }))                                                     // update interests (mine)
-        .mockReturnValueOnce(q({ error: null }))                                                     // update requests (req-1)
-        .mockReturnValueOnce(q({ error: null }))                                                     // update requests (req-mutual)
-        .mockReturnValueOnce(q({ data: matchedProfile, error: null }))                               // profile single
-        .mockReturnValueOnce(q({ data: requestDetails, error: null })),                              // request single
-    } as never)
-
-    const result = await createInterest('req-1', 'user-2')
-    expect(result.matched).toBe(true)
-    expect(result.matchedProfile).toEqual(matchedProfile)
-    expect(result.requestDetails).toEqual(requestDetails)
-  })
-
   it('handles duplicate insert (code 23505) without throwing', async () => {
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ error: { code: '23505', message: 'duplicate' } }))
-        .mockReturnValueOnce(q({ data: null, error: null })),
+        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null })) // profile check
+        .mockReturnValueOnce(q({ error: { code: '23505', message: 'duplicate' } })),
     } as never)
 
     await expect(createInterest('req-1', 'user-2')).resolves.toEqual({ matched: false })
@@ -151,6 +129,7 @@ describe('createInterest', () => {
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
+        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null })) // profile check
         .mockReturnValueOnce(q({ error: { code: '42P01', message: 'table not found' } })),
     } as never)
 
@@ -292,16 +271,20 @@ describe('getSentInterests', () => {
 describe('acceptInterest', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('resolves successfully and marks request as matched', async () => {
+  it('resolves successfully and returns match result', async () => {
+    const matchedProfile = { display_name: 'Alice', photo_url: '/alice.jpg', phone: '+972501234' }
+    const requestDetails = { location_name: 'Siurana', date: '2025-07-01' }
+
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ error: null }))                                  // update interest
-        .mockReturnValueOnce(q({ data: { request_id: 'req-1' }, error: null }))   // select single
-        .mockReturnValueOnce(q({ error: null })),                                  // update request
+        .mockReturnValueOnce(q({ error: null }))                                                          // update interest
+        .mockReturnValueOnce(q({ data: { from_user_id: 'user-2', request_id: 'req-1' }, error: null }))  // select interest
+        .mockReturnValueOnce(q({ data: matchedProfile, error: null }))                                    // select profile single
+        .mockReturnValueOnce(q({ data: requestDetails, error: null })),                                   // select request single
     } as never)
 
-    await expect(acceptInterest('int-1')).resolves.toBeUndefined()
+    await expect(acceptInterest('int-1')).resolves.toMatchObject({ matched: true })
   })
 
   it('throws when not authenticated', async () => {
@@ -391,5 +374,38 @@ describe('getPendingInterestCount', () => {
     } as never)
 
     expect(await getPendingInterestCount()).toBe(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getApplicantCounts
+// ---------------------------------------------------------------------------
+
+describe('getApplicantCounts', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('returns empty object for empty array', async () => {
+    expect(await getApplicantCounts([])).toEqual({})
+  })
+
+  it('returns counts keyed by request_id', async () => {
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn().mockReturnValueOnce(q({
+        data: [{ request_id: 'req-1' }, { request_id: 'req-1' }, { request_id: 'req-2' }],
+        error: null,
+      })),
+    } as never)
+    const counts = await getApplicantCounts(['req-1', 'req-2'])
+    expect(counts['req-1']).toBe(2)
+    expect(counts['req-2']).toBe(1)
+  })
+
+  it('returns empty object when no interests found', async () => {
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn().mockReturnValueOnce(q({ data: [], error: null })),
+    } as never)
+    expect(await getApplicantCounts(['req-1'])).toEqual({})
   })
 })

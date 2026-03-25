@@ -5,10 +5,9 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Input } from '@/components/Input'
-import { MultiSelect } from '@/components/MultiSelect'
 import { GearCheckboxes } from '@/components/GearCheckboxes'
 import { Button } from '@/components/Button'
-import type { Profile, GearSet, ClimbingType } from '@/lib/types/database'
+import type { Profile, GearSet } from '@/lib/types/database'
 import { signOut } from '@/lib/actions/auth'
 import { useLanguage } from '@/contexts/LanguageContext'
 
@@ -24,19 +23,11 @@ export function ProfileForm({ profile, userEmail }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
   const { t } = useLanguage()
 
-  const CLIMBING_TYPE_OPTIONS = [
-    { value: 'indoor', label: t.climbingTypes.indoor },
-    { value: 'sport', label: t.climbingTypes.sport },
-    { value: 'boulder', label: t.climbingTypes.boulder },
-    { value: 'trad', label: t.climbingTypes.trad },
-    { value: 'multi_pitch', label: t.climbingTypes.multiPitch },
-  ]
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [photoUrl, setPhotoUrl] = useState(profile?.photo_url || '')
   const [displayName, setDisplayName] = useState(profile?.display_name || '')
   const [homeArea, setHomeArea] = useState(profile?.home_area || '')
-  const [climbingTypes, setClimbingTypes] = useState<string[]>(profile?.climbing_types || [])
   const [sportGrade, setSportGrade] = useState(profile?.sport_grade_range || '')
   const [boulderGrade, setBoulderGrade] = useState(profile?.boulder_grade_range || '')
   const [weightKg, setWeightKg] = useState(profile?.weight_kg?.toString() || '')
@@ -86,7 +77,6 @@ export function ProfileForm({ profile, userEmail }: Props) {
         display_name: displayName.trim(),
         photo_url: photoUrl,
         home_area: homeArea.trim() || null,
-        climbing_types: climbingTypes as ClimbingType[],
         experience_level: null,
         sport_grade_range: sportGrade.trim() || null,
         boulder_grade_range: boulderGrade.trim() || null,
@@ -139,7 +129,6 @@ export function ProfileForm({ profile, userEmail }: Props) {
       <Input label={t.profile.displayName} value={displayName} onChange={e => setDisplayName(e.target.value)} required placeholder={t.profile.displayNamePlaceholder} />
       <Input label={t.profile.phone} type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder={t.profile.phonePlaceholder} required />
       <Input label={t.profile.homeArea} value={homeArea} onChange={e => setHomeArea(e.target.value)} placeholder={t.profile.homeAreaPlaceholder} />
-      <MultiSelect label={t.profile.climbingTypes} options={CLIMBING_TYPE_OPTIONS} selected={climbingTypes} onChange={setClimbingTypes} />
 
       <div className="grid grid-cols-2 gap-3">
         <Input label={t.profile.sportGrade} value={sportGrade} onChange={e => setSportGrade(e.target.value)} placeholder={t.profile.sportGradePlaceholder} />
