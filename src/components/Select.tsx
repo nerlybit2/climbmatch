@@ -13,7 +13,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {label && <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">{label}</label>}
         <select
           ref={ref}
-          className={`w-full rounded-2xl border-0 bg-white px-4 py-3.5 text-sm shadow-sm ring-1 ring-gray-200 focus:ring-2 focus:ring-orange-500 outline-none transition-all appearance-none ${
+          className={`w-full rounded-2xl border-0 bg-white px-4 py-3.5 text-sm shadow-sm ring-1 ring-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none ${
             error ? 'ring-red-400' : ''
           } ${className}`}
           {...props}

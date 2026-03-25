@@ -84,7 +84,7 @@ export default function InboxPage() {
       <div className="flex gap-1 mx-5 mb-5 bg-stone-100 rounded-2xl p-1">
         <button onClick={() => setTab('applicants')}
           className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${tab === 'applicants' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400'}`}>
-          {t.inbox.applicants} {pendingCount > 0 && <span className="ml-1 bg-gradient-to-r from-orange-500 to-rose-500 text-white text-[10px] w-5 h-5 rounded-full inline-flex items-center justify-center">{pendingCount}</span>}
+          {t.inbox.applicants} {pendingCount > 0 && <span className="ml-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[10px] w-5 h-5 rounded-full inline-flex items-center justify-center">{pendingCount}</span>}
         </button>
         <button onClick={() => setTab('applications')}
           className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${tab === 'applications' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400'}`}>
@@ -133,7 +133,7 @@ export default function InboxPage() {
                   <h3 className="font-bold text-sm">{item.fromProfile.display_name}</h3>
                   <p className="text-xs text-gray-500 truncate mt-0.5">{item.request.location_name}</p>
                   <div className="flex items-center gap-1 mt-1">
-                    <svg className="w-3.5 h-3.5 text-orange-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     <span className="text-xs font-bold text-gray-700">{new Date(item.request.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>

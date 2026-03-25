@@ -126,7 +126,7 @@ export default function NewRequestPage() {
         <Input label={t.newRequest.date} type="date" value={date} onChange={e => setDate(e.target.value)} min={today} required />
 
         <label className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm ring-1 ring-gray-100 cursor-pointer">
-          <input type="checkbox" checked={flexible} onChange={e => setFlexible(e.target.checked)} className="rounded border-gray-300 text-orange-500 focus:ring-orange-500 w-5 h-5" />
+          <input type="checkbox" checked={flexible} onChange={e => setFlexible(e.target.checked)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-5 h-5" />
           <span className="text-sm font-semibold text-gray-700">{t.newRequest.flexibleTime}</span>
         </label>
 
@@ -145,19 +145,19 @@ export default function NewRequestPage() {
         <div className="space-y-1.5">
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">{t.newRequest.notes}</label>
           <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
-            className="w-full rounded-2xl border-0 bg-white px-4 py-3.5 text-sm shadow-sm ring-1 ring-gray-200 placeholder:text-gray-300 focus:ring-2 focus:ring-orange-500 outline-none resize-none transition-all"
+            className="w-full rounded-2xl border-0 bg-white px-4 py-3.5 text-sm shadow-sm ring-1 ring-gray-200 placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all"
             placeholder={t.newRequest.notesPlaceholder} />
         </div>
 
         <GearCheckboxes label={t.newRequest.gearNeeded} gear={needsGear} onChange={setNeedsGear} />
 
         <label className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm ring-1 ring-gray-100 cursor-pointer">
-          <input type="checkbox" checked={carpoolNeeded} onChange={e => setCarpoolNeeded(e.target.checked)} className="rounded border-gray-300 text-orange-500 focus:ring-orange-500 w-5 h-5" />
+          <input type="checkbox" checked={carpoolNeeded} onChange={e => setCarpoolNeeded(e.target.checked)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-5 h-5" />
           <span className="text-sm font-semibold text-gray-700">{t.newRequest.carpoolNeeded}</span>
         </label>
 
         <label className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm ring-1 ring-gray-100 cursor-pointer">
-          <input type="checkbox" checked={weightRelevant} onChange={e => setWeightRelevant(e.target.checked)} className="rounded border-gray-300 text-orange-500 focus:ring-orange-500 w-5 h-5" />
+          <input type="checkbox" checked={weightRelevant} onChange={e => setWeightRelevant(e.target.checked)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-5 h-5" />
           <span className="text-sm font-semibold text-gray-700">{t.newRequest.weightRelevant}</span>
         </label>
 

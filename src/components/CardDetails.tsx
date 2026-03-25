@@ -148,27 +148,27 @@ export function CardDetails({ profile, request, compatibility, onClose, onIntere
           <div className="border-t border-gray-100 pt-5">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{t.cardDetails.requestDetails}</h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-orange-50 rounded-2xl p-3">
-                <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">{t.cardDetails.date}</span>
+              <div className="bg-blue-50 rounded-2xl p-3">
+                <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">{t.cardDetails.date}</span>
                 <p className="font-semibold text-sm mt-0.5">{request.date}</p>
               </div>
-              <div className="bg-orange-50 rounded-2xl p-3">
-                <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">{t.cardDetails.time}</span>
+              <div className="bg-blue-50 rounded-2xl p-3">
+                <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">{t.cardDetails.time}</span>
                 <p className="font-semibold text-sm mt-0.5">{request.flexible ? t.cardDetails.flexibleTime : `${request.start_time?.slice(0, 5) || ''} - ${request.end_time?.slice(0, 5) || ''}`}</p>
               </div>
-              <div className="bg-orange-50 rounded-2xl p-3">
-                <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">{t.cardDetails.location}</span>
+              <div className="bg-blue-50 rounded-2xl p-3">
+                <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">{t.cardDetails.location}</span>
                 <p className="font-semibold text-sm mt-0.5">{request.location_name}</p>
               </div>
               {request.goal_type && request.goal_type !== 'any' && (
-                <div className="bg-orange-50 rounded-2xl p-3">
-                  <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">{t.cardDetails.goal}</span>
+                <div className="bg-blue-50 rounded-2xl p-3">
+                  <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">{t.cardDetails.goal}</span>
                   <p className="font-semibold text-sm mt-0.5">{GOAL_LABELS[request.goal_type]}</p>
                 </div>
               )}
               {request.desired_grade_range && (
-                <div className="bg-orange-50 rounded-2xl p-3">
-                  <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">{t.cardDetails.grade}</span>
+                <div className="bg-blue-50 rounded-2xl p-3">
+                  <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">{t.cardDetails.grade}</span>
                   <p className="font-semibold text-sm mt-0.5">{request.desired_grade_range}</p>
                 </div>
               )}

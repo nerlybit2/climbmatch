@@ -75,10 +75,10 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-rose-500 to-violet-600" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700" />
       <div className="absolute top-16 -left-16 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-24 -right-16 w-72 h-72 bg-orange-300/20 rounded-full blur-3xl" />
-      <div className="absolute top-1/3 right-8 w-32 h-32 bg-rose-400/20 rounded-full blur-2xl" />
+      <div className="absolute bottom-24 -right-16 w-72 h-72 bg-blue-300/20 rounded-full blur-3xl" />
+      <div className="absolute top-1/3 right-8 w-32 h-32 bg-indigo-400/20 rounded-full blur-2xl" />
 
       <div className="relative z-10 w-full max-w-sm">
         <div className="text-center mb-10">
@@ -100,7 +100,7 @@ export default function LoginPage() {
                 </div>
                 <p className="font-bold text-gray-800">Check your email</p>
                 <p className="text-sm text-gray-500">We sent a password reset link to <strong>{email}</strong></p>
-                <button onClick={() => { setMode('login'); setResetSent(false) }} className="text-sm font-semibold text-rose-500 hover:text-rose-600">
+                <button onClick={() => { setMode('login'); setResetSent(false) }} className="text-sm font-semibold text-indigo-500 hover:text-indigo-700">
                   Back to login
                 </button>
               </div>
@@ -118,12 +118,12 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Email"
-                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   />
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full rounded-2xl bg-gradient-to-r from-rose-500 to-violet-600 px-4 py-4 text-sm font-semibold text-white hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
+                    className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-4 text-sm font-semibold text-white hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
                   >
                     {loading ? 'Sending...' : 'Send reset link'}
                   </button>
@@ -143,7 +143,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email"
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 />
                 <div className="space-y-1">
                   <input
@@ -153,10 +153,10 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Password (min 6 chars)"
-                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   />
                   <div className="text-right">
-                    <button type="button" onClick={() => { setMode('reset'); setError('') }} className="text-xs font-semibold text-rose-500 hover:text-rose-600">
+                    <button type="button" onClick={() => { setMode('reset'); setError('') }} className="text-xs font-semibold text-indigo-500 hover:text-indigo-700">
                       Forgot password?
                     </button>
                   </div>
@@ -164,7 +164,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-2xl bg-gradient-to-r from-rose-500 to-violet-600 px-4 py-4 text-sm font-semibold text-white hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
+                  className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-4 text-sm font-semibold text-white hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
                 >
                   {loading ? 'Please wait...' : 'Continue'}
                 </button>

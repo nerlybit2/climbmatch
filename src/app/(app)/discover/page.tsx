@@ -146,7 +146,7 @@ export default function DiscoverPage() {
                   onChange={e => handleLocationChange(e.target.value)}
                   onFocus={() => locationSuggestions.length > 0 && setShowSuggestions(true)}
                   placeholder={t.discover.locationPlaceholder}
-                  className="w-full rounded-2xl border-0 bg-white pl-10 pr-4 py-3.5 text-sm shadow-sm ring-1 ring-gray-200 placeholder:text-gray-300 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+                  className="w-full rounded-2xl border-0 bg-white pl-10 pr-4 py-3.5 text-sm shadow-sm ring-1 ring-gray-200 placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 />
                 <svg className="w-4.5 h-4.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -168,7 +168,7 @@ export default function DiscoverPage() {
                     key={loc + i}
                     type="button"
                     onClick={() => selectLocation(loc)}
-                    className="w-full text-left px-4 py-3 text-sm hover:bg-orange-50 transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
+                    className="w-full text-left px-4 py-3 text-sm hover:bg-blue-50 transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
                   >
                     <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -190,7 +190,7 @@ export default function DiscoverPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
             {t.discover.advancedFilters}
-            {timeOfDay && <span className="w-2 h-2 rounded-full bg-orange-500" />}
+            {timeOfDay && <span className="w-2 h-2 rounded-full bg-blue-600" />}
           </button>
 
           {showAdvanced && (
@@ -202,7 +202,7 @@ export default function DiscoverPage() {
                     <button key={tc.value} type="button" onClick={() => setTimeOfDay(tc.value)}
                       className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                         timeOfDay === tc.value
-                          ? 'bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-md shadow-orange-500/20'
+                          ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/20'
                           : 'bg-white text-gray-500 ring-1 ring-gray-200 hover:ring-gray-300'
                       }`}
                     >{tc.label}</button>
@@ -229,7 +229,7 @@ export default function DiscoverPage() {
           <p className="text-xs text-gray-400 font-medium">{cards.length} {t.discover.searchPartners.toLowerCase()}</p>
         </div>
         <button onClick={() => setShowFilters(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white shadow-sm ring-1 ring-gray-200 text-sm font-semibold text-gray-500 hover:text-orange-500 transition-colors">
+          className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white shadow-sm ring-1 ring-gray-200 text-sm font-semibold text-gray-500 hover:text-blue-600 transition-colors">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
           </svg>
@@ -259,7 +259,7 @@ export default function DiscoverPage() {
               key={card.request.id}
               type="button"
               onClick={() => setDetailCard(card)}
-              className="w-full text-left bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 overflow-hidden hover:shadow-md hover:ring-orange-200 transition-all duration-200 active:scale-[0.98]"
+              className="w-full text-left bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 overflow-hidden hover:shadow-md hover:ring-blue-200 transition-all duration-200 active:scale-[0.98]"
             >
               <div className="flex items-center gap-3 p-3">
                 {/* Avatar */}
@@ -278,7 +278,7 @@ export default function DiscoverPage() {
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-bold text-gray-900 truncate">{card.profile.display_name}</span>
                     {card.score > 0 && (
-                      <span className="flex-shrink-0 text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">
+                      <span className="flex-shrink-0 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
                         {card.score}pts
                       </span>
                     )}

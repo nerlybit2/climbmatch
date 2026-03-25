@@ -20,7 +20,7 @@ export default function AppError({
       </p>
       <button
         onClick={reset}
-        className="bg-gradient-to-r from-orange-500 to-rose-500 text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-md shadow-orange-500/20 active:scale-95 transition-all"
+        className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-md shadow-blue-500/20 active:scale-95 transition-all"
       >
         Try Again
       </button>

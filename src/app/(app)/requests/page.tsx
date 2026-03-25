@@ -97,7 +97,7 @@ export default function MyRequestsPage() {
                     <h3 className="font-bold text-sm">{req.location_name}</h3>
                     <span className={`text-[10px] px-2.5 py-0.5 rounded-full capitalize font-bold ${STATUS_STYLES[req.status]}`}>{t.requests.status[req.status as keyof typeof t.requests.status] || req.status}</span>
                     {req.status === 'active' && applicantCounts[req.id] > 0 && (
-                      <Link href="/inbox" className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-orange-50 text-orange-600">
+                      <Link href="/inbox" className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-blue-50 text-blue-600">
                         {applicantCounts[req.id]} {applicantCounts[req.id] === 1 ? t.requests.applicant : t.requests.applicants}
                       </Link>
                     )}

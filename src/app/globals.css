@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #f97316;
-  --primary-dark: #ea580c;
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
 }
 
 html, body {
@@ -28,7 +28,7 @@ body {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #f97316, #e11d48);
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

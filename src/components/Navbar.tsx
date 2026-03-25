@@ -28,16 +28,16 @@ export function Navbar() {
               key={tab.href}
               href={tab.href}
               className={`relative flex flex-col items-center justify-center flex-1 h-full text-[9px] font-semibold tracking-wide transition-all duration-200 ${
-                isActive ? 'text-orange-500' : 'text-gray-400'
+                isActive ? 'text-blue-600' : 'text-gray-400'
               }`}
             >
               {isActive && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-gradient-to-r from-orange-500 to-rose-500 rounded-full" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full" />
               )}
               <div className="relative">
                 <NavIcon type={tab.icon} active={isActive} />
                 {tab.icon === 'inbox' && count > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-gradient-to-r from-orange-500 to-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-md shadow-orange-500/30">
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-md shadow-blue-500/30">
                     {count > 9 ? '9+' : count}
                   </span>
                 )}

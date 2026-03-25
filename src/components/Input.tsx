@@ -12,7 +12,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">{label}</label>}
         <input
           ref={ref}
-          className={`w-full rounded-2xl border-0 bg-white px-4 py-3.5 text-sm shadow-sm ring-1 ring-gray-200 placeholder:text-gray-300 focus:ring-2 focus:ring-orange-500 outline-none transition-all ${
+          className={`w-full rounded-2xl border-0 bg-white px-4 py-3.5 text-sm shadow-sm ring-1 ring-gray-200 placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition-all ${
             error ? 'ring-red-400' : ''
           } ${className}`}
           {...props}

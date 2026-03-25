@@ -27,7 +27,7 @@ export function MultiSelect({ label, options, selected, onChange }: MultiSelectP
             onClick={() => toggle(o.value)}
             className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
               selected.includes(o.value)
-                ? 'bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-md shadow-orange-500/20'
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/20'
                 : 'bg-white text-gray-500 ring-1 ring-gray-200 hover:ring-gray-300'
             }`}
           >

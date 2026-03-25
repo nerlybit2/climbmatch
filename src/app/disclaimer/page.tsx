@@ -6,11 +6,11 @@ export default function PublicDisclaimerPage() {
       <div className="max-w-md mx-auto">
         <h1 className="text-2xl font-extrabold tracking-tight mb-6">Safety & Disclaimer</h1>
         <div className="space-y-4">
-          <div className="bg-gradient-to-br from-orange-50 to-rose-50 rounded-2xl p-5">
-            <h3 className="text-orange-700 font-extrabold mb-3 flex items-center gap-2">
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5">
+            <h3 className="text-blue-700 font-extrabold mb-3 flex items-center gap-2">
               <span className="text-lg">⚠️</span> Safety First
             </h3>
-            <ul className="space-y-2 text-sm text-orange-700/80 font-medium">
+            <ul className="space-y-2 text-sm text-blue-700/80 font-medium">
               <li className="flex gap-2"><span>•</span>Always verify your partner&apos;s experience before climbing together.</li>
               <li className="flex gap-2"><span>•</span>Meet in public places for the first time.</li>
               <li className="flex gap-2"><span>•</span>Share your plans with a trusted contact.</li>
@@ -32,7 +32,7 @@ export default function PublicDisclaimerPage() {
           </div>
         </div>
         <div className="mt-8">
-          <Link href="/login" className="text-orange-500 text-sm font-bold hover:text-orange-600 transition-colors">&larr; Back to Login</Link>
+          <Link href="/login" className="text-blue-600 text-sm font-bold hover:text-blue-800 transition-colors">&larr; Back to Login</Link>
         </div>
       </div>
     </div>

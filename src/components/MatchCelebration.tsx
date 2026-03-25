@@ -12,7 +12,7 @@ interface MatchCelebrationProps {
   closeLabel?: string
 }
 
-const CONFETTI_COLORS = ['#f97316', '#fb7185', '#fbbf24', '#ffffff', '#a78bfa', '#34d399']
+const CONFETTI_COLORS = ['#2563eb', '#4f46e5', '#818cf8', '#ffffff', '#bfdbfe', '#6366f1']
 
 export function MatchCelebration({ result, onClose, closeLabel }: MatchCelebrationProps) {
   const [imgSrc, setImgSrc] = useState(result.matchedProfile?.photo_url || '/default-avatar.svg')
@@ -52,7 +52,7 @@ export function MatchCelebration({ result, onClose, closeLabel }: MatchCelebrati
       <div className="relative z-10 flex flex-col items-center px-8 text-center">
         <h1 className="text-4xl font-extrabold gradient-text mb-6">It&apos;s a Match!</h1>
 
-        <div className="w-32 h-32 rounded-full border-4 border-orange-500 shadow-2xl shadow-orange-500/30 overflow-hidden mb-4 relative">
+        <div className="w-32 h-32 rounded-full border-4 border-blue-500 shadow-2xl shadow-blue-500/30 overflow-hidden mb-4 relative">
           <Image
             src={imgSrc}
             alt={result.matchedProfile?.display_name || 'Match'}
@@ -79,7 +79,7 @@ export function MatchCelebration({ result, onClose, closeLabel }: MatchCelebrati
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full bg-gradient-to-r from-orange-500 to-rose-500 text-white font-bold rounded-2xl px-6 py-3.5 text-center shadow-lg shadow-orange-500/25 active:scale-[0.96] transition-transform"
+              className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold rounded-2xl px-6 py-3.5 text-center shadow-lg shadow-blue-500/25 active:scale-[0.96] transition-transform"
             >
               Send a Message
             </a>
