@@ -256,6 +256,10 @@ function InboxCard({
         </div>
       </div>
 
+      {item.request.notes && (
+        <p className="px-5 pb-4 text-sm text-slate-600 leading-relaxed border-t border-gray-50 pt-3">{item.request.notes}</p>
+      )}
+
       {/* Action area */}
       {isPending && tab === 'applicants' && (
         <div className="px-5 pb-5 space-y-3">
