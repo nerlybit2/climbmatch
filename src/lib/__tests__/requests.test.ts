@@ -252,7 +252,7 @@ describe('updateRequest', () => {
   })
 
   it('resolves when update succeeds', async () => {
-    const chain = q({ error: null })
+    const chain = q({ error: null, data: [{ id: 'req-1' }] })
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn().mockReturnValueOnce(chain),
@@ -264,14 +264,23 @@ describe('updateRequest', () => {
   it('throws on database error', async () => {
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
-      from: vi.fn().mockReturnValueOnce(q({ error: new Error('not found') })),
+      from: vi.fn().mockReturnValueOnce(q({ error: new Error('not found'), data: null })),
     } as never)
 
     await expect(updateRequest('req-1', payloadFixture)).rejects.toThrow()
   })
 
+  it('throws when no rows matched (request inactive or missing)', async () => {
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn().mockReturnValueOnce(q({ error: null, data: [] })),
+    } as never)
+
+    await expect(updateRequest('req-1', payloadFixture)).rejects.toThrow('Request not found or no longer active')
+  })
+
   it('calls update with the payload', async () => {
-    const chain = q({ error: null })
+    const chain = q({ error: null, data: [{ id: 'req-1' }] })
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn().mockReturnValueOnce(chain),
@@ -283,7 +292,7 @@ describe('updateRequest', () => {
   })
 
   it('scopes the update to the owner and active status', async () => {
-    const chain = q({ error: null })
+    const chain = q({ error: null, data: [{ id: 'req-1' }] })
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs('user-1'),
       from: vi.fn().mockReturnValueOnce(chain),

@@ -32,7 +32,10 @@ export async function createInterest(requestId: string, toUserId: string): Promi
     request_id: requestId,
   })
 
-  if (error && error.code !== '23505') throw new Error(error.message)
+  if (error) {
+    if (error.code === '23505') return { matched: false }
+    throw new Error(error.message)
+  }
 
   const [{ data: matchedProfile }, { data: requestDetails }] = await Promise.all([
     supabase.from('profiles').select('display_name, photo_url, phone, instagram, facebook').eq('id', toUserId).single(),

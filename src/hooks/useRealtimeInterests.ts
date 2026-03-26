@@ -46,7 +46,11 @@ export function useRealtimeInterests({ userId, onChange }: UseRealtimeInterestsO
           onChangeRef.current()
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.error('[useRealtimeInterests] subscription error — real-time updates unavailable')
+        }
+      })
 
     return () => {
       supabase.removeChannel(channel)

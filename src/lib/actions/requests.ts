@@ -53,14 +53,16 @@ export async function updateRequest(id: string, payload: RequestPayload): Promis
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('partner_requests')
     .update(payload)
     .eq('id', id)
     .eq('user_id', user.id)
     .eq('status', 'active')
+    .select('id')
 
   if (error) throw error
+  if (!data || data.length === 0) throw new Error('Request not found or no longer active')
 }
 
 export async function cancelRequest(id: string): Promise<void> {

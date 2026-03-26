@@ -82,10 +82,11 @@ export default function DiscoverPage() {
       setCards(results)
     } catch (err) {
       console.error(err)
+      toast.addToast('Failed to load climbers. Pull down to retry.', 'error')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [toast])
 
   // Load all on mount
   useEffect(() => { loadData() }, [loadData])
@@ -148,6 +149,7 @@ export default function DiscoverPage() {
         router.push('/profile')
         return
       }
+      toast.addToast('Something went wrong. Please try again.', 'error')
       console.error(err)
     }
   }, [removeCard, toast, router, t])

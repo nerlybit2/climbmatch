@@ -25,6 +25,7 @@ export default function MyRequestsPage() {
   const [requests, setRequests] = useState<PartnerRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
+  const [cancelling, setCancelling] = useState(false)
   const [applicantCounts, setApplicantCounts] = useState<Record<string, number>>({})
   const toast = useToast()
 
@@ -56,13 +57,18 @@ export default function MyRequestsPage() {
   }
 
   const handleCancel = async (id: string) => {
+    if (cancelling) return
+    setCancelling(true)
     try {
       await cancelRequest(id)
       setCancellingId(null)
       toast.addToast(t.toasts.requestCancelled, 'info')
       await loadRequests()
     } catch (err) {
+      toast.addToast('Failed to cancel. Please try again.', 'error')
       console.error(err)
+    } finally {
+      setCancelling(false)
     }
   }
 
@@ -112,7 +118,7 @@ export default function MyRequestsPage() {
                   cancellingId === req.id ? (
                     <div className="flex items-center gap-2 animate-fade-in">
                       <span className="text-xs text-gray-500 font-medium">{t.requests.areYouSure}</span>
-                      <Button variant="danger" onClick={() => handleCancel(req.id)} className="text-xs !px-3 !py-1.5">{t.requests.yesCancel}</Button>
+                      <Button variant="danger" onClick={() => handleCancel(req.id)} loading={cancelling} className="text-xs !px-3 !py-1.5">{t.requests.yesCancel}</Button>
                       <Button variant="ghost" onClick={() => setCancellingId(null)} className="text-xs !px-3 !py-1.5">{t.requests.no}</Button>
                     </div>
                   ) : (

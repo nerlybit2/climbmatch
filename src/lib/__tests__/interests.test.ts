@@ -139,21 +139,16 @@ describe('createInterest', () => {
     expect(result.matchedProfile?.facebook).toBe('alice.climbs')
   })
 
-  it('handles duplicate insert (code 23505) without throwing', async () => {
-    const posterProfile = { display_name: 'Alice', photo_url: '/alice.jpg', phone: '+972501234', instagram: null, facebook: null }
-    const reqDetails = { location_name: 'Siurana', date: '2025-07-01' }
-
+  it('returns matched: false on duplicate insert (code 23505)', async () => {
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
         .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null }))
-        .mockReturnValueOnce(q({ error: { code: '23505', message: 'duplicate' } }))
-        .mockReturnValueOnce(q({ data: posterProfile, error: null }))
-        .mockReturnValueOnce(q({ data: reqDetails, error: null })),
+        .mockReturnValueOnce(q({ error: { code: '23505', message: 'duplicate' } })),
     } as never)
 
     const result = await createInterest('req-1', 'user-2')
-    expect(result.matched).toBe(true)
+    expect(result.matched).toBe(false)
   })
 
   it('throws on unexpected insert error', async () => {

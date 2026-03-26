@@ -12,7 +12,7 @@ const config: CapacitorConfig = {
     // Prod: set CAPACITOR_SERVER_URL env var or replace with your Vercel URL
     url: isDev
       ? 'http://10.0.2.2:3000'
-      : (process.env.CAPACITOR_SERVER_URL ?? 'https://your-app.vercel.app'),
+      : (process.env.CAPACITOR_SERVER_URL ?? 'https://climbmatch.vercel.app'),
     cleartext: isDev,
   },
   plugins: {

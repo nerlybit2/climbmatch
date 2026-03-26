@@ -64,7 +64,10 @@ export default function InboxPage() {
       const result = await acceptInterest(interestId)
       setAcceptResult(result)
       await loadData()
-    } catch (err) { console.error(err) }
+    } catch (err) {
+      toast.addToast('Failed to accept. Please try again.', 'error')
+      console.error(err)
+    }
   }
 
   const handleDecline = async (interestId: string) => {
@@ -72,7 +75,10 @@ export default function InboxPage() {
       await declineInterest(interestId)
       toast.addToast(t.toasts.interestDeclined, 'info')
       await loadData()
-    } catch (err) { console.error(err) }
+    } catch (err) {
+      toast.addToast('Failed to decline. Please try again.', 'error')
+      console.error(err)
+    }
   }
 
   const items = tab === 'applicants' ? received : sent
@@ -169,8 +175,8 @@ export default function InboxPage() {
               key={item.interest.id}
               item={item}
               tab={tab}
-              onAccept={handleAccept}
-              onDecline={handleDecline}
+              onAccept={(id) => handleAccept(id)}
+              onDecline={(id) => handleDecline(id)}
               t={t}
             />
           ))
@@ -197,11 +203,12 @@ function InboxCard({
 }: {
   item: InboxItem
   tab: 'applicants' | 'applications'
-  onAccept: (id: string) => void
-  onDecline: (id: string) => void
+  onAccept: (id: string) => Promise<void>
+  onDecline: (id: string) => Promise<void>
   t: ReturnType<typeof useLanguage>['t']
 }) {
   const [imgSrc, setImgSrc] = useState(item.fromProfile.photo_url || '/default-avatar.svg')
+  const [actioning, setActioning] = useState(false)
   const status = item.interest.status
   const isPending = status === 'pending'
   const isAccepted = status === 'accepted'
@@ -254,16 +261,18 @@ function InboxCard({
         <div className="px-5 pb-5 space-y-3">
           <div className="flex gap-2.5">
             <button
-              onClick={() => onAccept(item.interest.id)}
-              className="flex-1 bg-gradient-to-br from-blue-400 to-indigo-500 text-white text-sm font-bold rounded-2xl py-3 shadow-sm shadow-blue-400/20 active:scale-[0.97] transition-transform"
+              onClick={async () => { setActioning(true); await onAccept(item.interest.id); setActioning(false) }}
+              disabled={actioning}
+              className="flex-1 bg-gradient-to-br from-blue-400 to-indigo-500 text-white text-sm font-bold rounded-2xl py-3 shadow-sm shadow-blue-400/20 active:scale-[0.97] transition-transform disabled:opacity-60 disabled:scale-100"
             >
-              {t.inbox.accept}
+              {actioning ? '…' : t.inbox.accept}
             </button>
             <button
-              onClick={() => onDecline(item.interest.id)}
-              className="flex-1 bg-slate-100 text-slate-600 text-sm font-bold rounded-2xl py-3 active:scale-[0.97] transition-transform"
+              onClick={async () => { setActioning(true); await onDecline(item.interest.id); setActioning(false) }}
+              disabled={actioning}
+              className="flex-1 bg-slate-100 text-slate-600 text-sm font-bold rounded-2xl py-3 active:scale-[0.97] transition-transform disabled:opacity-60 disabled:scale-100"
             >
-              {t.inbox.decline}
+              {actioning ? '…' : t.inbox.decline}
             </button>
           </div>
           <ContactButtons phone={item.phone} instagram={item.instagram} facebook={item.facebook} location={item.request.location_name} waLabel={t.inbox.whatsapp} smsLabel={t.inbox.sms} />
@@ -311,19 +320,21 @@ function ContactButtons({
   waLabel: string
   smsLabel: string
 }) {
-  const hasAny = phone || instagram || facebook
+  const cleanPhone = phone ? digitsOnly(phone) : ''
+  const hasPhone = cleanPhone.length > 0
+  const igHandle = instagram ? parseInstagram(instagram) : null
+  const fbHandle = facebook ? parseFacebook(facebook) : null
+  const hasAny = hasPhone || igHandle || fbHandle
   if (!hasAny) return null
 
   const msg = encodeURIComponent(`Hey! I saw your ClimbMatch request at ${location}. Let's connect! 🧗`)
-  const igHandle = instagram ? parseInstagram(instagram) : null
-  const fbHandle = facebook ? parseFacebook(facebook) : null
 
   return (
     <div className="space-y-2">
-      {phone && (
+      {hasPhone && (
         <div className="flex gap-2">
           <a
-            href={`https://wa.me/${digitsOnly(phone!)}?text=${msg}`}
+            href={`https://wa.me/${cleanPhone}?text=${msg}`}
             target="_blank" rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] text-white text-sm font-bold rounded-2xl py-3 active:scale-[0.97] transition-transform shadow-sm shadow-green-500/20"
           >
@@ -334,7 +345,7 @@ function ContactButtons({
             {waLabel}
           </a>
           <a
-            href={`sms:+${digitsOnly(phone!)}`}
+            href={`sms:+${cleanPhone}`}
             className="flex-1 flex items-center justify-center gap-2 bg-slate-100 text-slate-700 text-sm font-bold rounded-2xl py-3 active:scale-[0.97] transition-transform"
           >
             <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
