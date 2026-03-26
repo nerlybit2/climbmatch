@@ -398,15 +398,17 @@ export default function DiscoverPage() {
                       {card.request.desired_grade_range}
                     </span>
                   )}
-                  {card.request.notes && (
-                    <p className="mt-1.5 text-xs text-slate-500 leading-snug line-clamp-2">{card.request.notes}</p>
-                  )}
                 </div>
 
                 <svg className="w-4 h-4 text-gray-300 flex-shrink-0 self-start mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
               </div>
+
+              {/* Post body */}
+              {card.request.notes && (
+                <p className="px-3.5 pb-3 text-sm text-slate-600 leading-relaxed line-clamp-3 border-t border-gray-50 pt-2.5">{card.request.notes}</p>
+              )}
 
               {/* Compatibility badges */}
               {(card.compatibility.gearMatches.length > 0 || card.compatibility.carpoolAvailable) && (
