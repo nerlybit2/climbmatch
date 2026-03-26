@@ -113,6 +113,7 @@ export default function MyRequestsPage() {
                     {req.date} {req.flexible ? `(${t.requests.flexible})` : `${req.start_time?.slice(0, 5) || ''} - ${req.end_time?.slice(0, 5) || ''}`}
                   </p>
                   {req.desired_grade_range && <p className="text-xs text-gray-400 mt-0.5">{t.requests.grade}: {req.desired_grade_range}</p>}
+                  {req.notes && <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">{req.notes}</p>}
                 </div>
                 {req.status === 'active' && (
                   cancellingId === req.id ? (
