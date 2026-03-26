@@ -1,10 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Capacitor } from '@capacitor/core'
+import { App } from '@capacitor/app'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -12,6 +15,32 @@ export default function LoginPage() {
   const [mode, setMode] = useState<'login' | 'reset'>('login')
   const [resetSent, setResetSent] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+
+    const handleDeepLink = async (url: string) => {
+      if (!url.startsWith('climbmatch://auth/callback')) return
+      const code = new URL(url).searchParams.get('code')
+      if (!code) return
+      const supabase = createClient()
+      const { error } = await supabase.auth.exchangeCodeForSession(code)
+      if (!error) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: profile } = await supabase.from('profiles').select('id').eq('id', user.id).single()
+          router.replace(profile ? '/discover' : '/profile')
+        }
+      }
+    }
+
+    // Cold start via deep link
+    App.getLaunchUrl().then(result => { if (result?.url) handleDeepLink(result.url) })
+
+    // App already running, deep link fires
+    const listener = App.addListener('appUrlOpen', ({ url }) => handleDeepLink(url))
+    return () => { listener.then(l => l.remove()) }
+  }, [router])
 
   const handleOAuth = async (provider: 'google' | 'facebook' | 'apple') => {
     const supabase = createClient()
