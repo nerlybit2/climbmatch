@@ -20,25 +20,55 @@ export default function LoginPage() {
     if (!Capacitor.isNativePlatform()) return
 
     const handleDeepLink = async (url: string) => {
+      console.log('[OAuth] deep link received:', url)
       if (!url.startsWith('climbmatch://auth/callback')) return
-      const code = new URL(url).searchParams.get('code')
-      if (!code) return
-      const supabase = createClient()
-      const { error } = await supabase.auth.exchangeCodeForSession(code)
-      if (!error) {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: profile } = await supabase.from('profiles').select('id').eq('id', user.id).single()
-          router.replace(profile ? '/discover' : '/profile')
-        }
+
+      let code: string | null = null
+      try {
+        code = new URL(url).searchParams.get('code')
+      } catch (e) {
+        setError('OAuth error: malformed callback URL')
+        return
       }
+
+      if (!code) {
+        setError('OAuth error: no code in callback URL')
+        return
+      }
+
+      setLoading(true)
+      setError('')
+      const supabase = createClient()
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+      if (exchangeError) {
+        console.error('[OAuth] exchangeCodeForSession failed:', exchangeError)
+        setError(`OAuth error: ${exchangeError.message}`)
+        setLoading(false)
+        return
+      }
+
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setError('OAuth error: no user after exchange')
+        setLoading(false)
+        return
+      }
+
+      const { data: profile } = await supabase.from('profiles').select('id').eq('id', user.id).single()
+      router.replace(profile ? '/discover' : '/profile')
     }
 
     // Cold start via deep link
-    App.getLaunchUrl().then(result => { if (result?.url) handleDeepLink(result.url) })
+    App.getLaunchUrl().then(result => {
+      console.log('[OAuth] launch url:', result?.url)
+      if (result?.url) handleDeepLink(result.url)
+    })
 
     // App already running, deep link fires
-    const listener = App.addListener('appUrlOpen', ({ url }) => handleDeepLink(url))
+    const listener = App.addListener('appUrlOpen', ({ url }) => {
+      console.log('[OAuth] appUrlOpen:', url)
+      handleDeepLink(url)
+    })
     return () => { listener.then(l => l.remove()) }
   }, [router])
 
