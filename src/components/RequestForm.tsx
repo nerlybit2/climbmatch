@@ -143,9 +143,12 @@ export function RequestForm({ existing }: Props) {
 
       <div className="space-y-1.5">
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">{t.newRequest.notes}</label>
-        <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
+        <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={4}
           className="w-full rounded-2xl border-0 bg-white px-4 py-3.5 text-sm shadow-sm ring-1 ring-gray-200 placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all"
-          placeholder={t.newRequest.notesPlaceholder} />
+          placeholder={t.newRequest.notesPlaceholder} maxLength={500} />
+        {notes.length > 400 && (
+          <p className="text-right text-xs text-gray-400">{notes.length}/500</p>
+        )}
       </div>
 
       <GearCheckboxes label={t.newRequest.gearNeeded} gear={needsGear} onChange={setNeedsGear} />
