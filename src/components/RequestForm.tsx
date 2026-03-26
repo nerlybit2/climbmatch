@@ -136,9 +136,9 @@ export function RequestForm({ existing }: Props) {
         </div>
       )}
 
-      <Select label={t.newRequest.locationType} value={locationType} onChange={e => setLocationType(e.target.value)} options={LOCATION_TYPE_OPTIONS} />
+      <Select label={t.newRequest.locationType} value={locationType} onChange={e => setLocationType(e.target.value as 'gym' | 'crag')} options={LOCATION_TYPE_OPTIONS} />
       <Input  label={t.newRequest.locationName} value={locationName} onChange={e => setLocationName(e.target.value)} placeholder={t.newRequest.locationPlaceholder} required />
-      <Select label={t.newRequest.goal}         value={goalType}     onChange={e => setGoalType(e.target.value)}     options={GOAL_OPTIONS} />
+      <Select label={t.newRequest.goal}         value={goalType}     onChange={e => setGoalType(e.target.value as 'any' | 'project' | 'mileage' | 'easy_day' | 'training')}     options={GOAL_OPTIONS} />
       <Input  label={t.newRequest.gradeRange}   value={desiredGrade} onChange={e => setDesiredGrade(e.target.value)} placeholder={t.newRequest.gradePlaceholder} />
 
       <div className="space-y-1.5">
