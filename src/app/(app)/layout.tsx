@@ -8,7 +8,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <LanguageProvider>
       <div className="min-h-[100dvh] flex flex-col bg-[#EDF1F7]">
         <ToastProvider>
-          <main className="flex-1 pb-28 overflow-y-auto">
+          <main className="flex-1 pb-28 overflow-y-auto" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
             {children}
           </main>
           <ToastContainer />
