@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { Capacitor } from '@capacitor/core'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -14,10 +15,12 @@ export default function LoginPage() {
 
   const handleOAuth = async (provider: 'google' | 'facebook') => {
     const supabase = createClient()
-    const origin = window.location.origin.includes('localhost') ? 'https://climbmatch.vercel.app' : window.location.origin
+    const redirectTo = Capacitor.isNativePlatform()
+      ? 'climbmatch://auth/callback'
+      : `${window.location.origin}/auth/callback`
     await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `${origin}/auth/callback` },
+      options: { redirectTo },
     })
   }
 
