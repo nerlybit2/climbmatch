@@ -28,7 +28,9 @@ export function Navbar() {
           {tabs.map((tab) => {
             const isActive =
               pathname === tab.href ||
-              (tab.href !== '/requests/new' && pathname.startsWith(tab.href + '/'))
+              (tab.href !== '/requests/new' &&
+               pathname !== '/requests/new' &&
+               pathname.startsWith(tab.href + '/'))
             return (
               <Link
                 key={tab.href}
