@@ -4,34 +4,24 @@ import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { EmptyState } from '@/components/EmptyState'
 import { MatchCelebration } from '@/components/MatchCelebration'
-import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import { PageHeader } from '@/components/PageHeader'
-import { getInboxData, acceptInterest, declineInterest, type InboxItem } from '@/lib/actions/interests'
+import { acceptInterest, declineInterest, type InboxItem } from '@/lib/actions/interests'
 import type { MatchResult } from '@/lib/actions/interests'
 import { useToast } from '@/hooks/useToast'
 import { useRealtimeInterests } from '@/hooks/useRealtimeInterests'
 import { createClient } from '@/lib/supabase/client'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useInbox } from '@/contexts/InboxContext'
 import { digitsOnly, parseInstagram, parseFacebook } from '@/lib/phone'
 
 export default function InboxPage() {
   const { t } = useLanguage()
+  const { received, sent, loading, refresh, updateItem } = useInbox()
 
   const [tab, setTab] = useState<'applicants' | 'applications'>('applicants')
-  const [received, setReceived] = useState<InboxItem[]>([])
-  const [sent, setSent] = useState<InboxItem[]>([])
-  const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
   const [acceptResult, setAcceptResult] = useState<MatchResult | null>(null)
   const toast = useToast()
-
-  const handlePullRefresh = useCallback(async () => {
-    await loadData()
-  }, [])
-
-  const { containerRef: pullRef, indicatorElement } = usePullToRefresh({
-    onRefresh: handlePullRefresh,
-  })
 
   useEffect(() => {
     createClient().auth.getUser().then(({ data }) => {
@@ -39,54 +29,36 @@ export default function InboxPage() {
     })
   }, [])
 
-  useEffect(() => { loadData() }, [])
+  // Only refresh when a NEW interest arrives — don't re-fetch on our own actions
+  useRealtimeInterests({ userId, onChange: refresh })
 
-  useRealtimeInterests({
-    userId,
-    onChange: () => { loadData() },
-  })
-
-  const loadData = async () => {
-    setLoading(true)
-    try {
-      const { received, sent } = await getInboxData()
-      setReceived(received)
-      setSent(sent)
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleAccept = async (interestId: string) => {
+  const handleAccept = useCallback(async (interestId: string) => {
     try {
       const result = await acceptInterest(interestId)
+      updateItem(interestId, 'accepted')
       setAcceptResult(result)
-      await loadData()
     } catch (err) {
       toast.addToast('Failed to accept. Please try again.', 'error')
       console.error(err)
     }
-  }
+  }, [updateItem, toast])
 
-  const handleDecline = async (interestId: string) => {
+  const handleDecline = useCallback(async (interestId: string) => {
     try {
       await declineInterest(interestId)
+      updateItem(interestId, 'declined')
       toast.addToast(t.toasts.interestDeclined, 'info')
-      await loadData()
     } catch (err) {
       toast.addToast('Failed to decline. Please try again.', 'error')
       console.error(err)
     }
-  }
+  }, [updateItem, toast, t])
 
   const items = tab === 'applicants' ? received : sent
   const pendingCount = received.filter(r => r.interest.status === 'pending').length
 
   return (
-    <div ref={pullRef}>
-      {indicatorElement}
+    <div>
       <PageHeader title={t.inbox.title} subtitle={t.inbox.subtitle} />
 
       {/* Tab switcher */}
@@ -177,8 +149,8 @@ export default function InboxPage() {
               key={item.interest.id}
               item={item}
               tab={tab}
-              onAccept={(id) => handleAccept(id)}
-              onDecline={(id) => handleDecline(id)}
+              onAccept={handleAccept}
+              onDecline={handleDecline}
               t={t}
             />
           ))
@@ -188,7 +160,7 @@ export default function InboxPage() {
       {acceptResult?.matched && (
         <MatchCelebration
           result={acceptResult}
-          onClose={() => { setAcceptResult(null); loadData() }}
+          onClose={() => setAcceptResult(null)}
           closeLabel={t.inbox.backToInbox}
         />
       )}
@@ -197,11 +169,7 @@ export default function InboxPage() {
 }
 
 function InboxCard({
-  item,
-  tab,
-  onAccept,
-  onDecline,
-  t,
+  item, tab, onAccept, onDecline, t,
 }: {
   item: InboxItem
   tab: 'applicants' | 'applications'
@@ -224,7 +192,6 @@ function InboxCard({
 
   return (
     <div className="bg-white rounded-3xl card-shadow border border-gray-50 overflow-hidden animate-fade-in">
-      {/* Person info */}
       <div className="flex items-center gap-4 p-5">
         <div className="relative flex-shrink-0">
           <Image
@@ -252,7 +219,6 @@ function InboxCard({
           </div>
         </div>
 
-        {/* Status badge — top-right corner */}
         <div className={`flex-shrink-0 flex items-center gap-1.5 ${statusConfig.bg} ${statusConfig.text} border ${statusConfig.border} text-[11px] font-bold px-2.5 py-1.5 rounded-full self-start`}>
           <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusConfig.dot}`} />
           {statusConfig.label}
@@ -265,7 +231,6 @@ function InboxCard({
         </p>
       )}
 
-      {/* Action area */}
       {isPending && tab === 'applicants' && (
         <div className="px-5 pb-5 space-y-3 border-t border-slate-50 pt-4">
           <div className="flex gap-2.5">
