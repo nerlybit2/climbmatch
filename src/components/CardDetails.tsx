@@ -5,7 +5,6 @@ import Image from 'next/image'
 import type { Profile, PartnerRequest, GearSet } from '@/lib/types/database'
 import type { CompatibilityInfo } from '@/lib/actions/discover'
 import { Button } from '@/components/Button'
-import { ProfileModal } from '@/components/ProfileModal'
 import { blockUser, reportUser } from '@/lib/actions/safety'
 import { useToast } from '@/hooks/useToast'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -22,7 +21,6 @@ interface Props {
 export function CardDetails({ profile, request, compatibility, onClose, onInterested, onPass }: Props) {
   const [showReport, setShowReport] = useState(false)
   const [showBlockConfirm, setShowBlockConfirm] = useState(false)
-  const [showProfile, setShowProfile] = useState(false)
   const [reportReason, setReportReason] = useState('')
   const [imgSrc, setImgSrc] = useState(profile.photo_url || '/default-avatar.svg')
   const toast = useToast()
@@ -42,6 +40,13 @@ export function CardDetails({ profile, request, compatibility, onClose, onIntere
   const gearList = Object.entries(gear).filter(([, v]) => v).map(([k]) => GEAR_LABELS[k])
   const needsList = Object.entries(needsGear).filter(([, v]) => v).map(([k]) => GEAR_LABELS[k])
 
+  const formattedDate = new Date(request.date).toLocaleDateString('en-US', {
+    weekday: 'long', month: 'short', day: 'numeric',
+  })
+  const timeStr = request.flexible
+    ? t.cardDetails.flexibleTime
+    : `${request.start_time?.slice(0, 5) ?? ''}${request.end_time ? ` – ${request.end_time.slice(0, 5)}` : ''}`
+
   const handleBlock = async () => {
     await blockUser(profile.id)
     toast.addToast(t.toasts.userBlocked, 'success')
@@ -56,176 +61,267 @@ export function CardDetails({ profile, request, compatibility, onClose, onIntere
     toast.addToast(t.toasts.reportSubmitted, 'success')
   }
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-end justify-center" onClick={onClose}>
-      <div className="bg-white w-full max-w-lg rounded-t-3xl max-h-[90vh] overflow-y-auto animate-slide-up" onClick={e => e.stopPropagation()}>
-        {/* Handle bar */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 bg-gray-300 rounded-full" />
-        </div>
+  const hasCompatibility = compatibility && (
+    compatibility.gearMatches.length > 0 || compatibility.carpoolAvailable || compatibility.carpoolNeeded
+  )
 
-        <div className="sticky top-0 bg-white/90 backdrop-blur-xl px-5 py-3 flex items-center justify-between z-10">
-          <h2 className="text-lg font-extrabold">{profile.display_name}</h2>
-          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 transition-colors">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={onClose}>
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+
+      {/* Sheet */}
+      <div
+        className="relative w-full max-w-lg bg-white rounded-t-3xl animate-slide-up flex flex-col"
+        style={{ maxHeight: '92dvh' }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* ── Hero photo with overlaid identity ─────────────────────── */}
+        <div className="relative flex-shrink-0 rounded-t-3xl overflow-hidden" style={{ height: 240 }}>
+          <Image
+            src={imgSrc}
+            alt={profile.display_name}
+            fill
+            sizes="(max-width: 512px) 100vw, 512px"
+            className="object-cover"
+            onError={() => setImgSrc('/default-avatar.svg')}
+            priority
+          />
+          {/* Gradient overlay — dark at bottom, clear at top */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+
+          {/* Handle bar */}
+          <div className="absolute top-3 left-0 right-0 flex justify-center">
+            <div className="w-10 h-1 bg-white/40 rounded-full" />
+          </div>
+
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-black/50 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-        </div>
 
-        <div className="px-5 pb-8 space-y-5">
-          <button onClick={() => setShowProfile(true)} className="w-full block active:scale-[0.99] transition-transform">
-            <Image src={imgSrc} alt={profile.display_name} width={512} height={288} className="w-full h-72 object-cover rounded-2xl" onError={() => setImgSrc('/default-avatar.svg')} />
-            <p className="text-[10px] text-center text-slate-400 font-medium mt-1">Tap photo for full profile</p>
-          </button>
-          {profile.bio && <p className="text-sm text-gray-600 leading-relaxed">{profile.bio}</p>}
-
-          <div className="grid grid-cols-2 gap-4">
-            {profile.experience_level && (
-              <div className="bg-stone-50 rounded-2xl p-3">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t.cardDetails.level}</span>
-                <p className="font-semibold text-sm mt-0.5 capitalize">{profile.experience_level}</p>
-              </div>
-            )}
+          {/* Name + location overlaid on photo */}
+          <div className="absolute bottom-4 left-5 right-16">
+            <h2 className="text-[22px] font-extrabold text-white leading-tight tracking-tight drop-shadow-md">
+              {profile.display_name}
+            </h2>
             {profile.home_area && (
-              <div className="bg-stone-50 rounded-2xl p-3">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t.cardDetails.area}</span>
-                <p className="font-semibold text-sm mt-0.5">{profile.home_area}</p>
-              </div>
-            )}
-            {profile.sport_grade_range && (
-              <div className="bg-stone-50 rounded-2xl p-3">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t.cardDetails.sport}</span>
-                <p className="font-semibold text-sm mt-0.5">{profile.sport_grade_range}</p>
-              </div>
-            )}
-            {profile.boulder_grade_range && (
-              <div className="bg-stone-50 rounded-2xl p-3">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t.cardDetails.boulder}</span>
-                <p className="font-semibold text-sm mt-0.5">{profile.boulder_grade_range}</p>
+              <div className="flex items-center gap-1 mt-0.5">
+                <svg className="w-3 h-3 text-white/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                </svg>
+                <span className="text-sm text-white/80 font-medium drop-shadow-sm">{profile.home_area}</span>
               </div>
             )}
           </div>
+        </div>
 
-          {gearList.length > 0 && (
-            <div>
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t.cardDetails.gear}</span>
-              <div className="flex flex-wrap gap-1.5 mt-1.5">
-                {gearList.map(g => <span key={g} className="bg-stone-100 text-gray-700 text-xs px-3 py-1.5 rounded-full font-medium">{g}</span>)}
+        {/* ── Quick stat pills ───────────────────────────────────────── */}
+        <div className="flex-shrink-0 px-5 py-3 flex flex-wrap gap-2 border-b border-slate-100">
+          {profile.sport_grade_range && (
+            <Pill icon="🧗" label={`Sport ${profile.sport_grade_range}`} color="blue" />
+          )}
+          {profile.boulder_grade_range && (
+            <Pill icon="🪨" label={`Boulder ${profile.boulder_grade_range}`} color="indigo" />
+          )}
+          {profile.has_car && (
+            <Pill icon="🚗" label="Has a car" color="slate" />
+          )}
+          {request.flexible && (
+            <Pill icon="🕐" label="Flexible time" color="slate" />
+          )}
+          {profile.share_weight && profile.weight_kg && (
+            <Pill icon="⚖️" label={`${profile.weight_kg} kg`} color="slate" />
+          )}
+        </div>
+
+        {/* ── Scrollable body ────────────────────────────────────────── */}
+        <div className="flex-1 overflow-y-auto overscroll-contain">
+          <div className="px-5 py-4 space-y-5 pb-4">
+
+            {/* Bio */}
+            {profile.bio && (
+              <p className="text-sm text-slate-600 leading-relaxed">{profile.bio}</p>
+            )}
+
+            {/* Gear they have */}
+            {gearList.length > 0 && (
+              <div>
+                <SectionLabel>{t.cardDetails.gear}</SectionLabel>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {gearList.map(g => (
+                    <span key={g} className="bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+                      {g}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {profile.languages && profile.languages.length > 0 && (
-            <div>
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t.cardDetails.languages}</span>
-              <p className="text-sm mt-0.5 font-medium">{profile.languages.join(', ')}</p>
-            </div>
-          )}
+            {/* Languages */}
+            {profile.languages && profile.languages.length > 0 && (
+              <div>
+                <SectionLabel>{t.cardDetails.languages}</SectionLabel>
+                <p className="text-sm font-semibold text-slate-700 mt-1">{profile.languages.join(' · ')}</p>
+              </div>
+            )}
 
-          {/* Compatibility */}
-          {compatibility && (compatibility.gearMatches.length > 0 || compatibility.carpoolAvailable || compatibility.carpoolNeeded) && (
-            <div className="mb-4">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{t.cardDetails.compatibility}</h3>
-              <div className="bg-emerald-50 rounded-2xl p-3 space-y-2">
-                {compatibility.gearMatches.length > 0 && (
-                  <div className="flex items-center gap-2 text-sm text-emerald-700">
-                    <span className="text-emerald-500">✓</span>
-                    <span>{t.cardDetails.youHave}: {compatibility.gearMatches.join(', ')}</span>
+            {/* Compatibility */}
+            {hasCompatibility && (
+              <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 space-y-2">
+                <SectionLabel className="text-emerald-600">{t.cardDetails.compatibility}</SectionLabel>
+                {compatibility!.gearMatches.length > 0 && (
+                  <div className="flex items-start gap-2 text-sm text-emerald-700">
+                    <span className="text-emerald-500 font-bold mt-0.5">✓</span>
+                    <span>{t.cardDetails.youHave}: <strong>{compatibility!.gearMatches.join(', ')}</strong></span>
                   </div>
                 )}
-                {compatibility.carpoolAvailable && (
+                {compatibility!.carpoolAvailable && (
                   <div className="flex items-center gap-2 text-sm text-emerald-700">
-                    <span className="text-emerald-500">✓</span>
+                    <span className="text-emerald-500 font-bold">✓</span>
                     <span>{t.cardDetails.canOfferRide}</span>
                   </div>
                 )}
-                {!compatibility.carpoolAvailable && compatibility.carpoolNeeded && (
+                {!compatibility!.carpoolAvailable && compatibility!.carpoolNeeded && (
                   <div className="flex items-center gap-2 text-sm text-amber-700">
-                    <span className="text-amber-500">!</span>
+                    <span className="text-amber-500 font-bold">!</span>
                     <span>{t.cardDetails.theyNeedRide}</span>
                   </div>
                 )}
               </div>
-            </div>
-          )}
+            )}
 
-          <div className="border-t border-gray-100 pt-5">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{t.cardDetails.requestDetails}</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-blue-50 rounded-2xl p-3">
-                <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">{t.cardDetails.date}</span>
-                <p className="font-semibold text-sm mt-0.5">{request.date}</p>
+            {/* Request details */}
+            <div>
+              <SectionLabel>{t.cardDetails.requestDetails}</SectionLabel>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <InfoTile label={t.cardDetails.date} value={formattedDate} accent />
+                <InfoTile label={t.cardDetails.time} value={timeStr} accent />
+                <InfoTile label={t.cardDetails.location} value={request.location_name} accent />
+                {request.goal_type && request.goal_type !== 'any' && (
+                  <InfoTile label={t.cardDetails.goal} value={GOAL_LABELS[request.goal_type]} accent />
+                )}
+                {request.desired_grade_range && (
+                  <InfoTile label={t.cardDetails.grade} value={request.desired_grade_range} accent />
+                )}
               </div>
-              <div className="bg-blue-50 rounded-2xl p-3">
-                <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">{t.cardDetails.time}</span>
-                <p className="font-semibold text-sm mt-0.5">{request.flexible ? t.cardDetails.flexibleTime : `${request.start_time?.slice(0, 5) || ''} - ${request.end_time?.slice(0, 5) || ''}`}</p>
-              </div>
-              <div className="bg-blue-50 rounded-2xl p-3">
-                <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">{t.cardDetails.location}</span>
-                <p className="font-semibold text-sm mt-0.5">{request.location_name}</p>
-              </div>
-              {request.goal_type && request.goal_type !== 'any' && (
-                <div className="bg-blue-50 rounded-2xl p-3">
-                  <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">{t.cardDetails.goal}</span>
-                  <p className="font-semibold text-sm mt-0.5">{GOAL_LABELS[request.goal_type]}</p>
+
+              {request.notes && (
+                <div className="mt-3 bg-slate-50 rounded-2xl p-4">
+                  <SectionLabel className="mb-1">Notes</SectionLabel>
+                  <p className="text-sm text-slate-600 leading-relaxed">{request.notes}</p>
                 </div>
               )}
-              {request.desired_grade_range && (
-                <div className="bg-blue-50 rounded-2xl p-3">
-                  <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">{t.cardDetails.grade}</span>
-                  <p className="font-semibold text-sm mt-0.5">{request.desired_grade_range}</p>
+
+              {needsList.length > 0 && (
+                <div className="mt-3">
+                  <SectionLabel>{t.cardDetails.needsGear}</SectionLabel>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {needsList.map(g => (
+                      <span key={g} className="bg-amber-50 border border-amber-100 text-amber-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+                        {g}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
-            {request.notes && <p className="text-sm text-gray-600 mt-3 bg-stone-50 p-4 rounded-2xl leading-relaxed">{request.notes}</p>}
-            {needsList.length > 0 && (
-              <div className="mt-3">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t.cardDetails.needsGear}</span>
-                <p className="text-sm font-medium mt-0.5">{needsList.join(', ')}</p>
+
+            {/* Block / Report */}
+            <div className="flex gap-4 justify-center pt-2 pb-2">
+              {showBlockConfirm ? (
+                <div className="flex items-center gap-3 animate-fade-in">
+                  <span className="text-xs text-slate-500 font-medium">{t.cardDetails.areYouSure}</span>
+                  <Button variant="danger" onClick={handleBlock} className="!text-xs !px-3 !py-1.5">{t.cardDetails.yesBlock}</Button>
+                  <Button variant="ghost" onClick={() => setShowBlockConfirm(false)} className="!text-xs !px-3 !py-1.5">{t.cardDetails.cancel}</Button>
+                </div>
+              ) : (
+                <>
+                  <button onClick={() => setShowBlockConfirm(true)} className="text-xs text-slate-400 hover:text-red-500 transition-colors font-medium">
+                    {t.cardDetails.blockUser}
+                  </button>
+                  <span className="text-slate-200">|</span>
+                  <button onClick={() => setShowReport(true)} className="text-xs text-slate-400 hover:text-red-500 transition-colors font-medium">
+                    {t.cardDetails.reportUser}
+                  </button>
+                </>
+              )}
+            </div>
+
+            {showReport && (
+              <div className="bg-red-50 border border-red-100 p-4 rounded-2xl space-y-3 animate-fade-in">
+                <textarea
+                  value={reportReason}
+                  onChange={e => setReportReason(e.target.value)}
+                  placeholder={t.cardDetails.reportPlaceholder}
+                  className="w-full text-sm border-0 bg-white ring-1 ring-red-200 rounded-xl p-3 resize-none focus:ring-2 focus:ring-red-400 outline-none"
+                  rows={2}
+                />
+                <div className="flex gap-2">
+                  <Button variant="danger" onClick={handleReport} className="text-xs">{t.cardDetails.submitReport}</Button>
+                  <Button variant="ghost" onClick={() => setShowReport(false)} className="text-xs">{t.cardDetails.cancel}</Button>
+                </div>
               </div>
             )}
           </div>
+        </div>
 
-          <div className="flex gap-3 pt-2">
-            <Button variant="secondary" onClick={onPass} className="flex-1">{t.cardDetails.pass}</Button>
-            <Button onClick={onInterested} className="flex-1">{t.cardDetails.interested}</Button>
-          </div>
-
-          <div className="flex gap-4 pt-3 border-t border-gray-100 justify-center">
-            {showBlockConfirm ? (
-              <div className="flex items-center gap-3 animate-fade-in">
-                <span className="text-xs text-gray-500 font-medium">{t.cardDetails.areYouSure}</span>
-                <Button variant="danger" onClick={handleBlock} className="text-xs !px-3 !py-1.5">{t.cardDetails.yesBlock}</Button>
-                <Button variant="ghost" onClick={() => setShowBlockConfirm(false)} className="text-xs !px-3 !py-1.5">{t.cardDetails.cancel}</Button>
-              </div>
-            ) : (
-              <>
-                <button onClick={() => setShowBlockConfirm(true)} className="text-xs text-gray-400 hover:text-red-500 transition-colors font-medium">{t.cardDetails.blockUser}</button>
-                <span className="text-gray-200">|</span>
-                <button onClick={() => setShowReport(true)} className="text-xs text-gray-400 hover:text-red-500 transition-colors font-medium">{t.cardDetails.reportUser}</button>
-              </>
-            )}
-          </div>
-
-          {showProfile && (
-            <ProfileModal
-              profile={profile}
-              onClose={() => setShowProfile(false)}
-            />
-          )}
-
-          {showReport && (
-            <div className="bg-red-50 p-4 rounded-2xl space-y-3 animate-fade-in">
-              <textarea value={reportReason} onChange={e => setReportReason(e.target.value)} placeholder={t.cardDetails.reportPlaceholder} className="w-full text-sm border-0 bg-white ring-1 ring-red-200 rounded-xl p-3 resize-none focus:ring-2 focus:ring-red-400 outline-none" rows={2} />
-              <div className="flex gap-2">
-                <Button variant="danger" onClick={handleReport} className="text-xs">{t.cardDetails.submitReport}</Button>
-                <Button variant="ghost" onClick={() => setShowReport(false)} className="text-xs">{t.cardDetails.cancel}</Button>
-              </div>
-            </div>
-          )}
+        {/* ── Fixed bottom CTA ───────────────────────────────────────── */}
+        <div
+          className="flex-shrink-0 px-5 py-4 bg-white border-t border-slate-100 flex gap-3"
+          style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+        >
+          <button
+            onClick={onPass}
+            className="flex-1 py-4 rounded-2xl bg-slate-100 text-slate-600 font-bold text-sm active:scale-[0.97] transition-transform"
+          >
+            {t.cardDetails.pass}
+          </button>
+          <button
+            onClick={onInterested}
+            className="flex-1 py-4 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-sm shadow-md shadow-blue-400/25 active:scale-[0.97] transition-transform"
+          >
+            {t.cardDetails.interested}
+          </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function Pill({ icon, label, color }: { icon: string; label: string; color: 'blue' | 'indigo' | 'slate' }) {
+  const cls = {
+    blue:   'bg-blue-50 text-blue-700 border-blue-100',
+    indigo: 'bg-indigo-50 text-indigo-700 border-indigo-100',
+    slate:  'bg-slate-100 text-slate-600 border-slate-200',
+  }[color]
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border ${cls}`}>
+      <span>{icon}</span>
+      {label}
+    </span>
+  )
+}
+
+function SectionLabel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <p className={`text-[10px] font-bold uppercase tracking-widest text-slate-400 ${className}`}>
+      {children}
+    </p>
+  )
+}
+
+function InfoTile({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className={`rounded-2xl p-3 ${accent ? 'bg-blue-50' : 'bg-slate-50'}`}>
+      <p className={`text-[10px] font-bold uppercase tracking-wider ${accent ? 'text-blue-400' : 'text-slate-400'}`}>{label}</p>
+      <p className="font-semibold text-sm mt-0.5 text-slate-800">{value}</p>
     </div>
   )
 }
