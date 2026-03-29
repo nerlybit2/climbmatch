@@ -10,15 +10,16 @@ interface MyPostsContextValue {
   applicantCounts: Record<string, number>
   loading: boolean
   refresh: () => Promise<void>
+  updatePost: (id: string, changes: Partial<PartnerRequest>) => void
 }
 
 const MyPostsContext = createContext<MyPostsContextValue | null>(null)
 
 export function MyPostsProvider({ children }: { children: React.ReactNode }) {
-  const [posts, setPosts]                   = useState<PartnerRequest[]>([])
+  const [posts, setPosts]                     = useState<PartnerRequest[]>([])
   const [applicantCounts, setApplicantCounts] = useState<Record<string, number>>({})
-  const [loading, setLoading]               = useState(false)
-  const fetchingRef                         = useRef(false)
+  const [loading, setLoading]                 = useState(false)
+  const fetchingRef                           = useRef(false)
 
   const fetchPosts = useCallback(async () => {
     if (fetchingRef.current) return
@@ -43,18 +44,21 @@ export function MyPostsProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   // Fetch once when the app layout mounts (right after login).
-  // After that, data is only refreshed when the user creates a post,
-  // cancels a post, or accepts a match.
-  useEffect(() => {
-    fetchPosts()
-  }, [fetchPosts])
+  // Data only updates when the user:
+  //   - creates a post  → refresh() called from RequestForm
+  //   - edits a post    → refresh() called from RequestForm
+  //   - cancels a post  → optimistic updatePost('cancelled')
+  useEffect(() => { fetchPosts() }, [fetchPosts])
 
-  const refresh = useCallback(async () => {
-    await fetchPosts()
-  }, [fetchPosts])
+  const refresh = useCallback(async () => { await fetchPosts() }, [fetchPosts])
+
+  // Optimistic update — avoids a round-trip for cancel/status changes
+  const updatePost = useCallback((id: string, changes: Partial<PartnerRequest>) => {
+    setPosts(prev => prev.map(p => p.id === id ? { ...p, ...changes } : p))
+  }, [])
 
   return (
-    <MyPostsContext.Provider value={{ posts, applicantCounts, loading, refresh }}>
+    <MyPostsContext.Provider value={{ posts, applicantCounts, loading, refresh, updatePost }}>
       {children}
     </MyPostsContext.Provider>
   )

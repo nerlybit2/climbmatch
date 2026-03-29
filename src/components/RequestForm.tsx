@@ -11,6 +11,7 @@ import type { GearSet, LocationType, GoalType, PartnerRequest } from '@/lib/type
 import { updateRequest, type RequestPayload } from '@/lib/actions/requests'
 import { useToast } from '@/hooks/useToast'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useMyPosts } from '@/contexts/MyPostsContext'
 
 const DEFAULT_GEAR: GearSet = { rope: false, quickdraws: false, belayDevice: false, crashPad: false, helmet: false }
 
@@ -23,6 +24,7 @@ export function RequestForm({ existing }: Props) {
   const router = useRouter()
   const toast = useToast()
   const { t } = useLanguage()
+  const { refresh: refreshPosts } = useMyPosts()
   const isEdit = !!existing
 
   const today = new Date().toISOString().split('T')[0]
@@ -86,8 +88,8 @@ export function RequestForm({ existing }: Props) {
       if (isEdit) {
         await updateRequest(existing!.id, payload)
         toast.addToast(t.toasts.requestUpdated, 'success')
+        refreshPosts()
         router.push('/requests')
-        router.refresh()
         return
       }
 
@@ -111,8 +113,8 @@ export function RequestForm({ existing }: Props) {
       if (insertError) throw insertError
 
       toast.addToast(t.toasts.requestCreated, 'success')
+      refreshPosts()
       router.push('/requests')
-      router.refresh()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save request')
     } finally {
