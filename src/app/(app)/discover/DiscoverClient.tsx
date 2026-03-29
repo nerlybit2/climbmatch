@@ -12,13 +12,10 @@ import { useToast } from '@/hooks/useToast'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useDiscover } from '@/contexts/DiscoverContext'
 
-export default function DiscoverClient({ initialCards }: { initialCards: ScoredCard[] }) {
+export default function DiscoverClient() {
   const { t } = useLanguage()
   const router = useRouter()
-  const { cards, loading, applyFilters, removeCard: removeFromStore, seed } = useDiscover()
-
-  // Seed the global store with server-fetched data on first render
-  useEffect(() => { seed(initialCards) }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const { cards, loading, applyFilters, removeCard: removeFromStore } = useDiscover()
 
   const TIME_CHIPS = [
     { value: '', label: t.timeChips.anyTime },
