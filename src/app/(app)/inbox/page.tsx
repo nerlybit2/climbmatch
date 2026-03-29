@@ -12,6 +12,7 @@ import { useRealtimeInterests } from '@/hooks/useRealtimeInterests'
 import { createClient } from '@/lib/supabase/client'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useInbox } from '@/contexts/InboxContext'
+import { ProfileModal } from '@/components/ProfileModal'
 import { digitsOnly, parseInstagram, parseFacebook } from '@/lib/phone'
 
 export default function InboxPage() {
@@ -21,6 +22,7 @@ export default function InboxPage() {
   const [tab, setTab] = useState<'applicants' | 'applications'>('applicants')
   const [userId, setUserId] = useState<string | null>(null)
   const [acceptResult, setAcceptResult] = useState<MatchResult | null>(null)
+  const [viewingProfile, setViewingProfile] = useState<InboxItem | null>(null)
   const toast = useToast()
 
   useEffect(() => {
@@ -151,6 +153,7 @@ export default function InboxPage() {
               tab={tab}
               onAccept={handleAccept}
               onDecline={handleDecline}
+              onViewProfile={() => setViewingProfile(item)}
               t={t}
             />
           ))
@@ -164,17 +167,29 @@ export default function InboxPage() {
           closeLabel={t.inbox.backToInbox}
         />
       )}
+
+      {viewingProfile && (
+        <ProfileModal
+          profile={viewingProfile.fromProfile}
+          phone={viewingProfile.phone}
+          instagram={viewingProfile.instagram}
+          facebook={viewingProfile.facebook}
+          location={viewingProfile.request.location_name}
+          onClose={() => setViewingProfile(null)}
+        />
+      )}
     </div>
   )
 }
 
 function InboxCard({
-  item, tab, onAccept, onDecline, t,
+  item, tab, onAccept, onDecline, onViewProfile, t,
 }: {
   item: InboxItem
   tab: 'applicants' | 'applications'
   onAccept: (id: string) => Promise<void>
   onDecline: (id: string) => Promise<void>
+  onViewProfile: () => void
   t: ReturnType<typeof useLanguage>['t']
 }) {
   const [imgSrc, setImgSrc] = useState(item.fromProfile.photo_url || '/default-avatar.svg')
@@ -193,7 +208,7 @@ function InboxCard({
   return (
     <div className="bg-white rounded-3xl card-shadow border border-gray-50 overflow-hidden animate-fade-in">
       <div className="flex items-center gap-4 p-5">
-        <div className="relative flex-shrink-0">
+        <button onClick={onViewProfile} className="relative flex-shrink-0 active:scale-95 transition-transform">
           <Image
             src={imgSrc}
             alt={item.fromProfile.display_name}
@@ -202,12 +217,14 @@ function InboxCard({
             className={`w-14 h-14 rounded-2xl object-cover ${isAccepted ? 'ring-2 ring-emerald-400 ring-offset-1' : ''}`}
             onError={() => setImgSrc('/default-avatar.svg')}
           />
-        </div>
+        </button>
 
         <div className="flex-1 min-w-0">
+          <button onClick={onViewProfile} className="text-left w-full">
           <h3 className="font-bold text-slate-900 text-[15px] leading-tight mb-1.5">
             {item.fromProfile.display_name}
           </h3>
+          </button>
           <p className="text-sm text-slate-500 truncate mb-1">{item.request.location_name}</p>
           <div className="flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

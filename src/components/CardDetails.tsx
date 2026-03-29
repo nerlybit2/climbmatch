@@ -5,6 +5,7 @@ import Image from 'next/image'
 import type { Profile, PartnerRequest, GearSet } from '@/lib/types/database'
 import type { CompatibilityInfo } from '@/lib/actions/discover'
 import { Button } from '@/components/Button'
+import { ProfileModal } from '@/components/ProfileModal'
 import { blockUser, reportUser } from '@/lib/actions/safety'
 import { useToast } from '@/hooks/useToast'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -21,6 +22,7 @@ interface Props {
 export function CardDetails({ profile, request, compatibility, onClose, onInterested, onPass }: Props) {
   const [showReport, setShowReport] = useState(false)
   const [showBlockConfirm, setShowBlockConfirm] = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
   const [reportReason, setReportReason] = useState('')
   const [imgSrc, setImgSrc] = useState(profile.photo_url || '/default-avatar.svg')
   const toast = useToast()
@@ -72,7 +74,10 @@ export function CardDetails({ profile, request, compatibility, onClose, onIntere
         </div>
 
         <div className="px-5 pb-8 space-y-5">
-          <Image src={imgSrc} alt={profile.display_name} width={512} height={288} className="w-full h-72 object-cover rounded-2xl" onError={() => setImgSrc('/default-avatar.svg')} />
+          <button onClick={() => setShowProfile(true)} className="w-full block active:scale-[0.99] transition-transform">
+            <Image src={imgSrc} alt={profile.display_name} width={512} height={288} className="w-full h-72 object-cover rounded-2xl" onError={() => setImgSrc('/default-avatar.svg')} />
+            <p className="text-[10px] text-center text-slate-400 font-medium mt-1">Tap photo for full profile</p>
+          </button>
           {profile.bio && <p className="text-sm text-gray-600 leading-relaxed">{profile.bio}</p>}
 
           <div className="grid grid-cols-2 gap-4">
@@ -202,6 +207,13 @@ export function CardDetails({ profile, request, compatibility, onClose, onIntere
               </>
             )}
           </div>
+
+          {showProfile && (
+            <ProfileModal
+              profile={profile}
+              onClose={() => setShowProfile(false)}
+            />
+          )}
 
           {showReport && (
             <div className="bg-red-50 p-4 rounded-2xl space-y-3 animate-fade-in">
