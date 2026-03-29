@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { checkEmailExists } from '@/lib/actions/auth'
 import { Capacitor } from '@capacitor/core'
 import { App } from '@capacitor/app'
 
@@ -192,18 +191,13 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true); setError('')
     try {
-      const exists = await checkEmailExists(email)
-      if (!exists) {
-        setError("No account found with this email. Please create an account first.")
-        setLoading(false); return
-      }
       const { error: err } = await createClient().auth.signInWithPassword({ email, password })
       if (!err) { window.location.href = '/discover'; return }
       if (err.message === 'Email not confirmed') {
         await createClient().auth.resend({ type: 'signup', email })
         setAwaitingOtp(true); setResendCooldown(30); setLoading(false); return
       }
-      throw new Error('Incorrect password.')
+      throw new Error('Invalid email or password.')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
       setLoading(false)

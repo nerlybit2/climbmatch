@@ -26,15 +26,6 @@ export async function markProfileComplete() {
   })
 }
 
-export async function checkEmailExists(email: string): Promise<boolean> {
-  const admin = createServiceClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
-  const { data } = await admin.auth.admin.listUsers()
-  return data.users.some(u => u.email?.toLowerCase() === email.toLowerCase())
-}
-
 export async function deleteAccount(): Promise<{ error: string | null }> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
