@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { sendNotification } from '@/lib/fcm'
 import type { PartnerRequest, GearSet, LocationType, GoalType } from '@/lib/types/database'
 
 export interface RequestPayload {
@@ -70,6 +71,12 @@ export async function cancelRequest(id: string): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  // Fetch location and pending applicants before cancelling
+  const [{ data: request }, { data: pendingInterests }] = await Promise.all([
+    supabase.from('partner_requests').select('location_name').eq('id', id).eq('user_id', user.id).single(),
+    supabase.from('interests').select('from_user_id').eq('request_id', id).eq('status', 'pending'),
+  ])
+
   const { error } = await supabase
     .from('partner_requests')
     .update({ status: 'cancelled' })
@@ -77,4 +84,16 @@ export async function cancelRequest(id: string): Promise<void> {
     .eq('user_id', user.id)
 
   if (error) throw error
+
+  // Notify all pending applicants that the post was cancelled
+  if (pendingInterests && pendingInterests.length > 0 && request) {
+    const unique = [...new Set(pendingInterests.map(i => i.from_user_id))]
+    unique.forEach(applicantId => {
+      sendNotification(applicantId, {
+        title: 'Climbing post cancelled',
+        body: `The climb at ${request.location_name} was cancelled. Find another partner!`,
+        data: { screen: 'discover' },
+      }).catch(console.error)
+    })
+  }
 }

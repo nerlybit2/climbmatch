@@ -105,7 +105,7 @@ export function RequestForm({ existing }: Props) {
         .eq('user_id', user.id)
         .eq('status', 'active')
 
-      if (count && count >= 2) { setError(t.newRequest.errors.maxRequests); setLoading(false); return }
+      if (count && count >= 10) { setError(t.newRequest.errors.maxRequests); setLoading(false); return }
 
       const { error: insertError } = await supabase.from('partner_requests').insert({ user_id: user.id, ...payload })
       if (insertError) throw insertError

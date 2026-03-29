@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#38BDF8"/>
+      <stop offset="55%" style="stop-color:#60A5FA"/>
+      <stop offset="100%" style="stop-color:#6366F1"/>
+    </linearGradient>
+    <linearGradient id="wallgrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0"/>
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.13"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- Rock wall (right panel) -->
+  <path d="M 290,0 L 512,0 L 512,512 L 305,512 L 260,310 L 285,140 Z" fill="url(#wallgrad)"/>
+  <!-- Wall edge line -->
+  <path d="M 285,140 L 260,310 L 305,512" fill="none" stroke="white" stroke-width="5" stroke-opacity="0.2"/>
+
+  <!-- Rock holds (subtle dots on wall) -->
+  <circle cx="350" cy="112" r="9" fill="white" opacity="0.25"/>
+  <circle cx="388" cy="185" r="7" fill="white" opacity="0.2"/>
+  <circle cx="330" cy="258" r="8" fill="white" opacity="0.2"/>
+  <circle cx="375" cy="300" r="7" fill="white" opacity="0.18"/>
+
+  <!-- ═══ ROPE ═══ -->
+  <!-- From belayer guide hand up through a natural arc to climber harness -->
+  <path d="M 192,318 C 228,268 265,228 308,190"
+        fill="none" stroke="white" stroke-width="10" stroke-linecap="round" opacity="0.92"/>
+
+  <!-- ═══ CLIMBER (upper right — on the wall) ═══ -->
+  <g fill="white" stroke="white" stroke-linecap="round">
+    <!-- Helmet dome -->
+    <ellipse cx="330" cy="104" rx="30" ry="18" />
+    <!-- Helmet brim -->
+    <rect x="300" y="115" width="60" height="7" rx="3.5"/>
+    <!-- Head -->
+    <circle cx="330" cy="128" r="23"/>
+    <!-- Body — leaning toward wall -->
+    <line x1="330" y1="151" x2="324" y2="228" stroke-width="19"/>
+    <!-- Left arm — reaching up for hold -->
+    <line x1="322" y1="168" x2="275" y2="108" stroke-width="17"/>
+    <!-- Right arm — hand pressing wall -->
+    <line x1="332" y1="170" x2="378" y2="158" stroke-width="17"/>
+    <!-- Left leg — foot on foothold -->
+    <line x1="318" y1="228" x2="288" y2="290" stroke-width="17"/>
+    <!-- Right leg — foot on foothold -->
+    <line x1="330" y1="228" x2="362" y2="278" stroke-width="17"/>
+    <!-- Harness indicator (where rope attaches) -->
+    <ellipse cx="328" cy="192" rx="13" ry="8" fill="none" stroke="white" stroke-width="7" opacity="0.7"/>
+  </g>
+
+  <!-- ═══ BELAYER (lower left — standing, looking up) ═══ -->
+  <g fill="white" stroke="white" stroke-linecap="round">
+    <!-- Helmet dome -->
+    <ellipse cx="152" cy="277" rx="28" ry="17"/>
+    <!-- Helmet brim -->
+    <rect x="124" y="287" width="56" height="7" rx="3.5"/>
+    <!-- Head — tilted back to look up -->
+    <circle cx="154" cy="303" r="22"/>
+    <!-- Body — slight lean back (belayer stance) -->
+    <line x1="154" y1="325" x2="146" y2="402" stroke-width="19"/>
+    <!-- Left arm — brake hand (down, holding rope below device) -->
+    <line x1="142" y1="350" x2="104" y2="378" stroke-width="17"/>
+    <!-- Right arm — guide hand (up, rope going to climber) -->
+    <line x1="164" y1="342" x2="196" y2="314" stroke-width="17"/>
+    <!-- Left leg -->
+    <line x1="136" y1="402" x2="108" y2="460" stroke-width="17"/>
+    <!-- Right leg -->
+    <line x1="156" y1="402" x2="178" y2="458" stroke-width="17"/>
+    <!-- Belay device (ATC shape at guide hand) -->
+    <ellipse cx="196" cy="312" rx="12" ry="7" stroke-width="6" fill="white" opacity="0.75"/>
+    <!-- Rope below brake hand (tail) -->
+    <line x1="104" y1="378" x2="95" y2="415" stroke-width="10" opacity="0.7"/>
+  </g>
+
+</svg>

@@ -89,52 +89,42 @@ export async function discoverRequests(filters: DiscoverFilters): Promise<Scored
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
 
-  // Expire stale requests on each discovery query
-  try { await supabase.rpc('expire_old_requests') } catch {}
-
-  const { data: myProfile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
-
-  const { data: blocksOut } = await supabase
-    .from('blocks')
-    .select('blocked_id')
-    .eq('blocker_id', user.id)
-
-  const { data: blocksIn } = await supabase
-    .from('blocks')
-    .select('blocker_id')
-    .eq('blocked_id', user.id)
-
-  const blockedIds = new Set([
-    ...(blocksOut || []).map(b => b.blocked_id),
-    ...(blocksIn || []).map(b => b.blocker_id),
-  ])
-
-  const { data: myInterests } = await supabase
-    .from('interests')
-    .select('request_id')
-    .eq('from_user_id', user.id)
-
-  const swipedRequestIds = new Set((myInterests || []).map(i => i.request_id))
-
   const today = new Date().toISOString().split('T')[0]
   const oneYearAhead = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   const dateFrom = filters.date_from || today
   const dateTo = filters.date_to || oneYearAhead
 
-  const { data: requests } = await supabase
-    .from('partner_requests')
-    .select('*')
-    .eq('status', 'active')
-    .gte('date', dateFrom)
-    .lte('date', dateTo)
-    .neq('user_id', user.id)
-    .order('date', { ascending: true })
-    .order('created_at', { ascending: false })
+  // Fire all independent queries in parallel — no sequential waiting
+  const [
+    { data: myProfile },
+    { data: blocksOut },
+    { data: blocksIn },
+    { data: myInterests },
+    { data: requests },
+  ] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', user.id).single(),
+    supabase.from('blocks').select('blocked_id').eq('blocker_id', user.id),
+    supabase.from('blocks').select('blocker_id').eq('blocked_id', user.id),
+    supabase.from('interests').select('request_id').eq('from_user_id', user.id),
+    supabase
+      .from('partner_requests')
+      .select('*')
+      .eq('status', 'active')
+      .gte('date', dateFrom)
+      .lte('date', dateTo)
+      .neq('user_id', user.id)
+      .order('date', { ascending: true })
+      .order('created_at', { ascending: false })
+      .limit(200),
+  ])
+
   if (!requests || requests.length === 0) return []
+
+  const blockedIds = new Set([
+    ...(blocksOut || []).map(b => b.blocked_id),
+    ...(blocksIn || []).map(b => b.blocker_id),
+  ])
+  const swipedRequestIds = new Set((myInterests || []).map(i => i.request_id))
 
   const eligible = requests.filter(r => !blockedIds.has(r.user_id) && !swipedRequestIds.has(r.id))
 

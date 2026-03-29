@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Input } from '@/components/Input'
@@ -9,7 +10,7 @@ import { PhoneInput } from '@/components/PhoneInput'
 import { GearCheckboxes } from '@/components/GearCheckboxes'
 import { Button } from '@/components/Button'
 import type { Profile, GearSet } from '@/lib/types/database'
-import { signOut } from '@/lib/actions/auth'
+import { signOut, deleteAccount, markProfileComplete } from '@/lib/actions/auth'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 const DEFAULT_GEAR: GearSet = { rope: false, quickdraws: false, belayDevice: false, crashPad: false, helmet: false }
@@ -27,6 +28,8 @@ export function ProfileForm({ profile, userEmail, prefill }: Props) {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [photoUrl, setPhotoUrl] = useState(profile?.photo_url || prefill?.photoUrl || '')
   const [displayName, setDisplayName] = useState(profile?.display_name || prefill?.displayName || '')
   const [homeArea, setHomeArea] = useState(profile?.home_area || '')
@@ -96,6 +99,7 @@ export function ProfileForm({ profile, userEmail, prefill }: Props) {
       }
       const { error: upsertError } = await supabase.from('profiles').upsert(profileData)
       if (upsertError) throw upsertError
+      await markProfileComplete()
       router.push('/discover')
       router.refresh()
     } catch (err: unknown) {
@@ -195,8 +199,60 @@ export function ProfileForm({ profile, userEmail, prefill }: Props) {
           <form action={signOut}>
             <Button type="submit" variant="ghost" className="w-full !text-red-400">{t.profile.signOut}</Button>
           </form>
+
+          {/* Delete account */}
+          {!showDeleteConfirm ? (
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full text-xs text-slate-400 hover:text-red-400 transition-colors py-2 font-medium"
+            >
+              Delete account
+            </button>
+          ) : (
+            <div className="bg-red-50 border border-red-100 rounded-2xl p-4 space-y-3">
+              <p className="text-sm font-bold text-red-600">Delete your account?</p>
+              <p className="text-xs text-red-500 leading-relaxed">
+                This permanently deletes your profile, posts, and all match history. This cannot be undone.
+              </p>
+              {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 bg-white border border-slate-200 text-slate-600 text-sm font-bold rounded-xl py-2.5"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={deleting}
+                  onClick={async () => {
+                    setDeleting(true)
+                    const result = await deleteAccount()
+                    if (result.error) {
+                      setError(result.error)
+                      setDeleting(false)
+                    } else {
+                      router.push('/login')
+                    }
+                  }}
+                  className="flex-1 bg-red-500 text-white text-sm font-bold rounded-xl py-2.5 disabled:opacity-60"
+                >
+                  {deleting ? 'Deleting…' : 'Yes, delete'}
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
+
+      {/* Privacy policy link */}
+      <div className="pb-4 text-center">
+        <Link href="/privacy" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
+          Privacy Policy
+        </Link>
+      </div>
     </div>
     </>
   )

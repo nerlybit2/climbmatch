@@ -301,7 +301,43 @@ test('flow: navbar highlights the correct tab on every route', async ({ page }) 
   expect(await activeTabHref()).toBe('/profile')
 })
 
-// ─── flow 7: new post validation ─────────────────────────────────────────────
+// ─── flow 7: signup shows OTP screen ─────────────────────────────────────────
+
+test('flow: signing up with a new email shows the OTP verification screen', async ({ page }) => {
+  // Use a fresh page with no session for this test
+  await page.context().clearCookies()
+  await page.goto('/login')
+
+  // Switch to Create Account
+  await page.getByRole('button', { name: /create account/i }).click()
+  await expect(page.getByPlaceholder('Your name')).toBeVisible({ timeout: 5_000 })
+
+  // Fill in signup form with a unique email
+  const uniqueEmail = `e2e+otp+${Date.now()}@climbmatch.test`
+  await page.getByPlaceholder('Your name').fill('OTP Test User')
+  await page.getByPlaceholder('Email').fill(uniqueEmail)
+  await page.getByPlaceholder(/^Password \(min/i).fill('TestPass123!')
+  await page.getByPlaceholder(/confirm password/i).fill('TestPass123!')
+
+  await page.getByRole('button', { name: /^create account$/i }).click()
+
+  // Should show the 6-box OTP screen
+  await expect(page.getByText(/enter verification code/i)).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByText(uniqueEmail)).toBeVisible()
+
+  // 6 OTP input boxes should be rendered
+  const boxes = page.locator('input[inputmode="numeric"]')
+  await expect(boxes).toHaveCount(6)
+
+  // Resend button present (with cooldown)
+  await expect(page.getByRole('button', { name: /resend/i })).toBeVisible()
+
+  // Back button works
+  await page.getByRole('button', { name: /← Back|back/i }).click()
+  await expect(page.getByRole('button', { name: /create account/i })).toBeVisible()
+})
+
+// ─── flow 8: new post validation ─────────────────────────────────────────────
 
 test('flow: submitting empty post form shows validation error', async ({ page }) => {
   await page.goto('/requests/new')

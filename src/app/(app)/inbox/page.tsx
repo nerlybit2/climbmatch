@@ -6,7 +6,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { MatchCelebration } from '@/components/MatchCelebration'
 import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import { PageHeader } from '@/components/PageHeader'
-import { getInbox, getSentInterests, acceptInterest, declineInterest, type InboxItem } from '@/lib/actions/interests'
+import { getInboxData, acceptInterest, declineInterest, type InboxItem } from '@/lib/actions/interests'
 import type { MatchResult } from '@/lib/actions/interests'
 import { useToast } from '@/hooks/useToast'
 import { useRealtimeInterests } from '@/hooks/useRealtimeInterests'
@@ -49,9 +49,9 @@ export default function InboxPage() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [r, s] = await Promise.all([getInbox(), getSentInterests()])
-      setReceived(r)
-      setSent(s)
+      const { received, sent } = await getInboxData()
+      setReceived(received)
+      setSent(sent)
     } catch (err) {
       console.error(err)
     } finally {
@@ -90,13 +90,13 @@ export default function InboxPage() {
       <PageHeader title={t.inbox.title} subtitle={t.inbox.subtitle} />
 
       {/* Tab switcher */}
-      <div className="flex gap-1.5 mx-5 mb-5 bg-white/60 rounded-2xl p-1.5 shadow-sm border border-white/80">
+      <div className="flex gap-1 mx-5 mb-5 bg-slate-100/80 rounded-2xl p-1 border border-slate-200/60">
         <button
           onClick={() => setTab('applicants')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${
             tab === 'applicants'
-              ? 'bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-md shadow-blue-400/30'
-              : 'text-slate-400 hover:text-slate-600'
+              ? 'bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-md shadow-blue-400/25'
+              : 'text-slate-500 hover:text-slate-700'
           }`}
         >
           {t.inbox.applicants}
@@ -112,16 +112,18 @@ export default function InboxPage() {
           onClick={() => setTab('applications')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${
             tab === 'applications'
-              ? 'bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-md shadow-blue-400/30'
-              : 'text-slate-400 hover:text-slate-600'
+              ? 'bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-md shadow-blue-400/25'
+              : 'text-slate-500 hover:text-slate-700'
           }`}
         >
           {t.inbox.myApplications}
-          <span className={`text-[10px] font-black min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 ${
-            tab === 'applications' ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-500'
-          }`}>
-            {sent.length}
-          </span>
+          {sent.length > 0 && (
+            <span className={`text-[10px] font-black min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 ${
+              tab === 'applications' ? 'bg-white/25 text-white' : 'bg-slate-400 text-white'
+            }`}>
+              {sent.length}
+            </span>
+          )}
         </button>
       </div>
 
@@ -215,15 +217,15 @@ function InboxCard({
   const isDeclined = status === 'declined'
 
   const statusConfig = {
-    pending:  { label: t.inbox.pending,  bg: 'bg-amber-50',   text: 'text-amber-600',  dot: 'bg-amber-400' },
-    accepted: { label: t.inbox.accepted, bg: 'bg-emerald-50', text: 'text-emerald-600', dot: 'bg-emerald-400' },
-    declined: { label: t.inbox.declined, bg: 'bg-red-50',     text: 'text-red-500',    dot: 'bg-red-400' },
-  }[status] ?? { label: status, bg: 'bg-slate-50', text: 'text-slate-500', dot: 'bg-slate-300' }
+    pending:  { label: t.inbox.pending,  bg: 'bg-amber-50',   text: 'text-amber-600',  dot: 'bg-amber-400',   border: 'border-amber-100' },
+    accepted: { label: t.inbox.accepted, bg: 'bg-emerald-50', text: 'text-emerald-600', dot: 'bg-emerald-400', border: 'border-emerald-100' },
+    declined: { label: t.inbox.declined, bg: 'bg-red-50',     text: 'text-red-500',    dot: 'bg-red-400',     border: 'border-red-100' },
+  }[status] ?? { label: status, bg: 'bg-slate-50', text: 'text-slate-500', dot: 'bg-slate-300', border: 'border-slate-100' }
 
   return (
     <div className="bg-white rounded-3xl card-shadow border border-gray-50 overflow-hidden animate-fade-in">
       {/* Person info */}
-      <div className="flex items-center gap-4 p-5 pb-4">
+      <div className="flex items-center gap-4 p-5">
         <div className="relative flex-shrink-0">
           <Image
             src={imgSrc}
@@ -236,16 +238,11 @@ function InboxCard({
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-bold text-slate-900 text-[15px] leading-tight">{item.fromProfile.display_name}</h3>
-            {/* Status badge */}
-            <span className={`flex-shrink-0 flex items-center gap-1.5 ${statusConfig.bg} ${statusConfig.text} text-[11px] font-bold px-2.5 py-1 rounded-full`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`} />
-              {statusConfig.label}
-            </span>
-          </div>
-          <p className="text-sm text-slate-500 mt-0.5 truncate">{item.request.location_name}</p>
-          <div className="flex items-center gap-1.5 mt-1">
+          <h3 className="font-bold text-slate-900 text-[15px] leading-tight mb-1.5">
+            {item.fromProfile.display_name}
+          </h3>
+          <p className="text-sm text-slate-500 truncate mb-1">{item.request.location_name}</p>
+          <div className="flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
@@ -254,15 +251,23 @@ function InboxCard({
             </span>
           </div>
         </div>
+
+        {/* Status badge — top-right corner */}
+        <div className={`flex-shrink-0 flex items-center gap-1.5 ${statusConfig.bg} ${statusConfig.text} border ${statusConfig.border} text-[11px] font-bold px-2.5 py-1.5 rounded-full self-start`}>
+          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusConfig.dot}`} />
+          {statusConfig.label}
+        </div>
       </div>
 
       {item.request.notes && (
-        <p className="px-5 pb-4 text-sm text-slate-600 leading-relaxed border-t border-gray-50 pt-3">{item.request.notes}</p>
+        <p className="px-5 pb-4 text-sm text-slate-600 leading-relaxed border-t border-slate-50 pt-3 -mt-1">
+          {item.request.notes}
+        </p>
       )}
 
       {/* Action area */}
       {isPending && tab === 'applicants' && (
-        <div className="px-5 pb-5 space-y-3">
+        <div className="px-5 pb-5 space-y-3 border-t border-slate-50 pt-4">
           <div className="flex gap-2.5">
             <button
               onClick={async () => { setActioning(true); await onAccept(item.interest.id); setActioning(false) }}
@@ -279,13 +284,20 @@ function InboxCard({
               {actioning ? '…' : t.inbox.decline}
             </button>
           </div>
-          <ContactButtons phone={item.phone} instagram={item.instagram} facebook={item.facebook} location={item.request.location_name} waLabel={t.inbox.whatsapp} smsLabel={t.inbox.sms} />
+          <ContactButtons
+            phone={item.phone}
+            instagram={item.instagram}
+            facebook={item.facebook}
+            location={item.request.location_name}
+            waLabel={t.inbox.whatsapp}
+            smsLabel={t.inbox.sms}
+          />
         </div>
       )}
 
       {isPending && tab === 'applications' && (
-        <div className="px-5 pb-5">
-          <div className="bg-amber-50 rounded-2xl px-4 py-3 flex items-center gap-2">
+        <div className="px-5 pb-5 border-t border-slate-50 pt-4">
+          <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3 flex items-center gap-2.5">
             <svg className="w-4 h-4 text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -295,14 +307,21 @@ function InboxCard({
       )}
 
       {isAccepted && (
-        <div className="px-5 pb-5">
-          <ContactButtons phone={item.phone} instagram={item.instagram} facebook={item.facebook} location={item.request.location_name} waLabel={t.inbox.whatsapp} smsLabel={t.inbox.sms} />
+        <div className="px-5 pb-5 border-t border-slate-50 pt-4">
+          <ContactButtons
+            phone={item.phone}
+            instagram={item.instagram}
+            facebook={item.facebook}
+            location={item.request.location_name}
+            waLabel={t.inbox.whatsapp}
+            smsLabel={t.inbox.sms}
+          />
         </div>
       )}
 
       {isDeclined && (
-        <div className="px-5 pb-5">
-          <div className="bg-red-50 rounded-2xl px-4 py-3 flex items-center gap-2">
+        <div className="px-5 pb-5 border-t border-slate-50 pt-4">
+          <div className="bg-red-50 border border-red-100 rounded-2xl px-4 py-3 flex items-center gap-2.5">
             <svg className="w-4 h-4 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -334,13 +353,13 @@ function ContactButtons({
   const msg = encodeURIComponent(`Hey! I saw your ClimbMatch request at ${location}. Let's connect! 🧗`)
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       {hasPhone && (
-        <div className="flex gap-2">
+        <>
           <a
             href={`https://wa.me/${cleanPhone}?text=${msg}`}
             target="_blank" rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] text-white text-sm font-bold rounded-2xl py-3 active:scale-[0.97] transition-transform shadow-sm shadow-green-500/20"
+            className="flex items-center justify-center gap-2.5 w-full bg-[#25D366] text-white text-sm font-bold rounded-2xl py-3.5 active:scale-[0.97] transition-transform shadow-sm shadow-green-500/20"
           >
             <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
@@ -350,22 +369,22 @@ function ContactButtons({
           </a>
           <a
             href={`sms:+${cleanPhone}`}
-            className="flex-1 flex items-center justify-center gap-2 bg-slate-100 text-slate-700 text-sm font-bold rounded-2xl py-3 active:scale-[0.97] transition-transform"
+            className="flex items-center justify-center gap-2.5 w-full bg-slate-100 text-slate-700 text-sm font-bold rounded-2xl py-3.5 active:scale-[0.97] transition-transform border border-slate-200/60"
           >
             <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
             </svg>
             {smsLabel}
           </a>
-        </div>
+        </>
       )}
       {(igHandle || fbHandle) && (
-        <div className="flex gap-2">
+        <div className="flex gap-2.5">
           {igHandle && (
             <a
               href={`https://instagram.com/${igHandle}`}
               target="_blank" rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-2 text-white text-sm font-bold rounded-2xl py-3 active:scale-[0.97] transition-transform"
+              className="flex-1 flex items-center justify-center gap-2 text-white text-sm font-bold rounded-2xl py-3.5 active:scale-[0.97] transition-transform"
               style={{ background: 'linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)' }}
             >
               <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
@@ -378,7 +397,7 @@ function ContactButtons({
             <a
               href={`https://facebook.com/${fbHandle}`}
               target="_blank" rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-2 bg-[#1877F2] text-white text-sm font-bold rounded-2xl py-3 active:scale-[0.97] transition-transform"
+              className="flex-1 flex items-center justify-center gap-2 bg-[#1877F2] text-white text-sm font-bold rounded-2xl py-3.5 active:scale-[0.97] transition-transform"
             >
               <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>

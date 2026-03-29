@@ -1,15 +1,19 @@
 import { Navbar } from '@/components/Navbar'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { LanguageProvider } from '@/contexts/LanguageContext'
+import { DiscoverProvider } from '@/contexts/DiscoverContext'
 import { ToastContainer } from '@/components/Toast'
 import { DeepLinkHandler } from '@/components/DeepLinkHandler'
+import { PushNotificationProvider } from '@/components/PushNotificationProvider'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <LanguageProvider>
+      <DiscoverProvider>
       <div className="min-h-[100dvh] flex flex-col bg-[#EDF1F7]">
         <ToastProvider>
           <DeepLinkHandler />
+          <PushNotificationProvider />
           <main className="flex-1 pb-28 overflow-y-auto" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
             {children}
           </main>
@@ -17,6 +21,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </ToastProvider>
         <Navbar />
       </div>
+      </DiscoverProvider>
     </LanguageProvider>
   )
 }
