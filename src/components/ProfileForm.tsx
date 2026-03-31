@@ -13,6 +13,7 @@ import type { Profile, GearSet } from '@/lib/types/database'
 import { signOut, deleteAccount, markProfileComplete } from '@/lib/actions/auth'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useProfile } from '@/contexts/ProfileContext'
+import { clearCache, CACHE_KEYS } from '@/lib/cache'
 
 const DEFAULT_GEAR: GearSet = { rope: false, quickdraws: false, belayDevice: false, crashPad: false, helmet: false }
 
@@ -198,9 +199,17 @@ export function ProfileForm({ profile, userEmail, prefill }: Props) {
       {profile && (
         <>
           <p className="text-xs text-gray-400 font-medium">{t.profile.signedInAs} {userEmail}</p>
-          <form action={signOut}>
-            <Button type="submit" variant="ghost" className="w-full !text-red-400">{t.profile.signOut}</Button>
-          </form>
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full !text-red-400"
+            onClick={() => {
+              Object.values(CACHE_KEYS).forEach(k => clearCache(k))
+              signOut()
+            }}
+          >
+            {t.profile.signOut}
+          </Button>
 
           {/* Delete account */}
           {!showDeleteConfirm ? (
