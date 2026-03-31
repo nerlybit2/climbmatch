@@ -254,8 +254,8 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-white/20 backdrop-blur-xl rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-2xl border border-white/20">
-            <span className="text-4xl">🧗</span>
+          <div className="w-20 h-20 bg-white/20 backdrop-blur-xl rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-2xl border border-white/20 overflow-hidden">
+            <img src="/logo.png" alt="ClimbMatch" className="w-16 h-16 object-contain" />
           </div>
           <h1 className="text-4xl font-extrabold text-white tracking-tight">ClimbMatch</h1>
           <p className="text-white/60 mt-1.5 text-base font-medium">Find your climbing partner</p>
