@@ -4,6 +4,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext'
 import { DiscoverProvider } from '@/contexts/DiscoverContext'
 import { InboxProvider } from '@/contexts/InboxContext'
 import { MyPostsProvider } from '@/contexts/MyPostsContext'
+import { ProfileProvider } from '@/contexts/ProfileContext'
 import { ToastContainer } from '@/components/Toast'
 import { CapacitorHandlers } from '@/components/CapacitorHandlers'
 
@@ -13,6 +14,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <DiscoverProvider>
       <InboxProvider>
       <MyPostsProvider>
+      <ProfileProvider>
       <div className="min-h-[100dvh] flex flex-col bg-[#EDF1F7]">
         <ToastProvider>
           <CapacitorHandlers />
@@ -23,6 +25,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </ToastProvider>
         <Navbar />
       </div>
+      </ProfileProvider>
       </MyPostsProvider>
       </InboxProvider>
       </DiscoverProvider>

@@ -1,19 +1,24 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useProfile } from '@/contexts/ProfileContext'
 import { ProfileForm } from '@/components/ProfileForm'
 
-export default async function ProfilePage() {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+export default function ProfilePage() {
+  const { profile, userEmail, userMeta, loading } = useProfile()
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
-
-  const meta = user.user_metadata as { full_name?: string; name?: string; avatar_url?: string; picture?: string } | undefined
+  if (loading) {
+    return (
+      <div className="px-5 pt-6 space-y-4 animate-pulse">
+        <div className="flex items-center gap-5">
+          <div className="w-24 h-24 rounded-3xl bg-slate-200" />
+          <div className="h-9 w-32 bg-slate-200 rounded-2xl" />
+        </div>
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-14 bg-slate-200 rounded-2xl" />
+        ))}
+      </div>
+    )
+  }
 
   const isNewUser = !profile?.display_name || !profile?.photo_url || !profile?.phone
 
@@ -32,10 +37,10 @@ export default async function ProfilePage() {
       <div className="px-5 pb-8">
         <ProfileForm
           profile={profile}
-          userEmail={user.email || ''}
+          userEmail={userEmail}
           prefill={profile ? undefined : {
-            displayName: meta?.full_name || meta?.name || '',
-            photoUrl: meta?.avatar_url || meta?.picture || '',
+            displayName: userMeta?.full_name || userMeta?.name || '',
+            photoUrl: userMeta?.avatar_url || userMeta?.picture || '',
           }}
         />
       </div>

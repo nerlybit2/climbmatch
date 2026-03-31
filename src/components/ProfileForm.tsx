@@ -12,6 +12,7 @@ import { Button } from '@/components/Button'
 import type { Profile, GearSet } from '@/lib/types/database'
 import { signOut, deleteAccount, markProfileComplete } from '@/lib/actions/auth'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useProfile } from '@/contexts/ProfileContext'
 
 const DEFAULT_GEAR: GearSet = { rope: false, quickdraws: false, belayDevice: false, crashPad: false, helmet: false }
 
@@ -25,6 +26,7 @@ export function ProfileForm({ profile, userEmail, prefill }: Props) {
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
   const { t } = useLanguage()
+  const { updateProfile } = useProfile()
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -100,8 +102,8 @@ export function ProfileForm({ profile, userEmail, prefill }: Props) {
       const { error: upsertError } = await supabase.from('profiles').upsert(profileData)
       if (upsertError) throw upsertError
       await markProfileComplete()
+      updateProfile(profileData as Profile)
       router.push('/discover')
-      router.refresh()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save profile')
     } finally {
