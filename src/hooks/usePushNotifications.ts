@@ -15,16 +15,21 @@ export function usePushNotifications() {
     let mounted = true
 
     async function register() {
-      // Check / request permission
-      let permStatus = await PushNotifications.checkPermissions()
+      try {
+        // Check / request permission
+        let permStatus = await PushNotifications.checkPermissions()
 
-      if (permStatus.receive === 'prompt') {
-        permStatus = await PushNotifications.requestPermissions()
+        if (permStatus.receive === 'prompt') {
+          permStatus = await PushNotifications.requestPermissions()
+        }
+
+        if (permStatus.receive !== 'granted') return
+
+        await PushNotifications.register()
+      } catch (err) {
+        // Firebase not configured or registration failed — fail silently
+        console.warn('[Push] Registration failed:', err)
       }
-
-      if (permStatus.receive !== 'granted') return
-
-      await PushNotifications.register()
     }
 
     // Token received from FCM
