@@ -50,7 +50,7 @@ export default function MyPostsPage() {
     <div>
       <PageHeader title={t.requests.title} subtitle={t.requests.subtitle} />
 
-      <div className="px-5 space-y-3 pb-8">
+      <div className="px-5 space-y-3 pb-28">
         {loading ? (
           <div className="space-y-3">
             {[1, 2].map(i => (

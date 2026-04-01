@@ -46,7 +46,7 @@ export default function ProfilePage() {
           </p>
         </div>
       )}
-      <div className="px-5 pb-8">
+      <div className="px-5 pb-28">
         <ProfileForm
           profile={profile}
           userEmail={userEmail}

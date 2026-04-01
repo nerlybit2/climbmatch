@@ -131,7 +131,7 @@ export function RequestForm({ existing }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="px-5 space-y-5 pb-8">
+    <form onSubmit={handleSubmit} className="px-5 space-y-5 pb-28">
       <MultiDateSelector value={dates} onChange={setDates} minDate={today} label={t.newRequest.date} />
 
       <label className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm ring-1 ring-gray-100 cursor-pointer">

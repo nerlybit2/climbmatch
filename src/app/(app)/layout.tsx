@@ -18,7 +18,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="h-[100dvh] overflow-hidden flex flex-col bg-[#EDF1F7]">
         <ToastProvider>
           <CapacitorHandlers />
-          <main className="flex-1 overflow-hidden pb-28 flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+          <main className="flex-1 overflow-hidden flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
             {children}
           </main>
           <ToastContainer />

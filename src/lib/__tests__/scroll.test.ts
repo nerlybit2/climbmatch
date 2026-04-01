@@ -276,11 +276,18 @@ describe('Scroll container class contract', () => {
     expect(mainMatch![0]).toContain('overflow-hidden')
   })
 
-  it('AppLayout main element has pb-28 for navbar clearance', () => {
+  it('AppLayout main element has no pb-28 (navbar clearance belongs in scroll content, not the container)', () => {
+    // pb-28 on <main> shrinks the scroll container height, creating a dead-zone gap
+    // between content and the navbar. Clearance must live inside the scrollable content.
     const src = readSrc('app/(app)/layout.tsx')
     const mainMatch = src.match(/<main[^>]+>/)
     expect(mainMatch).not.toBeNull()
-    expect(mainMatch![0]).toContain('pb-28')
+    expect(mainMatch![0]).not.toContain('pb-28')
+  })
+
+  it('RequestForm content has pb-28 so the submit button scrolls clear of the navbar', () => {
+    const src = readSrc('components/RequestForm.tsx')
+    expect(src).toContain('pb-28')
   })
 
   it('new-request page root div has flex-1 min-h-0 and overflow-y-auto (no PullToRefresh)', () => {
