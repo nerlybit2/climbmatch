@@ -50,3 +50,5 @@ node_modules/
 tests/e2e/.auth
 test-results/
 playwright-report/
+*.jks
+*.keystore
