@@ -9,13 +9,27 @@
  *    enforce the CSS height chain required for scrolling to work:
  *
  *    Outer shell:  h-[100dvh] overflow-hidden  → definite viewport height
- *    <main>:       flex-1 overflow-hidden pb-28 → constrained; pb-28 reserves navbar clearance
+ *    <main>:       flex-1 flex flex-col overflow-hidden pb-28 → constrained flex column; pb-28 reserves navbar clearance
  *    Wrapper div:  flex-1 min-h-0 overflow-y-auto → fills parent and scrolls content
+ *
+ * 3. Regression guards — tests targeting the two bugs that previously broke scroll:
+ *    Bug A: body { padding-bottom: env(safe-area-inset-bottom) } in globals.css
+ *           made the body content area smaller than h-[100dvh], so the page body
+ *           became scrollable on web instead of the inner scroll container.
+ *    Bug B: h-full on flex children of a flex-col container does not scroll because
+ *           flex items have min-height:auto by default, which overrides the explicit
+ *           height and prevents overflow-y-auto from activating. Fix: flex-1 min-h-0.
+ *
+ * 4. PullToRefreshWrapper render — verify the component mounts with the correct
+ *    DOM structure so the flex chain and containerRef attachment are always tested
+ *    at the component level, not just via source inspection.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { renderHook, act, render } from '@testing-library/react'
+import React from 'react'
 import { usePullToRefresh } from '@/hooks/usePullToRefresh'
+import { PullToRefreshWrapper } from '@/components/PullToRefreshWrapper'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
 
@@ -247,6 +261,14 @@ describe('Scroll container class contract', () => {
     expect(src).toContain('overflow-hidden')
   })
 
+  it('AppLayout main element has flex flex-col so children can use flex-1', () => {
+    const src = readSrc('app/(app)/layout.tsx')
+    const mainMatch = src.match(/<main[^>]+>/)
+    expect(mainMatch).not.toBeNull()
+    expect(mainMatch![0]).toContain('flex')
+    expect(mainMatch![0]).toContain('flex-col')
+  })
+
   it('AppLayout main element has overflow-hidden to constrain scroll to child containers', () => {
     const src = readSrc('app/(app)/layout.tsx')
     const mainMatch = src.match(/<main[^>]+>/)
@@ -273,5 +295,146 @@ describe('Scroll container class contract', () => {
     expect(src).toContain('flex-1')
     expect(src).toContain('min-h-0')
     expect(src).toContain('overflow-y-auto')
+  })
+
+  it('settings page root div has flex-1 min-h-0 and overflow-y-auto', () => {
+    const src = readSrc('app/(app)/settings/page.tsx')
+    expect(src).toContain('flex-1')
+    expect(src).toContain('min-h-0')
+    expect(src).toContain('overflow-y-auto')
+  })
+
+  it('inbox page uses PullToRefreshWrapper for scrolling', () => {
+    const src = readSrc('app/(app)/inbox/page.tsx')
+    expect(src).toContain('PullToRefreshWrapper')
+  })
+
+  it('requests (My Posts) page uses PullToRefreshWrapper for scrolling', () => {
+    const src = readSrc('app/(app)/requests/page.tsx')
+    expect(src).toContain('PullToRefreshWrapper')
+  })
+
+  it('profile page uses PullToRefreshWrapper for scrolling', () => {
+    const src = readSrc('app/(app)/profile/page.tsx')
+    expect(src).toContain('PullToRefreshWrapper')
+  })
+})
+
+// ─── Regression guards ───────────────────────────────────────────────────────
+//
+// These tests encode the exact bugs that caused scroll to break. If either is
+// re-introduced, these tests fail before the code ships.
+
+describe('Scroll regression guards', () => {
+  it('[Bug A] globals.css must not set body padding-bottom for safe-area-inset-bottom', () => {
+    // This padding shrinks the body content area below h-[100dvh], making the
+    // document body itself scrollable. All safe-area handling belongs in the
+    // Navbar component (which already uses max(1rem, env(safe-area-inset-bottom))).
+    const css = readSrc('app/globals.css')
+    // Must not have a body rule that includes padding-bottom + safe-area-inset-bottom
+    const bodyRuleMatch = css.match(/body\s*\{[^}]*padding-bottom[^}]*safe-area-inset-bottom[^}]*\}/s)
+    expect(bodyRuleMatch).toBeNull()
+  })
+
+  it('[Bug B] PullToRefreshWrapper must not use h-full (use flex-1 min-h-0 instead)', () => {
+    // h-full on a flex item in a flex-col container does not constrain height —
+    // min-height:auto overrides it and the item grows to content size, so
+    // overflow-y-auto never activates. flex-1 + min-h-0 is the correct pattern.
+    const src = readSrc('components/PullToRefreshWrapper.tsx')
+    expect(src).not.toContain('h-full')
+  })
+
+  it('[Bug B] new-request page scroll container must not use h-full', () => {
+    const src = readSrc('app/(app)/requests/new/page.tsx')
+    expect(src).not.toContain('h-full')
+  })
+
+  it('[Bug B] edit-request page scroll container must not use h-full', () => {
+    const src = readSrc('app/(app)/requests/[id]/edit/page.tsx')
+    expect(src).not.toContain('h-full')
+  })
+
+  it('[Bug B] settings page scroll container must not use h-full', () => {
+    const src = readSrc('app/(app)/settings/page.tsx')
+    expect(src).not.toContain('h-full')
+  })
+})
+
+// ─── PullToRefreshWrapper render (flow tests) ────────────────────────────────
+//
+// Render the component and assert the DOM structure. These catch regressions
+// that source-inspection tests would miss (e.g. the className moving to a child
+// element, or the ref being attached to the wrong node).
+
+describe('PullToRefreshWrapper render', () => {
+  afterEach(() => { vi.clearAllMocks() })
+
+  it('renders children inside the scroll container', () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined)
+    const { getByText } = render(
+      React.createElement(PullToRefreshWrapper, { onRefresh },
+        React.createElement('div', null, 'climbing content')
+      )
+    )
+    expect(getByText('climbing content')).toBeTruthy()
+  })
+
+  it('scroll container is the outermost element and carries overflow-y-auto', () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined)
+    const { container } = render(
+      React.createElement(PullToRefreshWrapper, { onRefresh },
+        React.createElement('p', null, 'content')
+      )
+    )
+    // The outermost rendered element (direct child of container) is the scroll div
+    const scrollEl = container.firstElementChild as HTMLElement
+    expect(scrollEl).not.toBeNull()
+    expect(scrollEl.className).toContain('overflow-y-auto')
+  })
+
+  it('scroll container carries flex-1 and min-h-0', () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined)
+    const { container } = render(
+      React.createElement(PullToRefreshWrapper, { onRefresh },
+        React.createElement('p', null, 'content')
+      )
+    )
+    const scrollEl = container.firstElementChild as HTMLElement
+    expect(scrollEl.className).toContain('flex-1')
+    expect(scrollEl.className).toContain('min-h-0')
+  })
+
+  it('does not show pull indicator when idle', () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined)
+    const { container } = render(
+      React.createElement(PullToRefreshWrapper, { onRefresh },
+        React.createElement('span', null, 'idle')
+      )
+    )
+    // Only the scroll container + child — no extra indicator div
+    const scrollEl = container.firstElementChild as HTMLElement
+    expect(scrollEl.children).toHaveLength(1)
+  })
+
+  it('scroll container wraps multiple children', () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined)
+    const { getByText } = render(
+      React.createElement(PullToRefreshWrapper, { onRefresh },
+        React.createElement('div', null,
+          React.createElement('h1', null, 'title'),
+          React.createElement('p', null, 'body text')
+        )
+      )
+    )
+    expect(getByText('title')).toBeTruthy()
+    expect(getByText('body text')).toBeTruthy()
+  })
+
+  it('usePullToRefresh registers touchmove as non-passive so e.preventDefault works', () => {
+    // { passive: false } is required to call e.preventDefault() and block the
+    // browser's native overscroll/pull-to-refresh during a PTR gesture.
+    const src = readSrc('hooks/usePullToRefresh.tsx')
+    expect(src).toContain("'touchmove'")
+    expect(src).toContain('passive: false')
   })
 })
