@@ -80,7 +80,7 @@ export function CardDetails({ profile, request, compatibility, onClose, onIntere
       {/* Sheet — full-width on mobile, centered on wide screens */}
       <div
         className="relative w-full max-w-lg mx-auto bg-white rounded-t-3xl animate-slide-up flex flex-col"
-        style={{ maxHeight: '88dvh' }}
+        style={{ maxHeight: 'calc(100dvh - 90px)' }}
         onClick={e => e.stopPropagation()}
       >
         {/* ── Hero ─────────────────────────────────────────────────── */}
@@ -288,7 +288,7 @@ export function CardDetails({ profile, request, compatibility, onClose, onIntere
         {/* ── Fixed bottom CTA ─────────────────────────────────────── */}
         <div
           className="flex-shrink-0 px-5 py-4 bg-white border-t border-slate-100 flex gap-3"
-          style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+          style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
         >
           <button
             onClick={onPass}
