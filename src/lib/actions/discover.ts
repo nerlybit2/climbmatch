@@ -126,14 +126,9 @@ export async function discoverRequests(filters: DiscoverFilters): Promise<Scored
   ])
   const swipedRequestIds = new Set((myInterests || []).map(i => i.request_id))
 
-  const eligible = requests.filter(r => {
-    if (blockedIds.has(r.user_id) || swipedRequestIds.has(r.id)) return false
-    // For multi-date requests: ensure at least one date falls within the filter range
-    if (r.dates && r.dates.length > 0) {
-      return r.dates.some((d: string) => d >= dateFrom && d <= dateTo)
-    }
-    return true // single-date requests already filtered by DB query
-  })
+  const eligible = requests.filter(r =>
+    !blockedIds.has(r.user_id) && !swipedRequestIds.has(r.id)
+  )
 
   const userIds = [...new Set(eligible.map(r => r.user_id))]
   if (userIds.length === 0) return []

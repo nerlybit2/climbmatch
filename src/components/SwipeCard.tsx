@@ -5,7 +5,6 @@ import Image from 'next/image'
 import type { Profile, PartnerRequest, GearSet } from '@/lib/types/database'
 import type { CompatibilityInfo } from '@/lib/actions/discover'
 import { hapticFeedback } from '@/lib/capacitor/haptics'
-import { formatDates } from '@/lib/dates'
 
 interface SwipeCardProps {
   profile: Profile
@@ -87,7 +86,7 @@ export function SwipeCard({ profile, request, compatibility, onSwipeRight, onSwi
 
   const profileGear = profile.gear as GearSet
   const formatTime = (t: string | null) => t ? t.slice(0, 5) : ''
-  const dateLabel = formatDates(request.date, request.dates)
+  const dateLabel = new Date(request.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
 
   return (
     <div

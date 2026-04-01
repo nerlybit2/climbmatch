@@ -32,7 +32,6 @@ const requestFixture = {
   id: 'req-1',
   user_id: 'user-1',
   date: '2025-07-01',
-  dates: null,
   start_time: '09:00',
   end_time: '14:00',
   flexible: false,
@@ -185,7 +184,6 @@ describe('cancelRequest', () => {
 
 const payloadFixture: RequestPayload = {
   date: '2025-07-10',
-  dates: null,
   start_time: '10:00',
   end_time: '13:00',
   flexible: false,
@@ -200,11 +198,6 @@ const payloadFixture: RequestPayload = {
   max_weight_difference_kg: null,
 }
 
-const multiDatePayload: RequestPayload = {
-  ...payloadFixture,
-  date: '2025-07-10',
-  dates: ['2025-07-10', '2025-07-11', '2025-07-12'],
-}
 
 describe('getRequestById', () => {
   beforeEach(() => vi.clearAllMocks())
@@ -325,19 +318,5 @@ describe('updateRequest', () => {
     expect(eqCalls).toContainEqual(['status', 'active'])
   })
 
-  it('passes multi-date payload with dates array', async () => {
-    const chain = q({ error: null, data: [{ id: 'req-1' }] })
-    vi.mocked(createServerSupabaseClient).mockResolvedValue({
-      auth: authAs(),
-      from: vi.fn().mockReturnValueOnce(chain),
-    } as never)
 
-    await updateRequest('req-1', multiDatePayload)
-
-    expect(chain.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        dates: ['2025-07-10', '2025-07-11', '2025-07-12'],
-      })
-    )
-  })
 })

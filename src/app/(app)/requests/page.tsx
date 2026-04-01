@@ -10,7 +10,6 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useMyPosts } from '@/contexts/MyPostsContext'
 import { cancelRequest } from '@/lib/actions/requests'
 import { PullToRefreshWrapper } from '@/components/PullToRefreshWrapper'
-import { formatDates } from '@/lib/dates'
 
 const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string; border: string }> = {
   active:    { bg: 'bg-emerald-50',  text: 'text-emerald-600', dot: 'bg-emerald-400', border: 'border-emerald-100' },
@@ -119,7 +118,7 @@ function PostCard({
 }) {
   const statusCfg = STATUS_CONFIG[req.status] ?? STATUS_CONFIG.expired
   const isActive = req.status === 'active'
-  const formattedDate = formatDates(req.date, req.dates)
+  const formattedDate = new Date(req.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 
   return (
     <div className="bg-white rounded-3xl card-shadow border border-gray-50 overflow-hidden animate-fade-in">

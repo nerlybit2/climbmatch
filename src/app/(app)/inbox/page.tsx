@@ -15,7 +15,6 @@ import { useInbox } from '@/contexts/InboxContext'
 import { PullToRefreshWrapper } from '@/components/PullToRefreshWrapper'
 import { ProfileModal } from '@/components/ProfileModal'
 import { digitsOnly, parseInstagram, parseFacebook } from '@/lib/phone'
-import { formatDates } from '@/lib/dates'
 
 export default function InboxPage() {
   const { t } = useLanguage()
@@ -235,7 +234,7 @@ function InboxCard({
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <span className="text-xs font-semibold text-slate-600">
-              {formatDates(item.request.date, item.request.dates)}
+              {new Date(item.request.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
             </span>
           </div>
         </div>

@@ -39,7 +39,6 @@ export interface PartnerRequest {
   id: string
   user_id: string
   date: string
-  dates: string[] | null
   start_time: string | null
   end_time: string | null
   flexible: boolean

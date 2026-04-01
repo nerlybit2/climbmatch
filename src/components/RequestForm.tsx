@@ -6,7 +6,6 @@ import { Input } from '@/components/Input'
 import { Select } from '@/components/Select'
 import { GearCheckboxes } from '@/components/GearCheckboxes'
 import { Button } from '@/components/Button'
-import { MultiDateSelector } from '@/components/MultiDateSelector'
 import { createClient } from '@/lib/supabase/client'
 import type { GearSet, LocationType, GoalType, PartnerRequest } from '@/lib/types/database'
 import { updateRequest, type RequestPayload } from '@/lib/actions/requests'
@@ -44,11 +43,7 @@ export function RequestForm({ existing }: Props) {
 
   const [loading, setLoading]           = useState(false)
   const [error, setError]               = useState('')
-  // dates holds one or more selected ISO date strings (sorted)
-  const [dates, setDates] = useState<string[]>(() => {
-    if (existing?.dates && existing.dates.length > 0) return [...existing.dates].sort()
-    return [existing?.date ?? today]
-  })
+  const [date, setDate] = useState(existing?.date ?? today)
   const [startTime, setStartTime]       = useState(existing?.start_time?.slice(0, 5) ?? '')
   const [endTime, setEndTime]           = useState(existing?.end_time?.slice(0, 5) ?? '')
   const [flexible, setFlexible]         = useState(existing?.flexible ?? false)
@@ -64,7 +59,6 @@ export function RequestForm({ existing }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const date = dates.length > 0 ? [...dates].sort()[0] : ''
     if (!date || !locationName.trim()) { setError(t.newRequest.errors.required); return }
     if (!flexible && !startTime)       { setError(t.newRequest.errors.noTime);   return }
     if (weightRelevant && maxWeightDiff && (parseFloat(maxWeightDiff) < 1 || parseFloat(maxWeightDiff) > 100)) {
@@ -74,10 +68,8 @@ export function RequestForm({ existing }: Props) {
     setLoading(true)
     setError('')
 
-    const sortedDates = [...dates].sort()
     const payload: RequestPayload = {
-      date: sortedDates[0],
-      dates: sortedDates.length > 1 ? sortedDates : null,
+      date,
       start_time:              flexible ? null : startTime || null,
       end_time:                flexible ? null : endTime || null,
       flexible,
@@ -132,7 +124,7 @@ export function RequestForm({ existing }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="px-5 space-y-5 pb-28">
-      <MultiDateSelector value={dates} onChange={setDates} minDate={today} label={t.newRequest.date} />
+      <Input label={t.newRequest.date} type="date" value={date} onChange={e => setDate(e.target.value)} min={today} required />
 
       <label className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm ring-1 ring-gray-100 cursor-pointer">
         <input type="checkbox" checked={flexible} onChange={e => setFlexible(e.target.checked)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-5 h-5" />
