@@ -12,6 +12,7 @@ import { useRealtimeInterests } from '@/hooks/useRealtimeInterests'
 import { createClient } from '@/lib/supabase/client'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useInbox } from '@/contexts/InboxContext'
+import { PullToRefreshWrapper } from '@/components/PullToRefreshWrapper'
 import { ProfileModal } from '@/components/ProfileModal'
 import { digitsOnly, parseInstagram, parseFacebook } from '@/lib/phone'
 
@@ -60,6 +61,7 @@ export default function InboxPage() {
   const pendingCount = received.filter(r => r.interest.status === 'pending').length
 
   return (
+    <PullToRefreshWrapper onRefresh={refresh}>
     <div>
       <PageHeader title={t.inbox.title} subtitle={t.inbox.subtitle} />
 
@@ -179,6 +181,7 @@ export default function InboxPage() {
         />
       )}
     </div>
+    </PullToRefreshWrapper>
   )
 }
 

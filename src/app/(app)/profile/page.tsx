@@ -2,9 +2,20 @@
 
 import { useProfile } from '@/contexts/ProfileContext'
 import { ProfileForm } from '@/components/ProfileForm'
+import { PullToRefreshWrapper } from '@/components/PullToRefreshWrapper'
+import { createClient } from '@/lib/supabase/client'
+import type { Profile } from '@/lib/types/database'
 
 export default function ProfilePage() {
-  const { profile, userEmail, userMeta, loading } = useProfile()
+  const { profile, userEmail, userMeta, loading, updateProfile } = useProfile()
+
+  const refreshProfile = async () => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+    if (data) updateProfile(data as Profile)
+  }
 
   if (loading) {
     return (
@@ -23,6 +34,7 @@ export default function ProfilePage() {
   const isNewUser = !profile?.display_name || !profile?.photo_url || !profile?.phone
 
   return (
+    <PullToRefreshWrapper onRefresh={refreshProfile}>
     <div>
       {isNewUser && (
         <div className="mx-5 mt-5 bg-blue-50 border border-blue-100 rounded-2xl px-4 py-3 flex items-start gap-3">
@@ -45,5 +57,6 @@ export default function ProfilePage() {
         />
       </div>
     </div>
+    </PullToRefreshWrapper>
   )
 }

@@ -11,6 +11,7 @@ import { MatchCelebration } from '@/components/MatchCelebration'
 import { useToast } from '@/hooks/useToast'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useDiscover } from '@/contexts/DiscoverContext'
+import { PullToRefreshWrapper } from '@/components/PullToRefreshWrapper'
 
 export default function DiscoverClient() {
   const { t } = useLanguage()
@@ -142,6 +143,7 @@ export default function DiscoverClient() {
   }, [removeCard])
 
   return (
+    <PullToRefreshWrapper onRefresh={refresh}>
     <div className="flex flex-col min-h-[80dvh]">
 
       {/* Sticky header */}
@@ -448,5 +450,6 @@ export default function DiscoverClient() {
         />
       )}
     </div>
+    </PullToRefreshWrapper>
   )
 }
