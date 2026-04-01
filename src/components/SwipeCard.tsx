@@ -24,7 +24,7 @@ export function SwipeCard({ profile, request, compatibility, onSwipeRight, onSwi
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const [isLeaving, setIsLeaving] = useState<'left' | 'right' | null>(null)
-  const [imgSrc, setImgSrc] = useState(profile.photo_url || '/default-avatar.svg')
+  const [imgSrc, setImgSrc] = useState(profile.photo_url || '/logo.png')
   const startPos = useRef({ x: 0, y: 0 })
   const hasMoved = useRef(false)
   const hapticFired = useRef(false)
@@ -102,7 +102,7 @@ export function SwipeCard({ profile, request, compatibility, onSwipeRight, onSwi
       }}
     >
       <div className="relative w-full h-full rounded-3xl overflow-hidden card-shadow-lg bg-gray-900">
-        <Image src={imgSrc} alt={profile.display_name} fill sizes="(max-width: 512px) 100vw, 512px" className="object-cover" draggable={false} priority onError={() => setImgSrc('/default-avatar.svg')} />
+        <Image src={imgSrc} alt={profile.display_name} fill sizes="(max-width: 512px) 100vw, 512px" className="object-cover" draggable={false} priority onError={() => setImgSrc('/logo.png')} />
 
         {/* INTERESTED stamp */}
         {offset.x > 40 && (

@@ -16,7 +16,7 @@ interface MatchCelebrationProps {
 const CONFETTI_COLORS = ['#2563eb', '#4f46e5', '#818cf8', '#ffffff', '#bfdbfe', '#6366f1']
 
 export function MatchCelebration({ result, onClose, closeLabel }: MatchCelebrationProps) {
-  const [imgSrc, setImgSrc] = useState(result.matchedProfile?.photo_url || '/default-avatar.svg')
+  const [imgSrc, setImgSrc] = useState(result.matchedProfile?.photo_url || '/logo.png')
 
   useEffect(() => {
     hapticNotification('success')
@@ -60,7 +60,7 @@ export function MatchCelebration({ result, onClose, closeLabel }: MatchCelebrati
             alt={result.matchedProfile?.display_name || 'Match'}
             fill
             className="object-cover"
-            onError={() => setImgSrc('/default-avatar.svg')}
+            onError={() => setImgSrc('/logo.png')}
           />
         </div>
 

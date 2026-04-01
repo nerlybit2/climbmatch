@@ -17,7 +17,7 @@ interface Props {
 }
 
 export function ProfileModal({ profile, phone, instagram, facebook, location, onClose }: Props) {
-  const [imgSrc, setImgSrc] = useState(profile.photo_url || '/default-avatar.svg')
+  const [imgSrc, setImgSrc] = useState(profile.photo_url || '/logo.png')
 
   const gear = profile.gear as GearSet
   const gearLabels: Record<string, string> = {
@@ -70,7 +70,7 @@ export function ProfileModal({ profile, phone, instagram, facebook, location, on
             width={480}
             height={320}
             className="w-full h-64 object-cover rounded-2xl"
-            onError={() => setImgSrc('/default-avatar.svg')}
+            onError={() => setImgSrc('/logo.png')}
           />
 
           {/* Bio */}

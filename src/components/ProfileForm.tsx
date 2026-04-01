@@ -122,7 +122,7 @@ export function ProfileForm({ profile, userEmail, prefill }: Props) {
       {/* Photo */}
       <div className="flex items-center gap-5">
         {photoUrl ? (
-          <Image src={photoUrl || '/default-avatar.svg'} alt="Avatar" width={96} height={96} className="w-24 h-24 rounded-3xl object-cover shadow-lg" />
+          <Image src={photoUrl || '/logo.png'} alt="Avatar" width={96} height={96} className="w-24 h-24 rounded-3xl object-cover shadow-lg" />
         ) : (
           <div className="w-24 h-24 rounded-3xl bg-stone-100 flex items-center justify-center text-gray-300">
             <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

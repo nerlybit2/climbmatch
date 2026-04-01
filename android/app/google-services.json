@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "484767117987",
+    "project_id": "climbmatch-4ffb8",
+    "storage_bucket": "climbmatch-4ffb8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:484767117987:android:c3a96665df83abc34a0516",
+        "android_client_info": {
+          "package_name": "com.climbmatch.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBk2qpCVEGGqorsyqAucqL3sz3777ia1Ls"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

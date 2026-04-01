@@ -192,7 +192,7 @@ function InboxCard({
   onViewProfile: () => void
   t: ReturnType<typeof useLanguage>['t']
 }) {
-  const [imgSrc, setImgSrc] = useState(item.fromProfile.photo_url || '/default-avatar.svg')
+  const [imgSrc, setImgSrc] = useState(item.fromProfile.photo_url || '/logo.png')
   const [actioning, setActioning] = useState(false)
   const status = item.interest.status
   const isPending = status === 'pending'
@@ -215,7 +215,7 @@ function InboxCard({
             width={56}
             height={56}
             className={`w-14 h-14 rounded-2xl object-cover ${isAccepted ? 'ring-2 ring-emerald-400 ring-offset-1' : ''}`}
-            onError={() => setImgSrc('/default-avatar.svg')}
+            onError={() => setImgSrc('/logo.png')}
           />
         </button>
 

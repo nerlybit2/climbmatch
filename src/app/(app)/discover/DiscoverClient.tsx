@@ -360,7 +360,7 @@ export default function DiscoverClient() {
                 {/* Avatar */}
                 <div className="relative w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 bg-slate-100">
                   <Image
-                    src={card.profile.photo_url || '/default-avatar.svg'}
+                    src={card.profile.photo_url || '/logo.png'}
                     alt={card.profile.display_name}
                     fill
                     sizes="64px"
