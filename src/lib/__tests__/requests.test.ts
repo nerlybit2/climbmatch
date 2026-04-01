@@ -120,7 +120,14 @@ describe('cancelRequest', () => {
 
   it('calls update with status: cancelled and resolves', async () => {
     const updateChain = q({ error: null })
-    const fromMock = vi.fn().mockReturnValueOnce(updateChain)
+    // cancelRequest does 3 from() calls:
+    // 1. partner_requests.select('location_name')... (Promise.all[0])
+    // 2. interests.select('from_user_id')...        (Promise.all[1])
+    // 3. partner_requests.update(...)               (the actual cancel)
+    const fromMock = vi.fn()
+      .mockReturnValueOnce(q({ data: { location_name: 'Siurana' }, error: null })) // select location
+      .mockReturnValueOnce(q({ data: [], error: null }))                            // select pending interests
+      .mockReturnValueOnce(updateChain)                                             // update status
 
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
@@ -152,16 +159,20 @@ describe('cancelRequest', () => {
   })
 
   it('restricts the update to the requesting user with eq filters', async () => {
-    const chain = q({ error: null })
+    const updateChain = q({ error: null })
+    // cancelRequest does 3 from() calls: select location, select pending interests, update status
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs('user-1'),
-      from: vi.fn().mockReturnValueOnce(chain),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: { location_name: 'Siurana' }, error: null })) // select location
+        .mockReturnValueOnce(q({ data: [], error: null }))                            // select pending interests
+        .mockReturnValueOnce(updateChain),                                            // update status
     } as never)
 
     await cancelRequest('req-1')
 
-    // Should have applied eq('id', 'req-1') and eq('user_id', 'user-1')
-    const eqCalls = (chain.eq as ReturnType<typeof vi.fn>).mock.calls
+    // Should have applied eq('id', 'req-1') and eq('user_id', 'user-1') on the update chain
+    const eqCalls = (updateChain.eq as ReturnType<typeof vi.fn>).mock.calls
     expect(eqCalls).toContainEqual(['id', 'req-1'])
     expect(eqCalls).toContainEqual(['user_id', 'user-1'])
   })

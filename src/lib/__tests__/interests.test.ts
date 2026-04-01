@@ -106,15 +106,16 @@ describe('createInterest', () => {
 
   it('returns matched: true with poster profile and request details', async () => {
     const posterProfile = { display_name: 'Alice', photo_url: '/alice.jpg', phone: '+972501234', instagram: '@alice', facebook: null }
-    const reqDetails = { location_name: 'Siurana', date: '2025-07-01' }
+    const reqDetails = { location_name: 'Siurana', date: '2025-07-01', user_id: 'user-2' }
 
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null })) // profile check
-        .mockReturnValueOnce(q({ error: null }))                         // insert interest
-        .mockReturnValueOnce(q({ data: posterProfile, error: null }))    // poster profile
-        .mockReturnValueOnce(q({ data: reqDetails, error: null })),      // request details
+        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null }))   // profile check
+        .mockReturnValueOnce(q({ error: null }))                            // insert interest
+        .mockReturnValueOnce(q({ data: { display_name: 'Me' }, error: null })) // myProfile (parallel[0])
+        .mockReturnValueOnce(q({ data: posterProfile, error: null }))          // matchedProfile (parallel[1])
+        .mockReturnValueOnce(q({ data: reqDetails, error: null })),             // requestDetails (parallel[2])
     } as never)
 
     const result = await createInterest('req-1', 'user-2')
@@ -123,15 +124,16 @@ describe('createInterest', () => {
 
   it('includes instagram and facebook in matchedProfile', async () => {
     const posterProfile = { display_name: 'Alice', photo_url: '/alice.jpg', phone: '+972501234', instagram: '@alice_climbs', facebook: 'alice.climbs' }
-    const reqDetails = { location_name: 'Siurana', date: '2025-07-01' }
+    const reqDetails = { location_name: 'Siurana', date: '2025-07-01', user_id: 'user-2' }
 
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null }))
-        .mockReturnValueOnce(q({ error: null }))
-        .mockReturnValueOnce(q({ data: posterProfile, error: null }))
-        .mockReturnValueOnce(q({ data: reqDetails, error: null })),
+        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null }))           // profile check
+        .mockReturnValueOnce(q({ error: null }))                                    // insert interest
+        .mockReturnValueOnce(q({ data: { display_name: 'Me' }, error: null }))     // myProfile (parallel[0])
+        .mockReturnValueOnce(q({ data: posterProfile, error: null }))               // matchedProfile (parallel[1])
+        .mockReturnValueOnce(q({ data: reqDetails, error: null })),                 // requestDetails (parallel[2])
     } as never)
 
     const result = await createInterest('req-1', 'user-2')
@@ -189,19 +191,24 @@ describe('getInbox', () => {
   })
 
   it('returns empty array when no interests exist', async () => {
+    // getInboxData fetches received and sent interests in parallel (2 from() calls)
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
-      from: vi.fn().mockReturnValueOnce(q({ data: [], error: null })),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: [], error: null })) // received interests
+        .mockReturnValueOnce(q({ data: [], error: null })), // sent interests
     } as never)
 
     expect(await getInbox()).toEqual([])
   })
 
   it('returns correctly joined inbox items', async () => {
+    // getInboxData: 1) received interests, 2) sent interests, 3) profiles, 4) partner_requests
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ data: [interestFixture], error: null })) // interests
+        .mockReturnValueOnce(q({ data: [interestFixture], error: null })) // received interests
+        .mockReturnValueOnce(q({ data: [], error: null }))                // sent interests
         .mockReturnValueOnce(q({ data: [profileFixture], error: null }))  // profiles
         .mockReturnValueOnce(q({ data: [requestFixture], error: null })), // requests
     } as never)
@@ -217,9 +224,10 @@ describe('getInbox', () => {
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ data: [{ ...interestFixture, status: 'pending' }], error: null }))
-        .mockReturnValueOnce(q({ data: [profileFixture], error: null }))
-        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),
+        .mockReturnValueOnce(q({ data: [{ ...interestFixture, status: 'pending' }], error: null })) // received
+        .mockReturnValueOnce(q({ data: [], error: null }))                                           // sent
+        .mockReturnValueOnce(q({ data: [profileFixture], error: null }))                             // profiles
+        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),                            // requests
     } as never)
 
     const items = await getInbox()
@@ -230,9 +238,10 @@ describe('getInbox', () => {
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ data: [{ ...interestFixture, status: 'accepted' }], error: null }))
-        .mockReturnValueOnce(q({ data: [profileFixture], error: null }))
-        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),
+        .mockReturnValueOnce(q({ data: [{ ...interestFixture, status: 'accepted' }], error: null })) // received
+        .mockReturnValueOnce(q({ data: [], error: null }))                                            // sent
+        .mockReturnValueOnce(q({ data: [profileFixture], error: null }))                              // profiles
+        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),                             // requests
     } as never)
 
     const items = await getInbox()
@@ -245,9 +254,10 @@ describe('getInbox', () => {
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ data: [interestFixture, orphanInterest], error: null }))
-        .mockReturnValueOnce(q({ data: [profileFixture], error: null })) // only one profile
-        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),
+        .mockReturnValueOnce(q({ data: [interestFixture, orphanInterest], error: null })) // received
+        .mockReturnValueOnce(q({ data: [], error: null }))                                 // sent
+        .mockReturnValueOnce(q({ data: [profileFixture], error: null }))                   // profiles (only one)
+        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),                  // requests
     } as never)
 
     const items = await getInbox()
@@ -275,12 +285,14 @@ describe('getSentInterests', () => {
   it('returns sent interests with joined data', async () => {
     const sentInterest = { ...interestFixture, from_user_id: 'user-1', to_user_id: 'user-2' }
 
+    // getInboxData: 1) received interests, 2) sent interests, 3) profiles, 4) partner_requests
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ data: [sentInterest], error: null }))
-        .mockReturnValueOnce(q({ data: [profileFixture], error: null }))
-        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),
+        .mockReturnValueOnce(q({ data: [], error: null }))                  // received interests
+        .mockReturnValueOnce(q({ data: [sentInterest], error: null }))      // sent interests
+        .mockReturnValueOnce(q({ data: [profileFixture], error: null }))    // profiles
+        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),   // requests
     } as never)
 
     const items = await getSentInterests()
@@ -295,9 +307,10 @@ describe('getSentInterests', () => {
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ data: [sentInterest], error: null }))
-        .mockReturnValueOnce(q({ data: [profileFixture], error: null }))
-        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),
+        .mockReturnValueOnce(q({ data: [], error: null }))                  // received interests
+        .mockReturnValueOnce(q({ data: [sentInterest], error: null }))      // sent interests
+        .mockReturnValueOnce(q({ data: [profileFixture], error: null }))    // profiles
+        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),   // requests
     } as never)
 
     const items = await getSentInterests()
@@ -311,9 +324,10 @@ describe('getSentInterests', () => {
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ data: [sentInterest], error: null }))
-        .mockReturnValueOnce(q({ data: [profileFixture], error: null }))
-        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),
+        .mockReturnValueOnce(q({ data: [], error: null }))                  // received interests
+        .mockReturnValueOnce(q({ data: [sentInterest], error: null }))      // sent interests
+        .mockReturnValueOnce(q({ data: [profileFixture], error: null }))    // profiles
+        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),   // requests
     } as never)
 
     const items = await getSentInterests()
@@ -330,12 +344,14 @@ describe('getInbox – social contact fields', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('exposes instagram and facebook for inbox (applicant side)', async () => {
+    // getInboxData: 1) received interests, 2) sent interests, 3) profiles, 4) partner_requests
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ data: [interestFixture], error: null }))
-        .mockReturnValueOnce(q({ data: [profileFixture], error: null }))
-        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),
+        .mockReturnValueOnce(q({ data: [interestFixture], error: null })) // received interests
+        .mockReturnValueOnce(q({ data: [], error: null }))                // sent interests
+        .mockReturnValueOnce(q({ data: [profileFixture], error: null }))  // profiles
+        .mockReturnValueOnce(q({ data: [requestFixture], error: null })), // requests
     } as never)
 
     const items = await getInbox()
@@ -349,9 +365,10 @@ describe('getInbox – social contact fields', () => {
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ data: [interestFixture], error: null }))
-        .mockReturnValueOnce(q({ data: [profileNoSocial], error: null }))
-        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),
+        .mockReturnValueOnce(q({ data: [interestFixture], error: null }))   // received interests
+        .mockReturnValueOnce(q({ data: [], error: null }))                   // sent interests
+        .mockReturnValueOnce(q({ data: [profileNoSocial], error: null }))    // profiles
+        .mockReturnValueOnce(q({ data: [requestFixture], error: null })),    // requests
     } as never)
 
     const items = await getInbox()
@@ -371,13 +388,20 @@ describe('acceptInterest', () => {
     const matchedProfile = { display_name: 'Alice', photo_url: '/alice.jpg', phone: '+972501234' }
     const requestDetails = { location_name: 'Siurana', date: '2025-07-01' }
 
+    // acceptInterest does 5 from() calls:
+    // 1. interests.update(...)           — update status
+    // 2. interests.select(...)           — fetch from_user_id + request_id
+    // 3. profiles.select('display_name') — myProfile (parallel[0])
+    // 4. profiles.select('display_name, photo_url, ...')  — matchedProfile (parallel[1])
+    // 5. partner_requests.select(...)    — requestDetails (parallel[2])
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
         .mockReturnValueOnce(q({ error: null }))                                                          // update interest
         .mockReturnValueOnce(q({ data: { from_user_id: 'user-2', request_id: 'req-1' }, error: null }))  // select interest
-        .mockReturnValueOnce(q({ data: matchedProfile, error: null }))                                    // select profile single
-        .mockReturnValueOnce(q({ data: requestDetails, error: null })),                                   // select request single
+        .mockReturnValueOnce(q({ data: { display_name: 'Me' }, error: null }))                            // myProfile (parallel[0])
+        .mockReturnValueOnce(q({ data: matchedProfile, error: null }))                                    // matchedProfile (parallel[1])
+        .mockReturnValueOnce(q({ data: requestDetails, error: null })),                                   // requestDetails (parallel[2])
     } as never)
 
     await expect(acceptInterest('int-1')).resolves.toMatchObject({ matched: true })
@@ -411,9 +435,15 @@ describe('declineInterest', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('resolves successfully', async () => {
+    // declineInterest does:
+    // 1. interests.select('from_user_id, request_id')...single() — fetch before updating
+    // 2. interests.update({ status: 'declined' })...             — update status
+    // 3. (conditional) partner_requests.select('location_name')  — for notification (fires when interest found)
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
-      from: vi.fn().mockReturnValueOnce(q({ error: null })),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: null, error: null }))  // select interest → null, skips notification
+        .mockReturnValueOnce(q({ error: null })),             // update status
     } as never)
 
     await expect(declineInterest('int-1')).resolves.toBeUndefined()
@@ -429,9 +459,13 @@ describe('declineInterest', () => {
   })
 
   it('throws on database error', async () => {
+    // When the update fails, the error is thrown. The select comes first — mock it with null data,
+    // then mock the update with the error.
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
-      from: vi.fn().mockReturnValueOnce(q({ error: { message: 'not found', code: 'PGRST116' } })),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: null, error: null }))  // select interest (before update)
+        .mockReturnValueOnce(q({ error: { message: 'not found', code: 'PGRST116' } })), // update error
     } as never)
 
     await expect(declineInterest('int-1')).rejects.toThrow('not found')

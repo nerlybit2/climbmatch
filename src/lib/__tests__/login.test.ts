@@ -47,9 +47,12 @@ describe('OTP digit input', () => {
     expect(result[0]).toBe('')
   })
 
-  it('takes only the last digit when multiple chars entered', () => {
+  it('distributes multiple chars as a paste when length > 1', () => {
+    // When more than one character is entered, the component treats it as a paste
+    // and distributes digits across slots starting at index 0.
     const result = applyDigitToSlots(empty, 0, '39')
-    expect(result[0]).toBe('9')
+    expect(result[0]).toBe('3')
+    expect(result[1]).toBe('9')
   })
 
   it('handles paste of full 6-digit code', () => {
