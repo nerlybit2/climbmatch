@@ -15,10 +15,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <InboxProvider>
       <MyPostsProvider>
       <ProfileProvider>
-      <div className="min-h-[100dvh] flex flex-col bg-[#EDF1F7]">
+      <div className="h-[100dvh] overflow-hidden flex flex-col bg-[#EDF1F7]">
         <ToastProvider>
           <CapacitorHandlers />
-          <main className="flex-1 pb-28 flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+          <main className="flex-1 overflow-hidden pb-28 flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
             {children}
           </main>
           <ToastContainer />

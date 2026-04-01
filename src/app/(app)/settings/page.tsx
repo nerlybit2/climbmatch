@@ -7,7 +7,7 @@ export default function SettingsPage() {
   const { language, setLanguage, t } = useLanguage()
 
   return (
-    <div>
+    <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
       <PageHeader title={t.settings.title} subtitle={t.settings.subtitle} />
       <div className="px-5 space-y-4 pb-8">
         <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 overflow-hidden">

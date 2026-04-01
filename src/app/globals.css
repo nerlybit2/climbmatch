@@ -13,9 +13,6 @@ html, body {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-body {
-  padding-bottom: env(safe-area-inset-bottom, 0);
-}
 
 .glass {
   background: rgba(255, 255, 255, 0.92);

@@ -6,6 +6,7 @@ import type { PartnerRequest, GearSet, LocationType, GoalType } from '@/lib/type
 
 export interface RequestPayload {
   date: string
+  dates: string[] | null
   start_time: string | null
   end_time: string | null
   flexible: boolean

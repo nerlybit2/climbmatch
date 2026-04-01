@@ -8,6 +8,7 @@ import { Button } from '@/components/Button'
 import { blockUser, reportUser } from '@/lib/actions/safety'
 import { useToast } from '@/hooks/useToast'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { formatDates, formatDateShort } from '@/lib/dates'
 
 interface Props {
   profile: Profile
@@ -40,9 +41,7 @@ export function CardDetails({ profile, request, compatibility, onClose, onIntere
   const gearList = Object.entries(gear).filter(([, v]) => v).map(([k]) => GEAR_LABELS[k])
   const needsList = Object.entries(needsGear).filter(([, v]) => v).map(([k]) => GEAR_LABELS[k])
 
-  const formattedDate = new Date(request.date).toLocaleDateString('en-US', {
-    weekday: 'long', month: 'short', day: 'numeric',
-  })
+  const formattedDate = formatDates(request.date, request.dates)
   const timeStr = request.flexible
     ? t.cardDetails.flexibleTime
     : `${request.start_time?.slice(0, 5) ?? ''}${request.end_time ? ` – ${request.end_time.slice(0, 5)}` : ''}`
@@ -167,7 +166,10 @@ export function CardDetails({ profile, request, compatibility, onClose, onIntere
             <div>
               <SectionLabel>{t.cardDetails.requestDetails}</SectionLabel>
               <div className="grid grid-cols-2 gap-2 mt-2">
-                <InfoTile label={t.cardDetails.date} value={formattedDate} />
+                <InfoTile
+                  label={request.dates && request.dates.length > 1 ? 'Dates' : t.cardDetails.date}
+                  value={formattedDate}
+                />
                 <InfoTile label={t.cardDetails.time} value={timeStr} />
                 <InfoTile label={t.cardDetails.location} value={request.location_name} />
                 {request.goal_type && request.goal_type !== 'any' && (
@@ -177,6 +179,16 @@ export function CardDetails({ profile, request, compatibility, onClose, onIntere
                   <InfoTile label={t.cardDetails.grade} value={request.desired_grade_range} />
                 )}
               </div>
+
+              {request.dates && request.dates.length > 1 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {[...request.dates].sort().map(d => (
+                    <span key={d} className="text-xs font-semibold bg-blue-50 border border-blue-100 text-blue-600 px-2.5 py-1 rounded-full">
+                      {formatDateShort(d)}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               {request.notes && (
                 <div className="mt-2 bg-slate-50 rounded-2xl p-4">

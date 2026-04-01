@@ -5,6 +5,7 @@ import Image from 'next/image'
 import type { Profile, PartnerRequest, GearSet } from '@/lib/types/database'
 import type { CompatibilityInfo } from '@/lib/actions/discover'
 import { hapticFeedback } from '@/lib/capacitor/haptics'
+import { formatDates } from '@/lib/dates'
 
 interface SwipeCardProps {
   profile: Profile
@@ -86,6 +87,7 @@ export function SwipeCard({ profile, request, compatibility, onSwipeRight, onSwi
 
   const profileGear = profile.gear as GearSet
   const formatTime = (t: string | null) => t ? t.slice(0, 5) : ''
+  const dateLabel = formatDates(request.date, request.dates)
 
   return (
     <div
@@ -162,7 +164,11 @@ export function SwipeCard({ profile, request, compatibility, onSwipeRight, onSwi
                   <span className="bg-white/15 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm font-medium">{GOAL_LABELS[request.goal_type]}</span>
                 )}
               </div>
-              <div className="flex items-center gap-3 mt-2.5 text-white/60 text-sm">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2.5 text-white/60 text-sm">
+                <span className="flex items-center gap-1">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  {dateLabel}
+                </span>
                 <span className="flex items-center gap-1">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                   {request.location_name}
