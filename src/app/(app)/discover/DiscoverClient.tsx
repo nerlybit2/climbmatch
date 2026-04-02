@@ -320,7 +320,7 @@ export default function DiscoverClient() {
       </div>
 
       {/* Results */}
-      <div className="flex-1 px-4 py-3 space-y-3">
+      <div className="flex-1 px-4 pt-3 pb-28 space-y-3">
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
