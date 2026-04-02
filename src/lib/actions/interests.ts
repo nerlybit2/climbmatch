@@ -249,7 +249,7 @@ export async function getPendingInterestCount(): Promise<number> {
 
   const { count } = await supabase
     .from('interests')
-    .select('*', { count: 'exact', head: true })
+    .select('partner_requests!inner(id)', { count: 'exact', head: true })
     .eq('to_user_id', user.id)
     .eq('status', 'pending')
 

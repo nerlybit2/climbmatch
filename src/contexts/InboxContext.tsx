@@ -23,10 +23,10 @@ export function InboxProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading]     = useState(cached === null)
   const fetchingRef               = useRef(false)
 
-  const fetchInbox = useCallback(async () => {
+  const fetchInbox = useCallback(async (silent = false) => {
     if (fetchingRef.current) return
     fetchingRef.current = true
-    setLoading(true)
+    if (!silent) setLoading(true)
     try {
       const data = await getInboxData()
       setReceived(data.received)
@@ -35,19 +35,19 @@ export function InboxProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error('[Inbox] fetch error', err)
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
       fetchingRef.current = false
     }
   }, [])
 
-  // Only fetch on mount if there's nothing in cache
+  // Always refresh on mount — show cache instantly, update silently in background
   useEffect(() => {
-    if (cached === null) fetchInbox()
+    fetchInbox(cached !== null)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const refresh = useCallback(async () => {
-    await fetchInbox()
+    await fetchInbox(false)
   }, [fetchInbox])
 
   // Optimistic update — also patches the cache so it stays consistent

@@ -505,6 +505,23 @@ describe('getPendingInterestCount', () => {
 
     expect(await getPendingInterestCount()).toBe(0)
   })
+
+  it('uses partner_requests!inner join to exclude interests with deleted requests', async () => {
+    // This inner join is the fix for the badge showing stale counts when a request
+    // is deleted — without it, getPendingInterestCount and getInboxData go out of sync.
+    const builder = q({ count: 2, error: null })
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn().mockReturnValue(builder),
+    } as never)
+
+    await getPendingInterestCount()
+
+    expect(builder.select).toHaveBeenCalledWith(
+      'partner_requests!inner(id)',
+      expect.objectContaining({ count: 'exact', head: true }),
+    )
+  })
 })
 
 // ---------------------------------------------------------------------------
