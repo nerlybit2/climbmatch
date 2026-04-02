@@ -39,7 +39,7 @@ export function ProfileModal({ profile, phone, instagram, facebook, location, on
   )
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-end justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center pb-[80px]" onClick={onClose}>
       <div
         className="bg-white w-full max-w-lg rounded-t-3xl max-h-[90vh] overflow-y-auto animate-slide-up"
         onClick={e => e.stopPropagation()}
