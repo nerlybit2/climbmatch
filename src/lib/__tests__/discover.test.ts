@@ -228,12 +228,12 @@ describe('discoverRequests', () => {
     expect(cards).toHaveLength(1)
     expect(cards[0].request.id).toBe('req-1')
     expect(cards[0].profile.display_name).toBe('Alice')
-    expect(typeof cards[0].score).toBe('number')
+    expect(cards[0].compatibility).toBeDefined()
     // Phone is sanitized out of profile
     expect(cards[0].profile.phone).toBeNull()
   })
 
-  it('excludes cards where weight mismatch gives score = -1', async () => {
+  it('returns all results when no weight mismatch logic is applied', async () => {
     const request = {
       id: 'req-1', user_id: 'user-2', date: today,
       climbing_type: 'sport', location_name: 'Siurana', status: 'active',
@@ -270,60 +270,297 @@ describe('discoverRequests', () => {
       rpc: vi.fn().mockResolvedValue({ error: null }),
     } as never)
 
-    // myProfile is fetched via .single() but our mock returns it via `then`
-    // The filter score = -1 should exclude this card
+    // Weight mismatch is no longer a filter — card is returned
     const cards = await discoverRequests({ date_from: today, date_to: today })
-    expect(cards).toHaveLength(0)
+    expect(cards).toHaveLength(1)
   })
 
-  it('sorts results by score descending', async () => {
-    const makeRequest = (id: string, userId: string, location: string) => ({
-      id, user_id: userId, date: today,
-      climbing_type: 'sport', location_name: location, status: 'active',
-      start_time: '09:00', end_time: '14:00', flexible: false,
-      needs_gear: { rope: false, quickdraws: false, belayDevice: false, crashPad: false, helmet: false },
-      carpool_needed: false, weight_relevant: false, max_weight_difference_kg: null,
-      goal_type: 'any', desired_grade_range: null, notes: null,
-      location_type: 'crag', created_at: '2025-06-01T08:00:00Z', updated_at: '',
-    })
-    const makeProfile = (id: string, name: string) => ({
-      id, display_name: name, photo_url: `/${name}.jpg`,
-      home_area: null, climbing_types: [], experience_level: null,
-      sport_grade_range: null, boulder_grade_range: null, weight_kg: null,
-      share_weight: false,
-      gear: { rope: false, quickdraws: false, belayDevice: false, crashPad: false, helmet: false },
-      has_car: false, bio: null, languages: [], phone: null,
-      created_at: '', updated_at: '',
-    })
+  // ── Filter: location_name (DB-level) ───────────────────────────────────────
 
-    const requests = [
-      makeRequest('req-1', 'user-2', 'No Match Gym'),   // no location boost
-      makeRequest('req-2', 'user-3', 'Siurana, Spain'), // location boost
-    ]
-    const profiles = [makeProfile('user-2', 'Alice'), makeProfile('user-3', 'Bob')]
-    const myProfile = {
-      id: 'user-1', climbing_types: ['sport'], gear: {},
-      experience_level: null, sport_grade_range: null, boulder_grade_range: null,
-      weight_kg: null, share_weight: false, has_car: false,
-    }
+  it('calls .ilike() on the requests query when location_name is provided', async () => {
+    const requestsQ = q({ data: [], error: null })
 
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ data: myProfile, error: null }))
-        .mockReturnValueOnce(q({ data: [], error: null }))
-        .mockReturnValueOnce(q({ data: [], error: null }))
-        .mockReturnValueOnce(q({ data: [], error: null }))
-        .mockReturnValueOnce(q({ data: requests, error: null }))
-        .mockReturnValueOnce(q({ data: profiles, error: null })),
+        .mockReturnValueOnce(q({ data: null, error: null }))  // myProfile
+        .mockReturnValueOnce(q({ data: [], error: null }))    // blocksOut
+        .mockReturnValueOnce(q({ data: [], error: null }))    // blocksIn
+        .mockReturnValueOnce(q({ data: [], error: null }))    // myInterests
+        .mockReturnValueOnce(requestsQ),                       // requests — captured
       rpc: vi.fn().mockResolvedValue({ error: null }),
     } as never)
 
-    const cards = await discoverRequests({ date_from: today, date_to: today, location_name: 'Siurana' })
-    if (cards.length === 2) {
-      // Siurana match should rank higher (location boost = +40)
-      expect(cards[0].request.location_name).toContain('Siurana')
-      expect(cards[0].score).toBeGreaterThan(cards[1].score)
-    }
+    await discoverRequests({ date_from: today, date_to: today, location_name: 'Siurana' })
+
+    expect(requestsQ.ilike).toHaveBeenCalledWith('location_name', '%Siurana%')
+  })
+
+  it('trims whitespace from location_name before passing to .ilike()', async () => {
+    const requestsQ = q({ data: [], error: null })
+
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: null, error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(requestsQ),
+      rpc: vi.fn().mockResolvedValue({ error: null }),
+    } as never)
+
+    await discoverRequests({ date_from: today, date_to: today, location_name: '  Siurana  ' })
+
+    expect(requestsQ.ilike).toHaveBeenCalledWith('location_name', '%Siurana%')
+  })
+
+  it('does not call .ilike() when location_name is undefined', async () => {
+    const requestsQ = q({ data: [], error: null })
+
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: null, error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(requestsQ),
+      rpc: vi.fn().mockResolvedValue({ error: null }),
+    } as never)
+
+    await discoverRequests({ date_from: today, date_to: today })
+
+    expect(requestsQ.ilike).not.toHaveBeenCalled()
+  })
+
+  it('does not call .ilike() when location_name is an empty string', async () => {
+    const requestsQ = q({ data: [], error: null })
+
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: null, error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(requestsQ),
+      rpc: vi.fn().mockResolvedValue({ error: null }),
+    } as never)
+
+    await discoverRequests({ date_from: today, date_to: today, location_name: '' })
+
+    expect(requestsQ.ilike).not.toHaveBeenCalled()
+  })
+
+  // ── Filter: date_from / date_to (DB-level) ──────────────────────────────────
+
+  it('passes date_from to .gte() on the requests query', async () => {
+    const requestsQ = q({ data: [], error: null })
+    const customDate = '2026-06-01'
+
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: null, error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(requestsQ),
+      rpc: vi.fn().mockResolvedValue({ error: null }),
+    } as never)
+
+    await discoverRequests({ date_from: customDate, date_to: '2026-12-31' })
+
+    expect(requestsQ.gte).toHaveBeenCalledWith('date', customDate)
+  })
+
+  it('passes date_to to .lte() on the requests query', async () => {
+    const requestsQ = q({ data: [], error: null })
+    const customDate = '2026-12-31'
+
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: null, error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(requestsQ),
+      rpc: vi.fn().mockResolvedValue({ error: null }),
+    } as never)
+
+    await discoverRequests({ date_from: '2026-06-01', date_to: customDate })
+
+    expect(requestsQ.lte).toHaveBeenCalledWith('date', customDate)
+  })
+
+  it('defaults date_from to today when not provided', async () => {
+    const requestsQ = q({ data: [], error: null })
+
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: null, error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(requestsQ),
+      rpc: vi.fn().mockResolvedValue({ error: null }),
+    } as never)
+
+    await discoverRequests({})
+
+    expect(requestsQ.gte).toHaveBeenCalledWith('date', today)
+  })
+
+  it('defaults date_to to one year ahead when not provided', async () => {
+    const requestsQ = q({ data: [], error: null })
+    const oneYearAhead = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: null, error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(requestsQ),
+      rpc: vi.fn().mockResolvedValue({ error: null }),
+    } as never)
+
+    await discoverRequests({})
+
+    expect(requestsQ.lte).toHaveBeenCalledWith('date', oneYearAhead)
+  })
+
+  // ── Filter: time_of_day (client-side) ───────────────────────────────────────
+
+  // Helpers shared across time_of_day tests
+  const makeTimedRequest = (id: string, userId: string, startTime: string | null, flexible = false) => ({
+    id, user_id: userId, date: today,
+    climbing_type: 'sport', location_name: 'Test Crag', status: 'active',
+    start_time: startTime, end_time: null, flexible,
+    needs_gear: { rope: false, quickdraws: false, belayDevice: false, crashPad: false, helmet: false },
+    carpool_needed: false, weight_relevant: false, max_weight_difference_kg: null,
+    goal_type: 'any', desired_grade_range: null, notes: null,
+    location_type: 'crag', created_at: '2025-06-01T08:00:00Z', updated_at: '',
+  })
+  const makeSimpleProfile = (id: string, name: string) => ({
+    id, display_name: name, photo_url: `/${name}.jpg`,
+    home_area: null, climbing_types: [], experience_level: null,
+    sport_grade_range: null, boulder_grade_range: null, weight_kg: null,
+    share_weight: false, gear: {}, has_car: false, bio: null, languages: [],
+    phone: null, created_at: '', updated_at: '',
+  })
+
+  it('time_of_day: morning — keeps morning requests (start < 12), excludes others', async () => {
+    const morningReq  = makeTimedRequest('req-1', 'user-2', '09:00') // hour 9 → morning
+    const eveningReq  = makeTimedRequest('req-2', 'user-3', '19:00') // hour 19 → evening
+
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: null, error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [morningReq, eveningReq], error: null }))
+        .mockReturnValueOnce(q({ data: [makeSimpleProfile('user-2', 'Alice'), makeSimpleProfile('user-3', 'Bob')], error: null })),
+      rpc: vi.fn().mockResolvedValue({ error: null }),
+    } as never)
+
+    const cards = await discoverRequests({ time_of_day: 'morning' })
+    expect(cards).toHaveLength(1)
+    expect(cards[0].request.id).toBe('req-1')
+  })
+
+  it('time_of_day: afternoon — keeps afternoon requests (12 ≤ start < 17), excludes others', async () => {
+    const morningReq   = makeTimedRequest('req-1', 'user-2', '09:00')
+    const afternoonReq = makeTimedRequest('req-2', 'user-3', '14:00')
+    const eveningReq   = makeTimedRequest('req-3', 'user-4', '19:00')
+
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: null, error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [morningReq, afternoonReq, eveningReq], error: null }))
+        .mockReturnValueOnce(q({ data: [
+          makeSimpleProfile('user-2', 'Alice'),
+          makeSimpleProfile('user-3', 'Bob'),
+          makeSimpleProfile('user-4', 'Carol'),
+        ], error: null })),
+      rpc: vi.fn().mockResolvedValue({ error: null }),
+    } as never)
+
+    const cards = await discoverRequests({ time_of_day: 'afternoon' })
+    expect(cards).toHaveLength(1)
+    expect(cards[0].request.id).toBe('req-2')
+  })
+
+  it('time_of_day: evening — keeps evening requests (start ≥ 17), excludes others', async () => {
+    const morningReq = makeTimedRequest('req-1', 'user-2', '09:00')
+    const eveningReq = makeTimedRequest('req-2', 'user-3', '18:00')
+
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: null, error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [morningReq, eveningReq], error: null }))
+        .mockReturnValueOnce(q({ data: [makeSimpleProfile('user-2', 'Alice'), makeSimpleProfile('user-3', 'Bob')], error: null })),
+      rpc: vi.fn().mockResolvedValue({ error: null }),
+    } as never)
+
+    const cards = await discoverRequests({ time_of_day: 'evening' })
+    expect(cards).toHaveLength(1)
+    expect(cards[0].request.id).toBe('req-2')
+  })
+
+  it('time_of_day filter always keeps flexible requests', async () => {
+    const flexibleReq = makeTimedRequest('req-1', 'user-2', '09:00', true) // flexible=true
+    const eveningReq  = makeTimedRequest('req-2', 'user-3', '19:00')        // non-flexible evening
+
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: null, error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [flexibleReq, eveningReq], error: null }))
+        .mockReturnValueOnce(q({ data: [makeSimpleProfile('user-2', 'Alice'), makeSimpleProfile('user-3', 'Bob')], error: null })),
+      rpc: vi.fn().mockResolvedValue({ error: null }),
+    } as never)
+
+    // morning filter — flexible passes (timeOverlap returns 10), evening non-flexible is excluded
+    const cards = await discoverRequests({ time_of_day: 'morning' })
+    expect(cards).toHaveLength(1)
+    expect(cards[0].request.id).toBe('req-1')
+  })
+
+  it('no time_of_day filter returns all requests regardless of start_time', async () => {
+    const morningReq  = makeTimedRequest('req-1', 'user-2', '09:00')
+    const eveningReq  = makeTimedRequest('req-2', 'user-3', '19:00')
+
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: null, error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [], error: null }))
+        .mockReturnValueOnce(q({ data: [morningReq, eveningReq], error: null }))
+        .mockReturnValueOnce(q({ data: [makeSimpleProfile('user-2', 'Alice'), makeSimpleProfile('user-3', 'Bob')], error: null })),
+      rpc: vi.fn().mockResolvedValue({ error: null }),
+    } as never)
+
+    const cards = await discoverRequests({})
+    expect(cards).toHaveLength(2)
   })
 })

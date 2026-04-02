@@ -2,7 +2,7 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import type { PartnerRequest, Profile, GearSet } from '@/lib/types/database'
-import { timeOverlap, gearCompatibility, experienceLevelScore } from '@/lib/scoring'
+import { timeOverlap } from '@/lib/scoring'
 import { WORLD_CRAGS } from '@/lib/crags'
 
 export interface DiscoverFilters {
@@ -22,7 +22,6 @@ export interface CompatibilityInfo {
 export interface ScoredCard {
   request: PartnerRequest
   profile: Profile
-  score: number
   compatibility: CompatibilityInfo
 }
 
@@ -94,29 +93,36 @@ export async function discoverRequests(filters: DiscoverFilters): Promise<Scored
   const dateFrom = filters.date_from || today
   const dateTo = filters.date_to || oneYearAhead
 
-  // Fire all independent queries in parallel — no sequential waiting
+  // Fire independent queries in parallel
   const [
     { data: myProfile },
     { data: blocksOut },
     { data: blocksIn },
     { data: myInterests },
-    { data: requests },
   ] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).single(),
     supabase.from('blocks').select('blocked_id').eq('blocker_id', user.id),
     supabase.from('blocks').select('blocker_id').eq('blocked_id', user.id),
     supabase.from('interests').select('request_id').eq('from_user_id', user.id),
-    supabase
-      .from('partner_requests')
-      .select('*')
-      .eq('status', 'active')
-      .gte('date', dateFrom)
-      .lte('date', dateTo)
-      .neq('user_id', user.id)
-      .order('date', { ascending: true })
-      .order('created_at', { ascending: false })
-      .limit(200),
   ])
+
+  // Build requests query — apply DB-level filters directly
+  let requestsQuery = supabase
+    .from('partner_requests')
+    .select('*')
+    .eq('status', 'active')
+    .gte('date', dateFrom)
+    .lte('date', dateTo)
+    .neq('user_id', user.id)
+    .order('date', { ascending: true })
+    .order('created_at', { ascending: false })
+    .limit(200)
+
+  if (filters.location_name?.trim()) {
+    requestsQuery = requestsQuery.ilike('location_name', `%${filters.location_name.trim()}%`)
+  }
+
+  const { data: requests } = await requestsQuery
 
   if (!requests || requests.length === 0) return []
 
@@ -140,58 +146,38 @@ export async function discoverRequests(filters: DiscoverFilters): Promise<Scored
 
   const profileMap = new Map((profiles || []).map(p => [p.id, p]))
 
-  const scored: ScoredCard[] = eligible
+  // time_of_day has no DB column — filter client-side
+  const timeFiltered = filters.time_of_day
+    ? eligible.filter(r => timeOverlap(r, filters.time_of_day) > 0)
+    : eligible
+
+  const cards: ScoredCard[] = timeFiltered
     .filter(r => profileMap.has(r.user_id))
     .map(request => {
-    const profile = profileMap.get(request.user_id)!
-    let score = 0
+      const profile = profileMap.get(request.user_id)!
 
-    score += timeOverlap(request, filters.time_of_day)
-
-    if (filters.location_name && request.location_name.toLowerCase().includes(filters.location_name.toLowerCase())) {
-      score += 40
-    }
-
-    if (myProfile) {
-      score += gearCompatibility(myProfile.gear as GearSet, request.needs_gear as GearSet)
-    }
-
-    score += experienceLevelScore(myProfile?.experience_level ?? null, profile.experience_level ?? null)
-
-    if (request.weight_relevant) {
-      if (myProfile?.share_weight && myProfile.weight_kg && profile.share_weight && profile.weight_kg) {
-        const diff = Math.abs(Number(myProfile.weight_kg) - Number(profile.weight_kg))
-        if (request.max_weight_difference_kg && diff > Number(request.max_weight_difference_kg)) {
-          score = -1
-        }
+      const gearKeys: (keyof GearSet)[] = ['rope', 'quickdraws', 'belayDevice', 'crashPad', 'helmet']
+      const gearLabels: Record<keyof GearSet, string> = {
+        rope: 'Rope', quickdraws: 'Quickdraws', belayDevice: 'Belay Device',
+        crashPad: 'Crash Pad', helmet: 'Helmet',
       }
-    }
+      const gearMatches = gearKeys
+        .filter(k => (request.needs_gear as GearSet)?.[k] && (myProfile?.gear as GearSet)?.[k])
+        .map(k => gearLabels[k])
 
-    // Build compatibility info
-    const gearKeys: (keyof GearSet)[] = ['rope', 'quickdraws', 'belayDevice', 'crashPad', 'helmet']
-    const gearLabels: Record<keyof GearSet, string> = {
-      rope: 'Rope', quickdraws: 'Quickdraws', belayDevice: 'Belay Device',
-      crashPad: 'Crash Pad', helmet: 'Helmet',
-    }
-    const gearMatches = gearKeys.filter(k => (request.needs_gear as GearSet)?.[k] && (myProfile?.gear as GearSet)?.[k]).map(k => gearLabels[k])
+      const compatibility: CompatibilityInfo = {
+        gearMatches,
+        carpoolAvailable: !!(request.carpool_needed && myProfile?.has_car),
+        carpoolNeeded: !!request.carpool_needed,
+        timeMatch: timeOverlap(request, filters.time_of_day) >= 30,
+      }
 
-    const compatibility: CompatibilityInfo = {
-      gearMatches,
-      carpoolAvailable: !!(request.carpool_needed && myProfile?.has_car),
-      carpoolNeeded: !!request.carpool_needed,
-      timeMatch: timeOverlap(request, filters.time_of_day) >= 30,
-    }
+      const sanitizedProfile = { ...profile }
+      if (!sanitizedProfile.share_weight) sanitizedProfile.weight_kg = null
+      sanitizedProfile.phone = null
 
-    const sanitizedProfile = { ...profile }
-    if (!sanitizedProfile.share_weight) {
-      sanitizedProfile.weight_kg = null
-    }
-    sanitizedProfile.phone = null
+      return { request, profile: sanitizedProfile, compatibility }
+    })
 
-    return { request, profile: sanitizedProfile, score, compatibility }
-  })
-    .filter(s => s.score >= 0)
-    .sort((a, b) => b.score - a.score || new Date(b.request.created_at).getTime() - new Date(a.request.created_at).getTime())
-
-  return scored
+  return cards
 }
