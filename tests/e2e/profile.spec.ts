@@ -6,7 +6,7 @@ test.describe('Profile', () => {
   })
 
   test('shows profile form', async ({ page }) => {
-    await expect(page.getByLabel(/display name/i)).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByPlaceholder(/climbing name/i)).toBeVisible({ timeout: 5_000 })
   })
 
   test('shows phone input with country selector', async ({ page }) => {
@@ -15,14 +15,15 @@ test.describe('Profile', () => {
   })
 
   test('shows instagram and facebook fields', async ({ page }) => {
-    await expect(page.getByLabel(/instagram/i)).toBeVisible({ timeout: 5_000 })
-    await expect(page.getByLabel(/facebook/i)).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByPlaceholder(/@your_username/i)).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByPlaceholder(/facebook\.com/i)).toBeVisible({ timeout: 5_000 })
   })
 
   test('can update display name', async ({ page }) => {
-    const nameInput = page.getByLabel(/display name/i)
+    const nameInput = page.getByPlaceholder(/climbing name/i)
     await nameInput.fill('E2E Test User')
     await page.getByRole('button', { name: /save/i }).click()
-    await expect(page.getByText(/saved|updated/i)).toBeVisible({ timeout: 5_000 })
+    // Profile form redirects to /discover after saving (no toast)
+    await expect(page).toHaveURL('/discover', { timeout: 10_000 })
   })
 })

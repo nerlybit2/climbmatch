@@ -1,14 +1,14 @@
 /**
- * Runs once before all flow tests.
- * Signs in as User A via the Supabase REST API and injects the session cookie
- * directly — bypasses the login UI entirely, no rate-limiting issues.
+ * Runs once before all flow tests that need a second authenticated user.
+ * Signs in as User B via the Supabase REST API and injects the session cookie
+ * directly — bypasses the login UI entirely.
  */
 import { test as setup, expect } from '@playwright/test'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
 import path from 'path'
 
-export const AUTH_FILE = path.join(__dirname, '.auth/user.json')
+export const AUTH_FILE_2 = path.join(__dirname, '.auth/user2.json')
 
 function loadEnv(): Record<string, string> {
   const env: Record<string, string> = {}
@@ -22,22 +22,22 @@ function loadEnv(): Record<string, string> {
   return { ...process.env as Record<string, string>, ...env }
 }
 
-const EMAIL    = process.env.TEST_USER_EMAIL    ?? 'e2e-a@climbmatch.test'
-const PASSWORD = process.env.TEST_USER_PASSWORD ?? 'E2eTest!2024'
+const EMAIL    = process.env.TEST_USER2_EMAIL    ?? 'e2e2@climbmatch.test'
+const PASSWORD = process.env.TEST_USER2_PASSWORD ?? 'E2eTest!2024'
 
-setup('authenticate', async ({ page }) => {
+setup('authenticate user2', async ({ page }) => {
   const env         = loadEnv()
   const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   const anonKey     = env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
-  if (!supabaseUrl || !anonKey) throw new Error('[auth setup] Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  if (!supabaseUrl || !anonKey) throw new Error('[auth setup2] Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY')
 
   const res = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: anonKey },
     body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
   })
-  if (!res.ok) throw new Error(`[auth setup] Sign-in API failed for ${EMAIL}: ${await res.text()}`)
+  if (!res.ok) throw new Error(`[auth setup2] Sign-in API failed for ${EMAIL}: ${await res.text()}`)
 
   const session = await res.json()
   const projectRef = new URL(supabaseUrl).hostname.split('.')[0]
@@ -53,12 +53,11 @@ setup('authenticate', async ({ page }) => {
       secure:   false,
       sameSite: 'Lax',
     },
-    // Profile-complete cache cookie — prevents middleware from hitting the DB on every request
     { name: 'pc', value: '1', domain: 'localhost', path: '/', httpOnly: true, secure: false, sameSite: 'Lax' },
   ])
 
   await page.goto('/discover')
   await expect(page.locator('h1')).toBeVisible({ timeout: 10_000 })
 
-  await page.context().storageState({ path: AUTH_FILE })
+  await page.context().storageState({ path: AUTH_FILE_2 })
 })

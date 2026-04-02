@@ -14,27 +14,28 @@ test.describe('Discover', () => {
   })
 
   test('shows partner cards or empty state', async ({ page }) => {
-    const hasCards = await page.locator('button').filter({ hasText: /\w/ }).count()
+    const hasCards = await page.locator('button').filter({ has: page.locator('img') }).count()
     const hasEmpty = await page.getByText(/no climbers|create.*request/i).isVisible()
     expect(hasCards > 0 || hasEmpty).toBeTruthy()
   })
 
   test('filter panel opens and closes', async ({ page }) => {
     await page.getByText(/search by location/i).click()
-    await expect(page.getByLabel(/date from/i).or(page.getByText(/time of day/i))).toBeVisible()
+    await expect(page.locator('input[type="date"]').first()).toBeVisible()
     await page.getByText(/search by location/i).click()
   })
 
   test('location filter narrows results', async ({ page }) => {
     await page.getByText(/search by location/i).click()
-    await page.getByPlaceholder(/location/i).fill('Siurana')
+    await page.getByPlaceholder(/search gyms|crags/i).fill('Siurana')
     await page.getByRole('button', { name: /apply/i }).click()
     // Either shows results matching Siurana or empty state
     await expect(page.getByText(/siurana/i).or(page.getByText(/no climbers/i))).toBeVisible({ timeout: 5_000 })
   })
 
   test('clicking a card opens the detail sheet', async ({ page }) => {
-    const firstCard = page.locator('button').filter({ hasText: /\w/ }).first()
+    // Cards have a profile photo (img) inside them; filter/refresh buttons do not
+    const firstCard = page.locator('button').filter({ has: page.locator('img') }).first()
     const hasCard = await firstCard.isVisible()
     if (!hasCard) test.skip()
 

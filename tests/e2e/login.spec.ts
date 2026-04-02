@@ -25,7 +25,7 @@ test.describe('Login page', () => {
   test('shows error on wrong password', async ({ page }) => {
     await page.getByPlaceholder('Email').fill('nobody@climbmatch.test')
     await page.getByPlaceholder('Password').fill('wrongpassword')
-    await page.getByRole('button', { name: /^sign in$/i }).click()
+    await page.locator('form').getByRole('button', { name: /sign in/i }).click()
     await expect(page.getByText(/incorrect|invalid|wrong/i)).toBeVisible({ timeout: 8_000 })
   })
 
@@ -44,29 +44,31 @@ test.describe('Login page', () => {
   // ── Create Account tab ───────────────────────────────────────────────────
 
   test('switching to Create Account tab shows name and confirm password fields', async ({ page }) => {
-    await page.getByRole('button', { name: /create account/i }).click()
+    await page.getByRole('button', { name: /create account/i }).first().click()
     await expect(page.getByPlaceholder('Your name')).toBeVisible()
     await expect(page.getByPlaceholder('Email')).toBeVisible()
     await expect(page.getByPlaceholder(/confirm password/i)).toBeVisible()
   })
 
   test('signup validation: empty name shows error', async ({ page }) => {
-    await page.getByRole('button', { name: /create account/i }).click()
+    await page.getByRole('button', { name: /create account/i }).first().click()
     await page.getByPlaceholder('Email').fill('test@example.com')
     await page.getByPlaceholder(/^Password/i).first().fill('password123')
     await page.getByPlaceholder(/confirm password/i).fill('password123')
     // Leave name empty
-    await page.getByRole('button', { name: /^create account$/i }).click()
-    await expect(page.getByText(/enter your name/i)).toBeVisible({ timeout: 3_000 })
+    await page.locator('form').getByRole('button', { name: /create account/i }).click()
+    // Browser HTML5 validation fires (native tooltip) — page stays at /login
+    await expect(page).toHaveURL('/login')
+    await expect(page.getByPlaceholder('Your name')).toBeVisible()
   })
 
   test('signup validation: mismatched passwords shows error', async ({ page }) => {
-    await page.getByRole('button', { name: /create account/i }).click()
+    await page.getByRole('button', { name: /create account/i }).first().click()
     await page.getByPlaceholder('Your name').fill('Test User')
     await page.getByPlaceholder('Email').fill('test@example.com')
     await page.getByPlaceholder(/^Password/i).first().fill('password123')
     await page.getByPlaceholder(/confirm password/i).fill('different456')
-    await page.getByRole('button', { name: /^create account$/i }).click()
+    await page.locator('form').getByRole('button', { name: /create account/i }).click()
     await expect(page.getByText(/do not match/i)).toBeVisible({ timeout: 3_000 })
   })
 
@@ -74,11 +76,11 @@ test.describe('Login page', () => {
     // Trigger an error on sign in
     await page.getByPlaceholder('Email').fill('nobody@climbmatch.test')
     await page.getByPlaceholder('Password').fill('wrongpassword')
-    await page.getByRole('button', { name: /^sign in$/i }).click()
+    await page.locator('form').getByRole('button', { name: /sign in/i }).click()
     await expect(page.getByText(/incorrect|invalid/i)).toBeVisible({ timeout: 8_000 })
 
     // Switch to Create Account — error should clear
-    await page.getByRole('button', { name: /create account/i }).click()
+    await page.getByRole('button', { name: /create account/i }).first().click()
     await expect(page.getByText(/incorrect|invalid/i)).not.toBeVisible()
   })
 

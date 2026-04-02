@@ -323,7 +323,7 @@ export const en: Translations = {
     goal: 'Goal',
     gradeRange: 'Desired Grade Range',
     gradePlaceholder: 'e.g., 6a-6c',
-    notes: 'Tell people about yourself',
+    notes: 'Tell people what you\'re looking for',
     notesPlaceholder: 'Your level, what you\'re working on, what kind of partner you\'re looking for…',
     gearNeeded: 'Gear Needed From Partner',
     carpoolNeeded: 'Need a ride / carpool',
