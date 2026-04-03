@@ -60,17 +60,6 @@ export function AppSplashWrapper({ children }: { children: React.ReactNode }) {
             />
           </svg>
 
-          {/* Logo */}
-          <div className="animate-slide-in-up relative z-10">
-            <Image
-              src="/logo.png"
-              alt="ClimbMatch"
-              width={100}
-              height={100}
-              priority
-            />
-          </div>
-
           {/* Wordmark */}
           <p
             className="mt-4 text-[13px] font-bold tracking-[0.18em] uppercase animate-slide-in-up relative z-10"
