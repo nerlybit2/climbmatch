@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/Input'
+import { LocationSearch } from '@/components/LocationSearch'
 import { Select } from '@/components/Select'
 import { GearCheckboxes } from '@/components/GearCheckboxes'
 import { Button } from '@/components/Button'
@@ -11,7 +12,7 @@ import type { GearSet, LocationType, GoalType, PartnerRequest } from '@/lib/type
 import { updateRequest, type RequestPayload } from '@/lib/actions/requests'
 import { useToast } from '@/hooks/useToast'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { useMyPosts } from '@/contexts/MyPostsContext'
+import { emit } from '@/lib/dataEvents'
 
 const DEFAULT_GEAR: GearSet = { rope: false, quickdraws: false, belayDevice: false, crashPad: false, helmet: false }
 
@@ -24,7 +25,6 @@ export function RequestForm({ existing }: Props) {
   const router = useRouter()
   const toast = useToast()
   const { t } = useLanguage()
-  const { refresh: refreshPosts } = useMyPosts()
   const isEdit = !!existing
 
   const today = new Date().toISOString().split('T')[0]
@@ -88,7 +88,7 @@ export function RequestForm({ existing }: Props) {
       if (isEdit) {
         await updateRequest(existing!.id, payload)
         toast.addToast(t.toasts.requestUpdated, 'success')
-        refreshPosts()
+        emit('post:updated')
         router.push('/requests')
         return
       }
@@ -113,7 +113,7 @@ export function RequestForm({ existing }: Props) {
       if (insertError) throw insertError
 
       toast.addToast(t.toasts.requestCreated, 'success')
-      refreshPosts()
+      emit('post:created')
       router.push('/requests')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save request')
@@ -138,8 +138,26 @@ export function RequestForm({ existing }: Props) {
         </div>
       )}
 
-      <Select label={t.newRequest.locationType} value={locationType} onChange={e => setLocationType(e.target.value as 'gym' | 'crag')} options={LOCATION_TYPE_OPTIONS} />
-      <Input  label={t.newRequest.locationName} value={locationName} onChange={e => setLocationName(e.target.value)} placeholder={t.newRequest.locationPlaceholder} required />
+      <div className="space-y-1.5">
+        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">{t.newRequest.locationType}</label>
+        <div className="flex bg-white rounded-2xl shadow-sm ring-1 ring-gray-200 p-1 gap-1">
+          {LOCATION_TYPE_OPTIONS.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { setLocationType(opt.value as 'gym' | 'crag'); setLocationName('') }}
+              className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-150 ${
+                locationType === opt.value
+                  ? 'bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-sm shadow-blue-400/25'
+                  : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <LocationSearch label={t.newRequest.locationName} value={locationName} onChange={setLocationName} type={locationType} required />
       <Select label={t.newRequest.goal}         value={goalType}     onChange={e => setGoalType(e.target.value as 'any' | 'project' | 'mileage' | 'easy_day' | 'training')}     options={GOAL_OPTIONS} />
       <Input  label={t.newRequest.gradeRange}   value={desiredGrade} onChange={e => setDesiredGrade(e.target.value)} placeholder={t.newRequest.gradePlaceholder} />
 

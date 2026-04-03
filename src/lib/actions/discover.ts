@@ -23,6 +23,7 @@ export interface ScoredCard {
   request: PartnerRequest
   profile: Profile
   compatibility: CompatibilityInfo
+  swiped: boolean
 }
 
 export async function searchLocations(query: string): Promise<string[]> {
@@ -89,8 +90,9 @@ export async function discoverRequests(filters: DiscoverFilters): Promise<Scored
   if (!user) return []
 
   const today = new Date().toISOString().split('T')[0]
-  const oneYearAhead = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  const dateFrom = filters.date_from || today
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString().split('T')[0]
+  const oneYearAhead = new Date(Date.now() + 365 * 86_400_000).toISOString().split('T')[0]
+  const dateFrom = filters.date_from || sevenDaysAgo
   const dateTo = filters.date_to || oneYearAhead
 
   // Fire independent queries in parallel
@@ -132,9 +134,7 @@ export async function discoverRequests(filters: DiscoverFilters): Promise<Scored
   ])
   const swipedRequestIds = new Set((myInterests || []).map(i => i.request_id))
 
-  const eligible = requests.filter(r =>
-    !blockedIds.has(r.user_id) && !swipedRequestIds.has(r.id)
-  )
+  const eligible = requests.filter(r => !blockedIds.has(r.user_id))
 
   const userIds = [...new Set(eligible.map(r => r.user_id))]
   if (userIds.length === 0) return []
@@ -176,8 +176,19 @@ export async function discoverRequests(filters: DiscoverFilters): Promise<Scored
       if (!sanitizedProfile.share_weight) sanitizedProfile.weight_kg = null
       sanitizedProfile.phone = null
 
-      return { request, profile: sanitizedProfile, compatibility }
+      return { request, profile: sanitizedProfile, compatibility, swiped: swipedRequestIds.has(request.id) }
     })
+
+  // Sort: future unswiped → future swiped → past unswiped → past swiped
+  cards.sort((a, b) => {
+    const aPast = a.request.date < today ? 1 : 0
+    const bPast = b.request.date < today ? 1 : 0
+    if (aPast !== bPast) return aPast - bPast
+    const aSwiped = a.swiped ? 1 : 0
+    const bSwiped = b.swiped ? 1 : 0
+    if (aSwiped !== bSwiped) return aSwiped - bSwiped
+    return a.request.date.localeCompare(b.request.date)
+  })
 
   return cards
 }

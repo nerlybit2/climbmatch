@@ -1,6 +1,33 @@
 // Comprehensive list of climbing crags worldwide
 // Sources: 8a.nu, 27crags, theCrag, climbingaway.fr, and climbing community data
 
+// ── Israel ──
+export const ISRAEL_CRAGS: string[] = [
+  // Galilee & North
+  'Mt. Arbel', 'Nahal Amud', 'Keshet Cave', 'Nebi Yusha', 'Kziv',
+  'Yehiam Fortress', 'Goren Park', 'Nahal Dishon', 'Nahal Daliyot',
+  'Ramat Razim', 'Hazon', 'Zippori Forest', 'Givat Yasaf',
+  'Bental', 'Kfar Giladi', 'Nahal Kziv',
+  // Carmel & Jezreel
+  'Beit Oren', 'Haifa Carmel', 'Kfar Baruch',
+  // Jerusalem & Judea
+  'Ein Prat', 'Wadi Qelt', 'Nahal Soreq', 'Judean Desert', 'Korazim',
+  // Negev
+  'Ein Gedi', 'Mitzpe Ramon', 'Timna Park',
+  // Eilat
+  'Red Canyon', "Solomon's Pillars", 'Har Tzfachot', 'Nahal Gishron',
+]
+
+export const ISRAEL_GYMS: string[] = [
+  'Climbzone Tel Aviv', 'Climbzone Rishon LeZion', 'Climbzone Jerusalem',
+  'Climbzone Petah Tikva', "Climbzone Ra'anana", 'Climbzone Haifa',
+  'Vertical Herzliya', "Vertical Ra'anana",
+  "HaPaamon Be'er Sheva",
+  'Campus Haifa',
+  'The Block Tel Aviv',
+  'Stonewall Jerusalem',
+]
+
 export const WORLD_CRAGS: string[] = [
   // ── Spain (953 areas total) ──
   'Siurana, Spain',

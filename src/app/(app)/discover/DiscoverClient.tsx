@@ -11,12 +11,19 @@ import { MatchCelebration } from '@/components/MatchCelebration'
 import { useToast } from '@/hooks/useToast'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useDiscover } from '@/contexts/DiscoverContext'
+import { useMyPosts } from '@/contexts/MyPostsContext'
+import { useProfile } from '@/contexts/ProfileContext'
 import { PullToRefreshWrapper } from '@/components/PullToRefreshWrapper'
+import { emit } from '@/lib/dataEvents'
+import Link from 'next/link'
 
 export default function DiscoverClient() {
   const { t } = useLanguage()
   const router = useRouter()
-  const { cards, loading, applyFilters, removeCard: removeFromStore, refresh } = useDiscover()
+  const { cards, loading, applyFilters, removeCard: removeFromStore, markSwiped: markSwipedInStore, refresh } = useDiscover()
+  const { posts, applicantCounts } = useMyPosts()
+  const activePosts = posts.filter(p => p.status === 'active')
+  const { profile } = useProfile()
 
   const TIME_CHIPS = [
     { value: '', label: t.timeChips.anyTime },
@@ -120,7 +127,8 @@ export default function DiscoverClient() {
   const handleInterested = useCallback(async (card: ScoredCard) => {
     try {
       const result = await createInterest(card.request.id, card.profile.id)
-      removeCard(card.request.id)
+      emit('interest:created')
+      markSwipedInStore(card.request.id)
       setDetailCard(null)
       if (result.matchedProfile) {
         setMatchResult(result)
@@ -136,7 +144,7 @@ export default function DiscoverClient() {
       toast.addToast('Something went wrong. Please try again.', 'error')
       console.error(err)
     }
-  }, [removeCard, toast, router, t])
+  }, [markSwipedInStore, toast, router, t])
 
   const handlePass = useCallback((card: ScoredCard) => {
     removeCard(card.request.id)
@@ -174,7 +182,7 @@ export default function DiscoverClient() {
           <div className="flex items-center justify-between mt-2 px-1">
             {!loading && (
               <p className="text-xs text-slate-400 font-medium">
-                {cards.length} partner{cards.length !== 1 ? 's' : ''} available
+                {cards.filter(c => !c.swiped).length} {t.discover.newCount} · {cards.filter(c => c.swiped).length} {t.discover.contactedCount}
               </p>
             )}
             {loading && <p className="text-xs text-slate-400 font-medium">Loading…</p>}
@@ -321,6 +329,69 @@ export default function DiscoverClient() {
 
       {/* Results */}
       <div className="flex-1 px-4 pt-3 pb-28 space-y-3">
+
+        {/* Own posts — full card style */}
+        {activePosts.length > 0 && !loading && activePosts.map(post => (
+          <Link
+            key={post.id}
+            href={activePosts.length === 1 ? '/inbox' : '/requests'}
+            className="block w-full text-left bg-white rounded-3xl card-shadow overflow-hidden border-l-4 border-l-emerald-400 border border-gray-50 active:scale-[0.98] transition-all duration-200"
+          >
+            <div className="flex items-center gap-3 p-3.5">
+              {/* Avatar */}
+              <div className="relative w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 bg-slate-100">
+                <Image
+                  src={profile?.photo_url || '/logo.png'}
+                  alt={profile?.display_name ?? ''}
+                  fill
+                  sizes="64px"
+                  className="object-cover"
+                />
+              </div>
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold text-slate-900 truncate">{profile?.display_name}</span>
+                  <span className="flex-shrink-0 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+                    Your Post
+                  </span>
+                  {(applicantCounts[post.id] ?? 0) > 0 && (
+                    <span className="flex-shrink-0 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+                      {applicantCounts[post.id]} {t.discover.interested}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 mt-0.5 text-xs text-slate-500 font-medium">
+                  <svg className="w-3 h-3 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="truncate">{post.location_name}</span>
+                </div>
+                <div className="flex items-center gap-1 mt-0.5 text-xs font-bold text-slate-700">
+                  <svg className="w-3 h-3 flex-shrink-0 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {new Date(post.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                  {post.start_time && (
+                    <span className="text-slate-400 font-medium">· {post.start_time.slice(0, 5)}{post.end_time ? `–${post.end_time.slice(0, 5)}` : ''}</span>
+                  )}
+                </div>
+                {post.desired_grade_range && (
+                  <span className="inline-block mt-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+                    {post.desired_grade_range}
+                  </span>
+                )}
+              </div>
+
+              <svg className="w-4 h-4 text-gray-300 flex-shrink-0 self-start mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </Link>
+        ))}
+
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
@@ -351,12 +422,20 @@ export default function DiscoverClient() {
             />
           </div>
         ) : (
-          cards.slice(0, displayCount).map(card => (
+          cards.slice(0, displayCount).map(card => {
+            const isPast = card.request.date < today
+            return (
             <button
               key={card.request.id}
               type="button"
               onClick={() => setDetailCard(card)}
-              className="w-full text-left bg-white rounded-3xl card-shadow border border-gray-50 overflow-hidden hover:shadow-md hover:border-blue-100 transition-all duration-200 active:scale-[0.98]"
+              className={`w-full text-left bg-white rounded-3xl card-shadow overflow-hidden transition-all duration-200 active:scale-[0.98] ${
+                card.swiped
+                  ? 'opacity-60 border-l-4 border-l-blue-300 border border-gray-50'
+                  : isPast
+                    ? 'border-l-4 border-l-amber-300 border border-gray-50'
+                    : 'border border-gray-50 hover:shadow-md hover:border-blue-100'
+              }`}
             >
               <div className="flex items-center gap-3 p-3.5">
                 {/* Avatar */}
@@ -374,6 +453,16 @@ export default function DiscoverClient() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-slate-900 truncate">{card.profile.display_name}</span>
+                    {card.swiped && (
+                      <span className="flex-shrink-0 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+                        {t.cardDetails.interestSent} ✓
+                      </span>
+                    )}
+                    {isPast && (
+                      <span className="flex-shrink-0 text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
+                        {t.discover.pastDate}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-1 mt-0.5 text-xs text-slate-500 font-medium">
                     <svg className="w-3 h-3 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -420,7 +509,8 @@ export default function DiscoverClient() {
                 </div>
               )}
             </button>
-          ))
+            )
+          })
         )}
 
         {/* Infinite scroll sentinel */}
@@ -436,6 +526,7 @@ export default function DiscoverClient() {
           profile={detailCard.profile}
           request={detailCard.request}
           compatibility={detailCard.compatibility}
+          swiped={detailCard.swiped}
           onClose={() => setDetailCard(null)}
           onInterested={() => handleInterested(detailCard)}
           onPass={() => handlePass(detailCard)}

@@ -4,7 +4,8 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import { getMyRequests } from '@/lib/actions/requests'
 import { getApplicantCounts } from '@/lib/actions/interests'
 import type { PartnerRequest } from '@/lib/types/database'
-import { readCache, writeCache, CACHE_KEYS } from '@/lib/cache'
+import { readCacheT, writeCacheT, isCacheFresh, CACHE_KEYS } from '@/lib/cache'
+import { on, type DataEvent } from '@/lib/dataEvents'
 
 interface MyPostsCache { posts: PartnerRequest[]; applicantCounts: Record<string, number> }
 
@@ -19,36 +20,53 @@ interface MyPostsContextValue {
 const MyPostsContext = createContext<MyPostsContextValue | null>(null)
 
 export function MyPostsProvider({ children }: { children: React.ReactNode }) {
-  const cached                                = readCache<MyPostsCache>(CACHE_KEYS.myPosts)
-  const [posts, setPosts]                     = useState<PartnerRequest[]>(cached?.posts ?? [])
-  const [applicantCounts, setApplicantCounts] = useState<Record<string, number>>(cached?.applicantCounts ?? {})
+  const cached                                = readCacheT<MyPostsCache>(CACHE_KEYS.myPosts)
+  const [posts, setPosts]                     = useState<PartnerRequest[]>(cached?.data.posts ?? [])
+  const [applicantCounts, setApplicantCounts] = useState<Record<string, number>>(cached?.data.applicantCounts ?? {})
   const [loading, setLoading]                 = useState(cached === null)
   const fetchingRef                           = useRef(false)
+  const lastFetchRef                          = useRef(0)
 
-  const fetchPosts = useCallback(async () => {
+  const fetchPosts = useCallback(async (silent = false) => {
     if (fetchingRef.current) return
+    if (silent && isCacheFresh(lastFetchRef.current)) return
     fetchingRef.current = true
-    setLoading(true)
+    if (!silent) setLoading(true)
     try {
       const data = await getMyRequests()
       const activeIds = data.filter(r => r.status === 'active').map(r => r.id)
       const counts = activeIds.length > 0 ? await getApplicantCounts(activeIds) : {}
       setPosts(data)
       setApplicantCounts(counts)
-      writeCache(CACHE_KEYS.myPosts, { posts: data, applicantCounts: counts })
+      lastFetchRef.current = Date.now()
+      writeCacheT(CACHE_KEYS.myPosts, { posts: data, applicantCounts: counts })
     } catch (err) {
       console.error('[MyPosts] fetch error', err)
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
       fetchingRef.current = false
     }
   }, [])
 
-  // Only fetch on mount if there's nothing in cache
+  // Stale-while-revalidate: show cache instantly, refresh in background if stale
   useEffect(() => {
-    if (cached === null) fetchPosts()
+    if (cached === null) {
+      fetchPosts()
+    } else if (!isCacheFresh(cached.ts)) {
+      fetchPosts(true)
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Subscribe to relevant data events for background refresh
+  useEffect(() => {
+    const events: DataEvent[] = [
+      'post:created', 'post:updated', 'post:cancelled',
+      'interest:accepted', 'interest:declined', 'app:resumed',
+    ]
+    const unsubs = events.map(e => on(e, () => fetchPosts(true)))
+    return () => unsubs.forEach(u => u())
+  }, [fetchPosts])
 
   const refresh = useCallback(async () => { await fetchPosts() }, [fetchPosts])
 
@@ -57,7 +75,7 @@ export function MyPostsProvider({ children }: { children: React.ReactNode }) {
     setPosts(prev => {
       const next = prev.map(p => p.id === id ? { ...p, ...changes } : p)
       setApplicantCounts(counts => {
-        writeCache(CACHE_KEYS.myPosts, { posts: next, applicantCounts: counts })
+        writeCacheT(CACHE_KEYS.myPosts, { posts: next, applicantCounts: counts })
         return counts
       })
       return next

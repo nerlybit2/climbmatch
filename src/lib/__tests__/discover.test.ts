@@ -168,7 +168,7 @@ describe('discoverRequests', () => {
     expect(await discoverRequests({ date_from: today, date_to: today })).toEqual([])
   })
 
-  it('filters out already-swiped requests', async () => {
+  it('returns already-swiped requests with swiped=true', async () => {
     const request = {
       id: 'req-1', user_id: 'user-2', date: today,
       climbing_type: 'sport', location_name: 'Test', status: 'active',
@@ -176,6 +176,13 @@ describe('discoverRequests', () => {
       needs_gear: {}, carpool_needed: false, weight_relevant: false,
       max_weight_difference_kg: null, goal_type: 'any', desired_grade_range: null,
       notes: null, location_type: 'crag', created_at: '', updated_at: '',
+    }
+    const profile = {
+      id: 'user-2', display_name: 'Alice', photo_url: null,
+      home_area: null, climbing_types: [], experience_level: null,
+      sport_grade_range: null, boulder_grade_range: null, weight_kg: null,
+      share_weight: false, gear: {}, has_car: false, bio: null, languages: [],
+      phone: null, created_at: '', updated_at: '',
     }
 
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
@@ -185,11 +192,14 @@ describe('discoverRequests', () => {
         .mockReturnValueOnce(q({ data: [], error: null }))                         // blocksOut
         .mockReturnValueOnce(q({ data: [], error: null }))                         // blocksIn
         .mockReturnValueOnce(q({ data: [{ request_id: 'req-1' }], error: null }))  // myInterests (already swiped)
-        .mockReturnValueOnce(q({ data: [request], error: null })),                 // requests
+        .mockReturnValueOnce(q({ data: [request], error: null }))                  // requests
+        .mockReturnValueOnce(q({ data: [profile], error: null })),                 // profiles
       rpc: vi.fn().mockResolvedValue({ error: null }),
     } as never)
 
-    expect(await discoverRequests({ date_from: today, date_to: today })).toEqual([])
+    const cards = await discoverRequests({ date_from: today, date_to: today })
+    expect(cards).toHaveLength(1)
+    expect(cards[0].swiped).toBe(true)
   })
 
   it('returns scored cards for eligible requests', async () => {
@@ -229,6 +239,7 @@ describe('discoverRequests', () => {
     expect(cards[0].request.id).toBe('req-1')
     expect(cards[0].profile.display_name).toBe('Alice')
     expect(cards[0].compatibility).toBeDefined()
+    expect(cards[0].swiped).toBe(false)
     // Phone is sanitized out of profile
     expect(cards[0].profile.phone).toBeNull()
   })
@@ -395,7 +406,7 @@ describe('discoverRequests', () => {
     expect(requestsQ.lte).toHaveBeenCalledWith('date', customDate)
   })
 
-  it('defaults date_from to today when not provided', async () => {
+  it('defaults date_from to 7 days ago when not provided', async () => {
     const requestsQ = q({ data: [], error: null })
 
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
@@ -411,7 +422,8 @@ describe('discoverRequests', () => {
 
     await discoverRequests({})
 
-    expect(requestsQ.gte).toHaveBeenCalledWith('date', today)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString().split('T')[0]
+    expect(requestsQ.gte).toHaveBeenCalledWith('date', sevenDaysAgo)
   })
 
   it('defaults date_to to one year ahead when not provided', async () => {

@@ -8,13 +8,18 @@ vi.mock('@/lib/actions/interests', () => ({
 }))
 
 vi.mock('@/lib/cache', () => ({
-  readCache: vi.fn(),
-  writeCache: vi.fn(),
+  readCacheT: vi.fn(),
+  writeCacheT: vi.fn(),
+  isCacheFresh: vi.fn().mockReturnValue(false),
   CACHE_KEYS: { inbox: 'cm_inbox' },
 }))
 
+vi.mock('@/lib/dataEvents', () => ({
+  on: vi.fn().mockReturnValue(() => {}),
+}))
+
 import { getInboxData } from '@/lib/actions/interests'
-import { readCache, writeCache } from '@/lib/cache'
+import { readCacheT, writeCacheT } from '@/lib/cache'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -52,7 +57,7 @@ describe('InboxContext', () => {
 
   describe('no cache — initial load', () => {
     it('shows loading state while fetching, then renders data', async () => {
-      vi.mocked(readCache).mockReturnValue(null)
+      vi.mocked(readCacheT).mockReturnValue(null)
       vi.mocked(getInboxData).mockResolvedValue({ received: [makeItem('+1')], sent: [] })
 
       render(<InboxProvider><Probe /></InboxProvider>)
@@ -64,20 +69,20 @@ describe('InboxContext', () => {
 
     it('writes fresh data to cache after fetch', async () => {
       const item = makeItem('+1')
-      vi.mocked(readCache).mockReturnValue(null)
+      vi.mocked(readCacheT).mockReturnValue(null)
       vi.mocked(getInboxData).mockResolvedValue({ received: [item], sent: [] })
 
       render(<InboxProvider><Probe /></InboxProvider>)
 
-      await waitFor(() => expect(writeCache).toHaveBeenCalled())
-      expect(writeCache).toHaveBeenCalledWith('cm_inbox', { received: [item], sent: [] })
+      await waitFor(() => expect(writeCacheT).toHaveBeenCalled())
+      expect(writeCacheT).toHaveBeenCalledWith('cm_inbox', { received: [item], sent: [] })
     })
   })
 
   describe('cache exists — stale-while-revalidate', () => {
     it('displays cached data immediately without a loading spinner', async () => {
       const cachedItem = makeItem('+972500000000')
-      vi.mocked(readCache).mockReturnValue({ received: [cachedItem], sent: [] })
+      vi.mocked(readCacheT).mockReturnValue({ data: { received: [cachedItem], sent: [] }, ts: 0 })
       vi.mocked(getInboxData).mockResolvedValue({ received: [cachedItem], sent: [] })
 
       render(<InboxProvider><Probe /></InboxProvider>)
@@ -92,7 +97,7 @@ describe('InboxContext', () => {
       const staleItem = makeItem('+972500000000') // old wrong number
       const freshItem = makeItem('+972509999999') // correct number after profile edit
 
-      vi.mocked(readCache).mockReturnValue({ received: [staleItem], sent: [] })
+      vi.mocked(readCacheT).mockReturnValue({ data: { received: [staleItem], sent: [] }, ts: 0 })
       vi.mocked(getInboxData).mockResolvedValue({ received: [freshItem], sent: [] })
 
       render(<InboxProvider><Probe /></InboxProvider>)
@@ -105,9 +110,9 @@ describe('InboxContext', () => {
       expect(screen.getByTestId('loading').textContent).toBe('false')
     })
 
-    it('always calls getInboxData once on mount even when cache is populated', async () => {
+    it('always calls getInboxData once on mount when cache is stale', async () => {
       const item = makeItem('+1')
-      vi.mocked(readCache).mockReturnValue({ received: [item], sent: [] })
+      vi.mocked(readCacheT).mockReturnValue({ data: { received: [item], sent: [] }, ts: 0 })
       vi.mocked(getInboxData).mockResolvedValue({ received: [item], sent: [] })
 
       render(<InboxProvider><Probe /></InboxProvider>)
@@ -119,13 +124,13 @@ describe('InboxContext', () => {
       const staleItem = makeItem('+972500000000')
       const freshItem = makeItem('+972509999999')
 
-      vi.mocked(readCache).mockReturnValue({ received: [staleItem], sent: [] })
+      vi.mocked(readCacheT).mockReturnValue({ data: { received: [staleItem], sent: [] }, ts: 0 })
       vi.mocked(getInboxData).mockResolvedValue({ received: [freshItem], sent: [] })
 
       render(<InboxProvider><Probe /></InboxProvider>)
 
       await waitFor(() =>
-        expect(writeCache).toHaveBeenCalledWith('cm_inbox', { received: [freshItem], sent: [] })
+        expect(writeCacheT).toHaveBeenCalledWith('cm_inbox', { received: [freshItem], sent: [] })
       )
     })
   })

@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { readCache, writeCache, clearCache, CACHE_KEYS } from '@/lib/cache'
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { readCache, writeCache, clearCache, readCacheT, writeCacheT, isCacheFresh, CACHE_FRESH_MS, CACHE_KEYS } from '@/lib/cache'
 
 // ---------------------------------------------------------------------------
 // Mock localStorage for Node environment
@@ -131,5 +131,112 @@ describe('CACHE_KEYS', () => {
 
   it('has exactly 4 keys', () => {
     expect(Object.keys(CACHE_KEYS)).toHaveLength(4)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Timestamped cache (readCacheT / writeCacheT / isCacheFresh)
+// ---------------------------------------------------------------------------
+
+describe('readCacheT', () => {
+  let storage: ReturnType<typeof makeMockStorage>
+
+  beforeEach(() => {
+    storage = makeMockStorage()
+    Object.defineProperty(globalThis, 'localStorage', { value: storage, writable: true, configurable: true })
+  })
+
+  it('returns null when key does not exist', () => {
+    expect(readCacheT('nonexistent')).toBeNull()
+  })
+
+  it('parses envelope format { data, ts }', () => {
+    const envelope = { data: { name: 'Alice' }, ts: 1000 }
+    storage.setItem('key', JSON.stringify(envelope))
+    expect(readCacheT<{ name: string }>('key')).toEqual(envelope)
+  })
+
+  it('treats legacy format (no ts/data fields) as ts: 0', () => {
+    const legacy = { name: 'Bob' }
+    storage.setItem('key', JSON.stringify(legacy))
+    expect(readCacheT<{ name: string }>('key')).toEqual({ data: legacy, ts: 0 })
+  })
+
+  it('treats legacy array format as ts: 0', () => {
+    const legacy = [1, 2, 3]
+    storage.setItem('key', JSON.stringify(legacy))
+    expect(readCacheT<number[]>('key')).toEqual({ data: legacy, ts: 0 })
+  })
+
+  it('returns null on corrupted data', () => {
+    storage.setItem('key', 'not valid json {{{')
+    expect(readCacheT('key')).toBeNull()
+  })
+
+  it('returns null when localStorage throws', () => {
+    storage.getItem.mockImplementation(() => { throw new Error('SecurityError') })
+    expect(readCacheT('key')).toBeNull()
+  })
+})
+
+describe('writeCacheT', () => {
+  let storage: ReturnType<typeof makeMockStorage>
+
+  beforeEach(() => {
+    storage = makeMockStorage()
+    Object.defineProperty(globalThis, 'localStorage', { value: storage, writable: true, configurable: true })
+  })
+
+  it('wraps data in a timestamped envelope', () => {
+    const now = Date.now()
+    writeCacheT('key', { score: 42 })
+    const stored = JSON.parse(storage.setItem.mock.calls[0][1])
+    expect(stored.data).toEqual({ score: 42 })
+    expect(stored.ts).toBeGreaterThanOrEqual(now)
+    expect(stored.ts).toBeLessThanOrEqual(Date.now())
+  })
+
+  it('does not throw when localStorage throws', () => {
+    storage.setItem.mockImplementation(() => { throw new Error('QuotaExceededError') })
+    expect(() => writeCacheT('key', 'value')).not.toThrow()
+  })
+})
+
+describe('readCacheT + writeCacheT round-trip', () => {
+  let storage: ReturnType<typeof makeMockStorage>
+
+  beforeEach(() => {
+    storage = makeMockStorage()
+    Object.defineProperty(globalThis, 'localStorage', { value: storage, writable: true, configurable: true })
+  })
+
+  it('reads back the data and a valid timestamp', () => {
+    const data = { items: ['a', 'b'], count: 2 }
+    writeCacheT('rt', data)
+    const written = storage.setItem.mock.calls[0][1]
+    storage.getItem.mockReturnValue(written)
+    const result = readCacheT<typeof data>('rt')
+    expect(result?.data).toEqual(data)
+    expect(result?.ts).toBeGreaterThan(0)
+  })
+})
+
+describe('isCacheFresh', () => {
+  afterEach(() => vi.useRealTimers())
+
+  it('returns true when timestamp is within CACHE_FRESH_MS', () => {
+    expect(isCacheFresh(Date.now() - 1000)).toBe(true)
+  })
+
+  it('returns false when timestamp is older than CACHE_FRESH_MS', () => {
+    expect(isCacheFresh(Date.now() - CACHE_FRESH_MS - 1)).toBe(false)
+  })
+
+  it('returns false for ts: 0 (legacy cache)', () => {
+    expect(isCacheFresh(0)).toBe(false)
+  })
+
+  it('CACHE_FRESH_MS is 30 seconds', () => {
+    expect(CACHE_FRESH_MS).toBe(30_000)
   })
 })

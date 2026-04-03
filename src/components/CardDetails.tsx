@@ -13,12 +13,13 @@ interface Props {
   profile: Profile
   request: PartnerRequest
   compatibility?: CompatibilityInfo
+  swiped?: boolean
   onClose: () => void
   onInterested: () => void
   onPass: () => void
 }
 
-export function CardDetails({ profile, request, compatibility, onClose, onInterested, onPass }: Props) {
+export function CardDetails({ profile, request, compatibility, swiped, onClose, onInterested, onPass }: Props) {
   const [showReport, setShowReport] = useState(false)
   const [showBlockConfirm, setShowBlockConfirm] = useState(false)
   const [reportReason, setReportReason] = useState('')
@@ -40,6 +41,8 @@ export function CardDetails({ profile, request, compatibility, onClose, onIntere
   const gearList = Object.entries(gear).filter(([, v]) => v).map(([k]) => GEAR_LABELS[k])
   const needsList = Object.entries(needsGear).filter(([, v]) => v).map(([k]) => GEAR_LABELS[k])
 
+  const today = new Date().toISOString().split('T')[0]
+  const isPast = request.date < today
   const formattedDate = new Date(request.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
   const timeStr = request.flexible
     ? t.cardDetails.flexibleTime
@@ -155,6 +158,20 @@ export function CardDetails({ profile, request, compatibility, onClose, onIntere
         {/* ── Scrollable body ──────────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto overscroll-contain">
           <div className="px-5 py-4 space-y-4 pb-4">
+
+            {/* Status banners */}
+            {swiped && (
+              <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-2xl px-4 py-2.5">
+                <span className="text-blue-500 font-bold">✓</span>
+                <span className="text-sm font-semibold text-blue-700">{t.cardDetails.alreadyInterested}</span>
+              </div>
+            )}
+            {isPast && (
+              <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-2xl px-4 py-2.5">
+                <span className="text-amber-500 font-bold">!</span>
+                <span className="text-sm font-semibold text-amber-700">{t.cardDetails.pastDate}</span>
+              </div>
+            )}
 
             {/* Bio */}
             {profile.bio && (
@@ -294,12 +311,18 @@ export function CardDetails({ profile, request, compatibility, onClose, onIntere
           >
             {t.cardDetails.pass}
           </button>
-          <button
-            onClick={onInterested}
-            className="flex-1 py-3.5 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-sm shadow-md shadow-blue-400/25 active:scale-[0.97] transition-transform"
-          >
-            {t.cardDetails.interested}
-          </button>
+          {swiped ? (
+            <div className="flex-1 py-3.5 rounded-2xl bg-blue-100 text-blue-400 font-bold text-sm text-center">
+              {t.cardDetails.interestSent} ✓
+            </div>
+          ) : (
+            <button
+              onClick={onInterested}
+              className="flex-1 py-3.5 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-sm shadow-md shadow-blue-400/25 active:scale-[0.97] transition-transform"
+            >
+              {t.cardDetails.interested}
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -2,7 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { getInboxData, type InboxItem } from '@/lib/actions/interests'
-import { readCache, writeCache, CACHE_KEYS } from '@/lib/cache'
+import { readCacheT, writeCacheT, isCacheFresh, CACHE_KEYS } from '@/lib/cache'
+import { on, type DataEvent } from '@/lib/dataEvents'
 
 interface InboxCache { received: InboxItem[]; sent: InboxItem[] }
 
@@ -17,21 +18,24 @@ interface InboxContextValue {
 const InboxContext = createContext<InboxContextValue | null>(null)
 
 export function InboxProvider({ children }: { children: React.ReactNode }) {
-  const cached                    = readCache<InboxCache>(CACHE_KEYS.inbox)
-  const [received, setReceived]   = useState<InboxItem[]>(cached?.received ?? [])
-  const [sent, setSent]           = useState<InboxItem[]>(cached?.sent ?? [])
+  const cached                    = readCacheT<InboxCache>(CACHE_KEYS.inbox)
+  const [received, setReceived]   = useState<InboxItem[]>(cached?.data.received ?? [])
+  const [sent, setSent]           = useState<InboxItem[]>(cached?.data.sent ?? [])
   const [loading, setLoading]     = useState(cached === null)
   const fetchingRef               = useRef(false)
+  const lastFetchRef              = useRef(0)
 
   const fetchInbox = useCallback(async (silent = false) => {
     if (fetchingRef.current) return
+    if (silent && isCacheFresh(lastFetchRef.current)) return
     fetchingRef.current = true
     if (!silent) setLoading(true)
     try {
       const data = await getInboxData()
       setReceived(data.received)
       setSent(data.sent)
-      writeCache(CACHE_KEYS.inbox, { received: data.received, sent: data.sent })
+      lastFetchRef.current = Date.now()
+      writeCacheT(CACHE_KEYS.inbox, { received: data.received, sent: data.sent })
     } catch (err) {
       console.error('[Inbox] fetch error', err)
     } finally {
@@ -40,11 +44,22 @@ export function InboxProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Always refresh on mount — show cache instantly, update silently in background
+  // Stale-while-revalidate: show cache instantly, refresh in background if stale
   useEffect(() => {
-    fetchInbox(cached !== null)
+    if (cached === null) {
+      fetchInbox()
+    } else if (!isCacheFresh(cached.ts)) {
+      fetchInbox(true)
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Subscribe to relevant data events for background refresh
+  useEffect(() => {
+    const events: DataEvent[] = ['interest:created', 'interest:accepted', 'interest:declined', 'app:resumed']
+    const unsubs = events.map(e => on(e, () => fetchInbox(true)))
+    return () => unsubs.forEach(u => u())
+  }, [fetchInbox])
 
   const refresh = useCallback(async () => {
     await fetchInbox(false)
@@ -62,7 +77,7 @@ export function InboxProvider({ children }: { children: React.ReactNode }) {
       const next = update(prev)
       setSent(s => {
         const nextSent = update(s)
-        writeCache(CACHE_KEYS.inbox, { received: next, sent: nextSent })
+        writeCacheT(CACHE_KEYS.inbox, { received: next, sent: nextSent })
         return nextSent
       })
       return next

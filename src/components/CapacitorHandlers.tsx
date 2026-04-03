@@ -12,12 +12,17 @@ const PushNotificationProvider = dynamic(
   () => import('@/components/PushNotificationProvider').then(m => ({ default: m.PushNotificationProvider })),
   { ssr: false },
 )
+const AppResumeHandler = dynamic(
+  () => import('@/components/AppResumeHandler').then(m => ({ default: m.AppResumeHandler })),
+  { ssr: false },
+)
 
 export function CapacitorHandlers() {
   return (
     <>
       <DeepLinkHandler />
       <PushNotificationProvider />
+      <AppResumeHandler />
     </>
   )
 }

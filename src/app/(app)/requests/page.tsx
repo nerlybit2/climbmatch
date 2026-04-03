@@ -10,6 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useMyPosts } from '@/contexts/MyPostsContext'
 import { cancelRequest } from '@/lib/actions/requests'
 import { PullToRefreshWrapper } from '@/components/PullToRefreshWrapper'
+import { emit } from '@/lib/dataEvents'
 
 const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string; border: string }> = {
   active:    { bg: 'bg-emerald-50',  text: 'text-emerald-600', dot: 'bg-emerald-400', border: 'border-emerald-100' },
@@ -33,6 +34,7 @@ export default function MyPostsPage() {
     setCancellingId(null)
     try {
       await cancelRequest(id)
+      emit('post:cancelled')
       toast.addToast(t.toasts.requestCancelled, 'info')
     } catch (err) {
       // Revert on failure

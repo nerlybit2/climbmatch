@@ -7,6 +7,7 @@ import { MyPostsProvider } from '@/contexts/MyPostsContext'
 import { ProfileProvider } from '@/contexts/ProfileContext'
 import { ToastContainer } from '@/components/Toast'
 import { CapacitorHandlers } from '@/components/CapacitorHandlers'
+import { AppSplashWrapper } from '@/components/AppSplashWrapper'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -15,6 +16,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <InboxProvider>
       <MyPostsProvider>
       <ProfileProvider>
+      <AppSplashWrapper>
       <div className="h-[100dvh] overflow-hidden flex flex-col bg-[#EDF1F7]">
         <ToastProvider>
           <CapacitorHandlers />
@@ -25,6 +27,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </ToastProvider>
         <Navbar />
       </div>
+      </AppSplashWrapper>
       </ProfileProvider>
       </MyPostsProvider>
       </InboxProvider>

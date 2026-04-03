@@ -1,5 +1,3 @@
-export type Language = 'en' | 'he'
-
 export interface Translations {
   nav: {
     discover: string
@@ -25,6 +23,12 @@ export interface Translations {
     postRequest: string
     gradeMatch: string
     canOfferRide: string
+    yourPostLive: string
+    interested: string
+    activePostsCount: string
+    newCount: string
+    contactedCount: string
+    pastDate: string
   }
   timeChips: {
     anyTime: string
@@ -144,6 +148,9 @@ export interface Translations {
     reportPlaceholder: string
     submitReport: string
     youHave: string
+    interestSent: string
+    alreadyInterested: string
+    pastDate: string
   }
   profile: {
     editTitle: string
@@ -192,9 +199,6 @@ export interface Translations {
   settings: {
     title: string
     subtitle: string
-    language: string
-    english: string
-    hebrew: string
   }
   toasts: {
     interestSent: string
@@ -251,6 +255,12 @@ export const en: Translations = {
     postRequest: 'Post a Request',
     gradeMatch: 'Grade match',
     canOfferRide: 'Can offer ride',
+    yourPostLive: 'Your post is live',
+    interested: 'interested',
+    activePostsCount: 'active posts',
+    newCount: 'new',
+    contactedCount: 'contacted',
+    pastDate: 'Past date',
   },
   timeChips: {
     anyTime: 'Any Time',
@@ -370,6 +380,9 @@ export const en: Translations = {
     reportPlaceholder: 'Why are you reporting this user?',
     submitReport: 'Submit Report',
     youHave: 'You have',
+    interestSent: 'Interest Sent',
+    alreadyInterested: "You've already shown interest",
+    pastDate: 'This date has passed',
   },
   profile: {
     editTitle: 'Edit Profile',
@@ -418,9 +431,6 @@ export const en: Translations = {
   settings: {
     title: 'Settings',
     subtitle: 'App preferences',
-    language: 'Language',
-    english: 'English',
-    hebrew: 'עברית',
   },
   toasts: {
     interestSent: 'Interest sent!',
@@ -452,230 +462,4 @@ export const en: Translations = {
   },
 }
 
-export const he: Translations = {
-  nav: {
-    discover: 'גלה',
-    post: 'פרסם',
-    inbox: 'תיבת דואר',
-    myPosts: 'הפרסומים',
-    profile: 'פרופיל',
-    settings: 'הגדרות',
-  },
-  discover: {
-    title: 'גלה',
-    subtitle: 'מצא את שותף הטיפוס שלך',
-    dateFrom: 'מתאריך',
-    dateTo: 'עד תאריך',
-    location: 'מיקום',
-    locationPlaceholder: 'חפש חדרי כושר, סלעים...',
-    advancedFilters: 'סינון מתקדם',
-    timeOfDay: 'שעת היום',
-    searchPartners: 'חפש שותפים',
-    filters: 'סינון',
-    noClimbersTitle: 'לא נמצאו מטפסים',
-    noClimbersSubtitle: 'נסה לשנות את הסינון או בדוק שוב מאוחר יותר',
-    postRequest: 'פרסם בקשה',
-    gradeMatch: 'התאמת רמה',
-    canOfferRide: 'יכול להסיע',
-  },
-  timeChips: {
-    anyTime: 'כל שעה',
-    morning: 'בוקר',
-    afternoon: 'צהריים',
-    evening: 'ערב',
-    flexible: 'גמיש',
-  },
-  inbox: {
-    title: 'תיבת דואר',
-    subtitle: 'נהל את החיבורים שלך',
-    received: 'נכנס',
-    sent: 'יוצא',
-    loading: 'טוען...',
-    noReceivedTitle: 'אין עניין שהתקבל עדיין',
-    noReceivedSubtitle: 'כשמטפסים ירצו להתאים לך שותף, הם יופיעו כאן',
-    discoverPartners: 'גלה שותפים',
-    noSentTitle: 'לא נשלח עניין עדיין',
-    noSentSubtitle: 'החלק ימינה על מטפסים שתרצה לשתף פעולה איתם',
-    startSwiping: 'התחל להחליק',
-    accept: 'קבל',
-    decline: 'דחה',
-    pending: 'ממתין',
-    matched: 'הותאם',
-    declined: 'נדחה',
-    whatsapp: 'WhatsApp',
-    sms: 'SMS',
-    at: 'ב',
-    applicants: 'מועמדים',
-    myApplications: 'הגשות שלי',
-    accepted: 'אושר',
-    backToInbox: 'חזרה לתיבת הדואר',
-    noApplicantsTitle: 'אין מועמדים עדיין',
-    noApplicantsSubtitle: 'כשמטפסים יירצו להצטרף אליך, הם יופיעו כאן',
-    noApplicationsTitle: 'לא הגשת בקשות עדיין',
-    noApplicationsSubtitle: 'עיין בבקשות ולחץ על מעוניין כדי להגיש',
-  },
-  requests: {
-    title: 'הפוסטים שלי',
-    subtitle: 'נהל את פוסטי הטיפוס שלך',
-    loading: 'טוען...',
-    noRequestsTitle: 'אין עדיין בקשות טיפוס',
-    noRequestsSubtitle: 'פרסם בקשה ותן למטפסים למצוא אותך',
-    createFirst: 'צור את הבקשה הראשונה שלך',
-    flexible: 'גמיש',
-    grade: 'רמה',
-    areYouSure: 'אתה בטוח?',
-    yesCancel: 'כן, בטל',
-    no: 'לא',
-    cancel: 'ביטול',
-    applicant: 'מועמד',
-    applicants: 'מועמדים',
-    status: {
-      active: 'פעיל',
-      matched: 'הותאם',
-      cancelled: 'בוטל',
-      expired: 'פג תוקף',
-    },
-  },
-  newRequest: {
-    title: 'פרסם בקשה',
-    subtitle: 'מצא שותף טיפוס',
-    date: 'תאריך *',
-    flexibleTime: 'זמן גמיש',
-    startTime: 'שעת התחלה *',
-    endTime: 'שעת סיום',
-    locationType: 'סוג מיקום *',
-    locationName: 'שם מיקום *',
-    locationPlaceholder: 'לדוגמה, גן הורד, עין פרת',
-    goal: 'מטרה',
-    gradeRange: 'טווח רמה רצוי',
-    gradePlaceholder: 'לדוגמה, 6a-6c',
-    notes: 'ספר/י על עצמך',
-    notesPlaceholder: 'הרמה שלך, מה אתה עובד עליו, איזה שותף אתה מחפש...',
-    gearNeeded: 'ציוד נדרש מהשותף',
-    carpoolNeeded: 'צריך הסעה / שיתוף נסיעות',
-    weightRelevant: 'התאמת משקל רלוונטית',
-    maxWeightDiff: 'הפרש משקל מקסימלי (ק"ג)',
-    maxWeightPlaceholder: 'לדוגמה, 15',
-    submit: 'פרסם בקשה',
-    editTitle: 'ערוך בקשה',
-    editSubtitle: 'עדכן את בקשת הטיפוס שלך',
-    editSubmit: 'שמור שינויים',
-    errors: {
-      required: 'תאריך ומיקום הם שדות חובה',
-      noTime: 'הגדר שעת התחלה או סמן כגמיש',
-      weightRange: 'הפרש המשקל חייב להיות בין 1-100 ק"ג',
-      maxRequests: 'מותרות עד 10 בקשות פעילות. בטל בקשה קיימת תחילה.',
-    },
-  },
-  cardDetails: {
-    level: 'רמה',
-    area: 'אזור',
-    sport: 'ספורט',
-    boulder: 'בולדר',
-    gear: 'ציוד',
-    languages: 'שפות',
-    compatibility: 'התאמה',
-    gradeMatches: 'טווח הרמה תואם',
-    canOfferRide: 'יכול להסיע',
-    theyNeedRide: 'צריך הסעה',
-    requestDetails: 'פרטי הבקשה',
-    date: 'תאריך',
-    time: 'שעה',
-    location: 'מיקום',
-    goal: 'מטרה',
-    grade: 'רמה',
-    flexibleTime: 'גמיש',
-    needsGear: 'דרוש ציוד',
-    pass: 'דלג',
-    interested: 'מעוניין',
-    blockUser: 'חסום משתמש',
-    reportUser: 'דווח על משתמש',
-    areYouSure: 'אתה בטוח?',
-    yesBlock: 'כן, חסום',
-    cancel: 'ביטול',
-    reportPlaceholder: 'למה אתה מדווח על משתמש זה?',
-    submitReport: 'שלח דיווח',
-    youHave: 'יש לך',
-  },
-  profile: {
-    editTitle: 'ערוך פרופיל',
-    createTitle: 'צור פרופיל',
-    editSubtitle: 'עדכן את פרופיל הטיפוס שלך',
-    createSubtitle: 'הגדר את הפרופיל שלך כדי להתחיל להתאים',
-    changePhoto: 'שנה תמונה',
-    uploadPhoto: 'העלה תמונה',
-    required: 'חובה',
-    displayName: 'שם תצוגה *',
-    displayNamePlaceholder: 'שם הטיפוס שלך',
-    phone: 'טלפון (WhatsApp) *',
-    phonePlaceholder: '+972...',
-    instagram: 'אינסטגרם',
-    instagramPlaceholder: '@שם_משתמש',
-    facebook: 'פייסבוק',
-    facebookPlaceholder: 'facebook.com/yourname',
-    homeArea: 'אזור מגורים',
-    homeAreaPlaceholder: 'לדוגמה, תל אביב',
-    sportGrade: 'רמת ספורט',
-    sportGradePlaceholder: 'לדוגמה, 6a-7a',
-    boulderGrade: 'רמת בולדר',
-    boulderGradePlaceholder: 'לדוגמה, V3-V6',
-    weightPrivate: 'משקל (פרטי)',
-    weightPlaceholder: 'משקלך בק"ג',
-    showWeight: 'הצג משקל בפרופיל שלי',
-    weightVisible: 'גלוי לשותפים פוטנציאליים להתאמת עיגון',
-    weightHidden: 'מוסתר מכולם — משמש רק לניקוד התאמה',
-    gearIHave: 'ציוד שיש לי',
-    hasCar: 'יש לי מכונית',
-    bio: 'ביוגרפיה',
-    bioPlaceholder: 'ספר לאחרים על עצמך...',
-    languages: 'שפות',
-    languagesPlaceholder: 'אנגלית, עברית',
-    save: 'שמור פרופיל',
-    create: 'צור פרופיל',
-    signedInAs: 'מחובר כ',
-    signOut: 'התנתק',
-    errors: {
-      displayName: 'שם תצוגה הוא שדה חובה',
-      photo: 'תמונה היא שדה חובה',
-      phone: 'מספר טלפון נדרש להתאמה',
-      weight: 'המשקל חייב להיות בין 30-200 ק"ג',
-    },
-  },
-  settings: {
-    title: 'הגדרות',
-    subtitle: 'העדפות אפליקציה',
-    language: 'שפה',
-    english: 'English',
-    hebrew: 'עברית',
-  },
-  toasts: {
-    interestSent: 'עניין נשלח!',
-    userBlocked: 'משתמש נחסם',
-    reportSubmitted: 'הדיווח נשלח. תודה.',
-    matchAccepted: 'התאמה אושרה!',
-    interestDeclined: 'עניין נדחה',
-    requestCancelled: 'הבקשה בוטלה',
-    requestCreated: 'הבקשה נוצרה!',
-    requestUpdated: 'הבקשה עודכנה!',
-  },
-  goalTypes: {
-    project: 'פרויקט',
-    mileage: 'מרחק',
-    easyDay: 'יום קל',
-    training: 'אימון',
-    any: 'כל',
-  },
-  gearLabels: {
-    rope: 'חבל',
-    quickdraws: 'אקספרסים',
-    belayDevice: 'מכשיר עיגון',
-    crashPad: 'מזרן',
-    helmet: 'קסדה',
-  },
-  locationTypes: {
-    gym: 'חדר כושר',
-    crag: 'סלע',
-  },
-}
 
-export const translations: Record<Language, Translations> = { en, he }
