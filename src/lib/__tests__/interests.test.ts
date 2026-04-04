@@ -22,10 +22,11 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 /** Creates a chainable Supabase query builder that resolves to `result` when awaited. */
 function q(result: unknown) {
   const self: Record<string, unknown> = {}
-  for (const m of ['select', 'insert', 'update', 'upsert', 'eq', 'neq', 'in', 'ilike', 'not', 'order', 'limit']) {
+  for (const m of ['select', 'insert', 'update', 'upsert', 'eq', 'neq', 'in', 'ilike', 'not', 'order', 'limit', 'is']) {
     self[m] = vi.fn(() => self)
   }
-  self.single = vi.fn(() => Promise.resolve(result))
+  self.single      = vi.fn(() => Promise.resolve(result))
+  self.maybeSingle = vi.fn(() => Promise.resolve(result))
   self.then = (res: (v: unknown) => unknown, rej?: (e: unknown) => unknown) =>
     Promise.resolve(result).then(res, rej)
   return self
@@ -101,44 +102,89 @@ const interestFixture = {
 // createInterest
 // ---------------------------------------------------------------------------
 
+// Call order for createInterest(requestId, toUserId):
+//   1. profiles.select('id')          — profile check
+//   2. interests.insert({...})         — insert
+//   3. interests...maybeSingle()       — reverseQuery (mutual match check) — constructed before Promise.all
+//   4. profiles.select('display_name') — myProfile   (parallel[0] in Promise.all)
+//   5. profiles.select('display_name, photo_url, ...') — matchedProfile (parallel[1])
+//   6. partner_requests.select(...)    — requestDetails (only when requestId is not null)
+
 describe('createInterest', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('returns matched: true with poster profile and request details', async () => {
+  it('returns matched: true when reverse interest exists (mutual match)', async () => {
     const posterProfile = { display_name: 'Alice', photo_url: '/alice.jpg', phone: '+972501234', instagram: '@alice', facebook: null }
     const reqDetails = { location_name: 'Siurana', date: '2025-07-01', user_id: 'user-2' }
 
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null }))   // profile check
-        .mockReturnValueOnce(q({ error: null }))                            // insert interest
-        .mockReturnValueOnce(q({ data: { display_name: 'Me' }, error: null })) // myProfile (parallel[0])
-        .mockReturnValueOnce(q({ data: posterProfile, error: null }))          // matchedProfile (parallel[1])
-        .mockReturnValueOnce(q({ data: reqDetails, error: null })),             // requestDetails (parallel[2])
+        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null }))               // 1. profile check
+        .mockReturnValueOnce(q({ error: null }))                                        // 2. insert
+        .mockReturnValueOnce(q({ data: { id: 'int-reverse' }, error: null }))          // 3. reverseQuery → match!
+        .mockReturnValueOnce(q({ data: { display_name: 'Me' }, error: null }))         // 4. myProfile
+        .mockReturnValueOnce(q({ data: posterProfile, error: null }))                  // 5. matchedProfile
+        .mockReturnValueOnce(q({ data: reqDetails, error: null })),                    // 6. requestDetails
     } as never)
 
     const result = await createInterest('req-1', 'user-2')
     expect(result).toMatchObject({ matched: true, matchedProfile: posterProfile, requestDetails: reqDetails })
   })
 
-  it('includes instagram and facebook in matchedProfile', async () => {
+  it('returns matched: false and no matchedProfile when no reverse interest (one-way)', async () => {
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null }))         // 1. profile check
+        .mockReturnValueOnce(q({ error: null }))                                  // 2. insert
+        .mockReturnValueOnce(q({ data: null, error: null }))                      // 3. reverseQuery → no match
+        .mockReturnValueOnce(q({ data: { display_name: 'Me' }, error: null }))   // 4. myProfile
+        .mockReturnValueOnce(q({ data: { display_name: 'Alice', photo_url: null, phone: null, instagram: null, facebook: null }, error: null })) // 5. matchedProfile
+        .mockReturnValueOnce(q({ data: { location_name: 'Siurana', date: '2025-07-01' }, error: null })), // 6. requestDetails
+    } as never)
+
+    const result = await createInterest('req-1', 'user-2')
+    expect(result.matched).toBe(false)
+    expect(result.matchedProfile).toBeUndefined()
+  })
+
+  it('includes instagram and facebook in matchedProfile on mutual match', async () => {
     const posterProfile = { display_name: 'Alice', photo_url: '/alice.jpg', phone: '+972501234', instagram: '@alice_climbs', facebook: 'alice.climbs' }
     const reqDetails = { location_name: 'Siurana', date: '2025-07-01', user_id: 'user-2' }
 
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null }))           // profile check
-        .mockReturnValueOnce(q({ error: null }))                                    // insert interest
-        .mockReturnValueOnce(q({ data: { display_name: 'Me' }, error: null }))     // myProfile (parallel[0])
-        .mockReturnValueOnce(q({ data: posterProfile, error: null }))               // matchedProfile (parallel[1])
-        .mockReturnValueOnce(q({ data: reqDetails, error: null })),                 // requestDetails (parallel[2])
+        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null }))
+        .mockReturnValueOnce(q({ error: null }))
+        .mockReturnValueOnce(q({ data: { id: 'int-reverse' }, error: null }))   // match
+        .mockReturnValueOnce(q({ data: { display_name: 'Me' }, error: null }))
+        .mockReturnValueOnce(q({ data: posterProfile, error: null }))
+        .mockReturnValueOnce(q({ data: reqDetails, error: null })),
     } as never)
 
     const result = await createInterest('req-1', 'user-2')
     expect(result.matchedProfile?.instagram).toBe('@alice_climbs')
     expect(result.matchedProfile?.facebook).toBe('alice.climbs')
+  })
+
+  it('handles profile-level interest (requestId = null) — no requestDetails fetch', async () => {
+    const posterProfile = { display_name: 'Alice', photo_url: '/alice.jpg', phone: '+972501234', instagram: null, facebook: null }
+
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: authAs(),
+      from: vi.fn()
+        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null }))           // 1. profile check
+        .mockReturnValueOnce(q({ error: null }))                                    // 2. insert
+        .mockReturnValueOnce(q({ data: { id: 'int-reverse' }, error: null }))      // 3. reverseQuery (profile-level)
+        .mockReturnValueOnce(q({ data: { display_name: 'Me' }, error: null }))     // 4. myProfile
+        .mockReturnValueOnce(q({ data: posterProfile, error: null })),             // 5. matchedProfile (no step 6)
+    } as never)
+
+    const result = await createInterest(null, 'user-2')
+    expect(result.matched).toBe(true)
+    expect(result.requestDetails).toBeUndefined()
   })
 
   it('returns matched: false on duplicate insert (code 23505)', async () => {
@@ -157,7 +203,7 @@ describe('createInterest', () => {
     vi.mocked(createServerSupabaseClient).mockResolvedValue({
       auth: authAs(),
       from: vi.fn()
-        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null })) // profile check
+        .mockReturnValueOnce(q({ data: { id: 'user-1' }, error: null }))
         .mockReturnValueOnce(q({ error: { code: '42P01', message: 'table not found' } })),
     } as never)
 
@@ -217,7 +263,7 @@ describe('getInbox', () => {
     expect(items).toHaveLength(1)
     expect(items[0].interest.id).toBe('int-1')
     expect(items[0].fromProfile.display_name).toBe('Alice')
-    expect(items[0].request.location_name).toBe('Siurana')
+    expect(items[0].request?.location_name).toBe('Siurana')
   })
 
   it('exposes phone for pending interests (request owner can contact applicants)', async () => {

@@ -129,8 +129,12 @@ describe('CACHE_KEYS', () => {
     expect(CACHE_KEYS.profile).toBe('cm_profile')
   })
 
-  it('has exactly 4 keys', () => {
-    expect(Object.keys(CACHE_KEYS)).toHaveLength(4)
+  it('has exactly 5 keys', () => {
+    expect(Object.keys(CACHE_KEYS)).toHaveLength(5)
+  })
+
+  it('includes swipeDiscover key', () => {
+    expect(CACHE_KEYS.swipeDiscover).toBe('cm_swipe_discover')
   })
 })
 
