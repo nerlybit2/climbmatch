@@ -38,10 +38,18 @@ export async function createInterest(requestId: string | null, toUserId: string)
     throw new Error(error.message)
   }
 
-  const [{ data: myProfile }, { data: matchedProfile }] = await Promise.all([
+  // Check for mutual interest (they already expressed interest in us)
+  const reverseQuery = requestId
+    ? supabase.from('interests').select('id').eq('from_user_id', toUserId).eq('to_user_id', user.id).eq('request_id', requestId).maybeSingle()
+    : supabase.from('interests').select('id').eq('from_user_id', toUserId).eq('to_user_id', user.id).is('request_id', null).maybeSingle()
+
+  const [{ data: myProfile }, { data: matchedProfile }, { data: reverseInterest }] = await Promise.all([
     supabase.from('profiles').select('display_name').eq('id', user.id).single(),
     supabase.from('profiles').select('display_name, photo_url, phone, instagram, facebook').eq('id', toUserId).single(),
+    reverseQuery,
   ])
+
+  const matched = reverseInterest !== null
 
   // Fetch request details only if this is a post-based interest
   let requestDetails: { location_name: string; date: string; user_id?: string } | null = null
@@ -61,7 +69,7 @@ export async function createInterest(requestId: string | null, toUserId: string)
     data: { screen: 'inbox' },
   }).catch(console.error)
 
-  return { matched: true, matchedProfile: matchedProfile ?? undefined, requestDetails: requestDetails ?? undefined }
+  return { matched, matchedProfile: matched ? (matchedProfile ?? undefined) : undefined, requestDetails: requestDetails ?? undefined }
 }
 
 export interface InboxItem {

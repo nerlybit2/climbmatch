@@ -56,8 +56,13 @@ export function InboxProvider({ children }: { children: React.ReactNode }) {
 
   // Subscribe to relevant data events for background refresh
   useEffect(() => {
-    const events: DataEvent[] = ['interest:created', 'interest:accepted', 'interest:declined', 'app:resumed']
-    const unsubs = events.map(e => on(e, () => fetchInbox(true)))
+    // interest:created is a user action — always force-fetch so the sent tab updates immediately
+    const forceEvents: DataEvent[] = ['interest:created']
+    const silentEvents: DataEvent[] = ['interest:accepted', 'interest:declined', 'app:resumed']
+    const unsubs = [
+      ...forceEvents.map(e => on(e, () => fetchInbox(false))),
+      ...silentEvents.map(e => on(e, () => fetchInbox(true))),
+    ]
     return () => unsubs.forEach(u => u())
   }, [fetchInbox])
 
