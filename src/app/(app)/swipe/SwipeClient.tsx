@@ -232,6 +232,8 @@ export default function SwipeClient() {
             className="relative w-full max-w-lg mx-auto bg-white rounded-t-3xl animate-slide-up"
             style={{ maxHeight: 'calc(100dvh - 120px)' }}
             onClick={e => e.stopPropagation()}
+            onTouchStart={e => e.stopPropagation()}
+            onTouchMove={e => e.stopPropagation()}
           >
             <div className="flex justify-center pt-3 pb-2">
               <div className="w-10 h-1 bg-slate-200 rounded-full" />
@@ -240,7 +242,7 @@ export default function SwipeClient() {
               <h3 className="text-lg font-extrabold text-slate-900">{postSheet.profile.profile.display_name}&apos;s Posts</h3>
               <p className="text-xs text-slate-400 font-medium mt-0.5">{postSheet.posts.length} active {postSheet.posts.length === 1 ? 'post' : 'posts'}</p>
             </div>
-            <div className="overflow-y-auto px-5 pb-6 space-y-2.5" style={{ maxHeight: 'calc(100dvh - 220px)' }}>
+            <div className="overflow-y-auto px-5 pb-6 space-y-2.5" style={{ maxHeight: 'calc(100dvh - 220px)', touchAction: 'pan-y', overscrollBehavior: 'contain' }}>
               {postSheet.posts.map(post => (
                 <button
                   key={post.id}
