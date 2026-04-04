@@ -179,7 +179,7 @@ export default function InboxPage() {
           phone={viewingProfile.phone}
           instagram={viewingProfile.instagram}
           facebook={viewingProfile.facebook}
-          location={viewingProfile.request.location_name}
+          location={viewingProfile.request?.location_name ?? ''}
           onClose={() => setViewingProfile(null)}
         />
       )}
@@ -236,14 +236,14 @@ function InboxCard({
               <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <p className="text-[12px] font-medium text-slate-500 truncate">{item.request.location_name}</p>
+            <p className="text-[12px] font-medium text-slate-500 truncate">{item.request?.location_name ?? 'Profile connection'}</p>
           </div>
           <div className="flex items-center gap-1">
             <svg className="w-3 h-3 text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <span className="text-[11px] font-bold text-slate-700">
-              {new Date(item.request.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+              {item.request ? new Date(item.request.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Connection request'}
             </span>
           </div>
         </div>
@@ -254,7 +254,7 @@ function InboxCard({
         </div>
       </div>
 
-      {item.request.notes && (
+      {item.request?.notes && (
         <p className="px-4 pb-3 text-[11px] font-semibold text-slate-400 leading-relaxed tracking-wide border-t border-slate-50 pt-2.5 line-clamp-2">
           {item.request.notes}
         </p>
@@ -283,7 +283,7 @@ function InboxCard({
               phone={item.phone}
               instagram={item.instagram}
               facebook={item.facebook}
-              location={item.request.location_name}
+              location={item.request?.location_name ?? 'Profile connection'}
             />
           </div>
         </div>
@@ -306,7 +306,7 @@ function InboxCard({
             phone={item.phone}
             instagram={item.instagram}
             facebook={item.facebook}
-            location={item.request.location_name}
+            location={item.request?.location_name ?? 'Profile connection'}
           />
         </div>
       )}

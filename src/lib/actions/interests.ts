@@ -19,7 +19,7 @@ export interface MatchResult {
   }
 }
 
-export async function createInterest(requestId: string, toUserId: string): Promise<MatchResult> {
+export async function createInterest(requestId: string | null, toUserId: string): Promise<MatchResult> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
@@ -38,20 +38,28 @@ export async function createInterest(requestId: string, toUserId: string): Promi
     throw new Error(error.message)
   }
 
-  const [{ data: myProfile }, { data: matchedProfile }, { data: requestDetails }] = await Promise.all([
+  const [{ data: myProfile }, { data: matchedProfile }] = await Promise.all([
     supabase.from('profiles').select('display_name').eq('id', user.id).single(),
     supabase.from('profiles').select('display_name, photo_url, phone, instagram, facebook').eq('id', toUserId).single(),
-    supabase.from('partner_requests').select('location_name, date, user_id').eq('id', requestId).single(),
   ])
 
-  // Notify the post owner: someone is interested
-  if (requestDetails?.user_id) {
-    sendNotification(requestDetails.user_id, {
-      title: '🧗 New interest in your post!',
-      body: `${myProfile?.display_name ?? 'Someone'} wants to climb with you at ${requestDetails.location_name}`,
-      data: { screen: 'inbox' },
-    }).catch(console.error)
+  // Fetch request details only if this is a post-based interest
+  let requestDetails: { location_name: string; date: string; user_id?: string } | null = null
+  if (requestId) {
+    const { data } = await supabase.from('partner_requests').select('location_name, date, user_id').eq('id', requestId).single()
+    requestDetails = data
   }
+
+  // Notify the other user
+  const notifTitle = requestId ? '🧗 New interest in your post!' : '🧗 Someone wants to connect!'
+  const notifBody = requestDetails
+    ? `${myProfile?.display_name ?? 'Someone'} wants to climb with you at ${requestDetails.location_name}`
+    : `${myProfile?.display_name ?? 'Someone'} wants to connect with you on ClimbMatch`
+  sendNotification(toUserId, {
+    title: notifTitle,
+    body: notifBody,
+    data: { screen: 'inbox' },
+  }).catch(console.error)
 
   return { matched: true, matchedProfile: matchedProfile ?? undefined, requestDetails: requestDetails ?? undefined }
 }
@@ -59,7 +67,7 @@ export async function createInterest(requestId: string, toUserId: string): Promi
 export interface InboxItem {
   interest: Interest
   fromProfile: Profile
-  request: PartnerRequest
+  request: PartnerRequest | null
   phone: string | null
   instagram: string | null
   facebook: string | null
@@ -95,12 +103,14 @@ export async function getInboxData(): Promise<{ received: InboxItem[]; sent: Inb
   for (const i of receivedInterests || []) otherUserIds.add(i.from_user_id)
   for (const i of sentInterests || []) otherUserIds.add(i.to_user_id)
 
-  const requestIds = new Set(allInterests.map(i => i.request_id))
+  const requestIds = new Set(allInterests.map(i => i.request_id).filter((id): id is string => id !== null))
 
   // Fetch all profiles and requests in parallel — one round-trip
   const [{ data: profiles }, { data: requests }] = await Promise.all([
     supabase.from('profiles').select('*').in('id', [...otherUserIds]),
-    supabase.from('partner_requests').select('*').in('id', [...requestIds]),
+    requestIds.size > 0
+      ? supabase.from('partner_requests').select('*').in('id', [...requestIds])
+      : Promise.resolve({ data: [] as PartnerRequest[] }),
   ])
 
   const profileMap = new Map((profiles || []).map(p => [p.id, p]))
@@ -109,8 +119,8 @@ export async function getInboxData(): Promise<{ received: InboxItem[]; sent: Inb
   const received: InboxItem[] = (receivedInterests || [])
     .map(interest => {
       const profile = profileMap.get(interest.from_user_id)
-      const request = requestMap.get(interest.request_id)
-      if (!profile || !request) return null
+      if (!profile) return null
+      const request = interest.request_id ? requestMap.get(interest.request_id) ?? null : null
       return {
         interest,
         fromProfile: profile,
@@ -125,8 +135,8 @@ export async function getInboxData(): Promise<{ received: InboxItem[]; sent: Inb
   const sent: InboxItem[] = (sentInterests || [])
     .map(interest => {
       const profile = profileMap.get(interest.to_user_id)
-      const request = requestMap.get(interest.request_id)
-      if (!profile || !request) return null
+      if (!profile) return null
+      const request = interest.request_id ? requestMap.get(interest.request_id) ?? null : null
       const accepted = interest.status === 'accepted'
       return {
         interest,
@@ -163,20 +173,28 @@ export async function acceptInterest(interestId: string): Promise<MatchResult> {
 
   if (!interest) return { matched: true }
 
-  const [{ data: myProfile }, { data: matchedProfile }, { data: requestDetails }] = await Promise.all([
+  const [{ data: myProfile }, { data: matchedProfile }] = await Promise.all([
     supabase.from('profiles').select('display_name').eq('id', user.id).single(),
     supabase.from('profiles').select('display_name, photo_url, phone, instagram, facebook').eq('id', interest.from_user_id).single(),
-    supabase.from('partner_requests').select('location_name, date').eq('id', interest.request_id).single(),
   ])
 
+  let acceptedRequestDetails: { location_name: string; date: string } | null = null
+  if (interest.request_id) {
+    const { data } = await supabase.from('partner_requests').select('location_name, date').eq('id', interest.request_id).single()
+    acceptedRequestDetails = data
+  }
+
   // Notify the applicant: their request was accepted
+  const notifBody = acceptedRequestDetails
+    ? `${myProfile?.display_name ?? 'Your partner'} accepted your request to climb at ${acceptedRequestDetails.location_name}`
+    : `${myProfile?.display_name ?? 'A climber'} wants to connect with you!`
   sendNotification(interest.from_user_id, {
     title: "🎉 It's a match!",
-    body: `${myProfile?.display_name ?? 'Your partner'} accepted your request to climb at ${requestDetails?.location_name ?? 'the crag'}`,
+    body: notifBody,
     data: { screen: 'inbox' },
   }).catch(console.error)
 
-  return { matched: true, matchedProfile: matchedProfile ?? undefined, requestDetails: requestDetails ?? undefined }
+  return { matched: true, matchedProfile: matchedProfile ?? undefined, requestDetails: acceptedRequestDetails ?? undefined }
 }
 
 export async function declineInterest(interestId: string) {
@@ -202,15 +220,19 @@ export async function declineInterest(interestId: string) {
 
   // Notify the applicant: declined
   if (interest) {
-    const { data: requestDetails } = await supabase
-      .from('partner_requests')
-      .select('location_name')
-      .eq('id', interest.request_id)
-      .single()
+    let locName = 'the crag'
+    if (interest.request_id) {
+      const { data: requestDetails } = await supabase
+        .from('partner_requests')
+        .select('location_name')
+        .eq('id', interest.request_id)
+        .single()
+      if (requestDetails) locName = requestDetails.location_name
+    }
 
     sendNotification(interest.from_user_id, {
       title: 'Update on your application',
-      body: `Your request to climb at ${requestDetails?.location_name ?? 'the crag'} was not accepted this time. Keep exploring!`,
+      body: `Your request to climb at ${locName} was not accepted this time. Keep exploring!`,
       data: { screen: 'inbox' },
     }).catch(console.error)
   }

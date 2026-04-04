@@ -11,6 +11,7 @@ export function Navbar() {
   const { t } = useLanguage()
 
   const tabs = [
+    { href: '/swipe', label: t.nav.swipeDiscover, icon: 'swipeDiscover' },
     { href: '/discover', label: t.nav.discover, icon: 'discover' },
     { href: '/requests/new', label: t.nav.post, icon: 'post' },
     { href: '/inbox', label: t.nav.inbox, icon: 'inbox' },
@@ -38,7 +39,7 @@ export function Navbar() {
                 className="flex-1 flex items-center justify-center h-full"
               >
                 <div
-                  className={`relative flex flex-col items-center gap-[3px] px-3 py-2 rounded-2xl transition-all duration-200 ${
+                  className={`relative flex flex-col items-center gap-[3px] px-2 py-2 rounded-2xl transition-all duration-200 ${
                     isActive
                       ? 'bg-gradient-to-b from-blue-400 to-indigo-500 text-white shadow-md shadow-blue-400/25'
                       : 'text-gray-400 hover:text-gray-600'
@@ -70,11 +71,18 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
   const sw = active ? 2.5 : 1.8
 
   switch (type) {
-    case 'discover':
+    case 'swipeDiscover':
       return (
         <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10" fill={active ? "currentColor" : "none"} opacity={active ? 0.15 : 1} />
           <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill={active ? "currentColor" : "none"} />
+        </svg>
+      )
+    case 'discover':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8" fill={active ? "currentColor" : "none"} opacity={active ? 0.15 : 1} />
+          <path d="M21 21l-4.35-4.35" />
         </svg>
       )
     case 'post':

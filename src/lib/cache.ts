@@ -65,8 +65,9 @@ export function isCacheFresh(ts: number): boolean {
 }
 
 export const CACHE_KEYS = {
-  discover: 'cm_discover',
-  inbox:    'cm_inbox',
-  myPosts:  'cm_myposts',
-  profile:  'cm_profile',
+  discover:      'cm_discover',
+  swipeDiscover: 'cm_swipe_discover',
+  inbox:         'cm_inbox',
+  myPosts:       'cm_myposts',
+  profile:       'cm_profile',
 } as const

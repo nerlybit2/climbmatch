@@ -1,21 +1,37 @@
 import { useEffect } from 'react'
 import { Capacitor } from '@capacitor/core'
-import { PushNotifications } from '@capacitor/push-notifications'
 import { saveDeviceToken } from '@/lib/actions/notifications'
 
 /**
  * Registers the device for push notifications and saves the FCM token to the
  * database. Should be mounted once inside the authenticated app layout.
+ *
+ * All plugin access is lazy (inside the effect) and fully wrapped in try/catch
+ * to prevent native bridge crashes if Firebase isn't ready yet on Android.
  */
 export function usePushNotifications() {
   useEffect(() => {
-    // Push notifications only work in native Capacitor apps
     if (!Capacitor.isNativePlatform()) return
 
     let mounted = true
+    const listeners: Array<Promise<{ remove: () => void }>> = []
 
-    async function register() {
+    async function init() {
       try {
+        // Lazy import — avoids touching the native bridge at module load time
+        const { PushNotifications } = await import('@capacitor/push-notifications')
+
+        // Add listeners before registering so we don't miss the token event
+        listeners.push(
+          PushNotifications.addListener('registration', async ({ value: token }) => {
+            if (!mounted) return
+            await saveDeviceToken(token, Capacitor.getPlatform())
+          }),
+          PushNotifications.addListener('pushNotificationReceived', (notification) => {
+            console.log('[Push] Foreground notification:', notification.title)
+          }),
+        )
+
         // Check / request permission
         let permStatus = await PushNotifications.checkPermissions()
 
@@ -27,31 +43,16 @@ export function usePushNotifications() {
 
         await PushNotifications.register()
       } catch (err) {
-        // Firebase not configured or registration failed — fail silently
-        console.warn('[Push] Registration failed:', err)
+        // Firebase not configured, plugin not ready, or permissions denied — fail silently
+        console.warn('[Push] Initialization failed:', err)
       }
     }
 
-    // Token received from FCM
-    const tokenListener = PushNotifications.addListener('registration', async ({ value: token }) => {
-      if (!mounted) return
-      await saveDeviceToken(token, Capacitor.getPlatform())
-    })
-
-    // Handle foreground notifications (show as alert when app is open)
-    const notifListener = PushNotifications.addListener(
-      'pushNotificationReceived',
-      (notification) => {
-        console.log('[Push] Foreground notification:', notification.title)
-      },
-    )
-
-    register()
+    init()
 
     return () => {
       mounted = false
-      tokenListener.then(l => l.remove())
-      notifListener.then(l => l.remove())
+      listeners.forEach(l => l.then(r => r.remove()).catch(() => {}))
     }
   }, [])
 }

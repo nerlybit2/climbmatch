@@ -1,6 +1,7 @@
 export interface Translations {
   nav: {
     discover: string
+    swipeDiscover: string
     post: string
     inbox: string
     myPosts: string
@@ -233,6 +234,7 @@ export interface Translations {
 export const en: Translations = {
   nav: {
     discover: 'Find',
+    swipeDiscover: 'Discover',
     post: 'Post',
     inbox: 'Inbox',
     myPosts: 'My Posts',

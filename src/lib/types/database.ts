@@ -60,7 +60,7 @@ export interface Interest {
   id: string
   from_user_id: string
   to_user_id: string
-  request_id: string
+  request_id: string | null
   status: InterestStatus
   created_at: string
   updated_at: string

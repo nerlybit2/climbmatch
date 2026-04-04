@@ -31,28 +31,38 @@ export function MatchCelebration({ result, onClose, closeLabel }: MatchCelebrati
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center animate-fade-in">
-      {/* Confetti */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {Array.from({ length: 30 }).map((_, i) => (
-          <span
-            key={i}
-            className="confetti-piece"
-            style={{
-              left: `${Math.random() * 100}%`,
-              backgroundColor: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-              animationDelay: `${Math.random() * 1.5}s`,
-              animationDuration: `${2 + Math.random() * 2}s`,
-              width: `${6 + Math.random() * 6}px`,
-              height: `${6 + Math.random() * 6}px`,
-              borderRadius: Math.random() > 0.5 ? '50%' : '2px',
-            }}
-          />
-        ))}
-      </div>
+      {/* Confetti — only on mutual match */}
+      {result.matched && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {Array.from({ length: 30 }).map((_, i) => (
+            <span
+              key={i}
+              className="confetti-piece"
+              style={{
+                left: `${Math.random() * 100}%`,
+                backgroundColor: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+                animationDelay: `${Math.random() * 1.5}s`,
+                animationDuration: `${2 + Math.random() * 2}s`,
+                width: `${6 + Math.random() * 6}px`,
+                height: `${6 + Math.random() * 6}px`,
+                borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center px-8 text-center">
-        <h1 className="text-4xl font-extrabold gradient-text mb-6">It&apos;s a Match!</h1>
+        {result.matched ? (
+          <h1 className="text-4xl font-extrabold gradient-text mb-5">It&apos;s a Match!</h1>
+        ) : (
+          <>
+            <div className="text-4xl mb-2">🧗</div>
+            <h1 className="text-3xl font-extrabold text-white mb-1">Interest Sent!</h1>
+            <p className="text-white/50 text-sm mb-5">We&apos;ll notify them — fingers crossed!</p>
+          </>
+        )}
 
         <div className="w-32 h-32 rounded-full border-4 border-blue-500 shadow-2xl shadow-blue-500/30 overflow-hidden mb-4 relative">
           <Image
