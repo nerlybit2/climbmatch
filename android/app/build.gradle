@@ -31,9 +31,6 @@ android {
     buildFeatures {
         buildConfig true
     }
-    ndk {
-        debugSymbolLevel 'FULL'
-    }
 }
 
 repositories {
