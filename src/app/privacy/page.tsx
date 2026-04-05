@@ -13,7 +13,7 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-[#EDF1F7] px-5 py-10">
       <div className="max-w-2xl mx-auto">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-500 mb-8">
+        <Link href="/" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0a5048] mb-8">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
@@ -86,7 +86,7 @@ export default function PrivacyPage() {
             </ul>
             <p>
               To exercise any of these rights, contact us at{' '}
-              <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-500 font-medium">{CONTACT_EMAIL}</a>.
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#0a5048] font-medium">{CONTACT_EMAIL}</a>.
             </p>
           </Section>
 
@@ -116,7 +116,7 @@ export default function PrivacyPage() {
           <Section title="9. Contact Us">
             <p>
               If you have any questions about this privacy policy or your data, contact us at:{' '}
-              <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-500 font-medium">{CONTACT_EMAIL}</a>
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#0a5048] font-medium">{CONTACT_EMAIL}</a>
             </p>
           </Section>
         </div>

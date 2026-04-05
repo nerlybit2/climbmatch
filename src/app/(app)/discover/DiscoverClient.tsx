@@ -162,12 +162,12 @@ export default function DiscoverClient() {
             onClick={() => setShowFilters(f => !f)}
             className={`w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-left transition-all duration-200 active:scale-[0.98] ${
               showFilters || activeFilterCount > 0
-                ? 'bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-md shadow-blue-400/25'
+                ? 'bg-[#0a5048] text-white shadow-md shadow-[#0a5048]/25'
                 : 'bg-white text-gray-500 shadow-md border border-gray-150 ring-1 ring-gray-200/60'
             }`}
             style={!(showFilters || activeFilterCount > 0) ? { boxShadow: '0 2px 12px rgba(79,142,247,0.10), 0 1px 3px rgba(0,0,0,0.06)' } : {}}
           >
-            <svg className={`w-5 h-5 flex-shrink-0 ${showFilters || activeFilterCount > 0 ? 'text-white' : 'text-blue-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <svg className={`w-5 h-5 flex-shrink-0 ${showFilters || activeFilterCount > 0 ? 'text-white' : 'text-[#0a5048]'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <span className={`text-sm font-semibold flex-1 ${showFilters || activeFilterCount > 0 ? 'text-white' : 'text-gray-400'}`}>
@@ -189,7 +189,7 @@ export default function DiscoverClient() {
             <button
               onClick={refresh}
               disabled={loading}
-              className="flex items-center gap-1.5 text-xs font-semibold text-blue-500 disabled:opacity-40 active:scale-95 transition-transform"
+              className="flex items-center gap-1.5 text-xs font-semibold text-[#0a5048] disabled:opacity-40 active:scale-95 transition-transform"
             >
               <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -211,7 +211,7 @@ export default function DiscoverClient() {
                   value={dateFrom}
                   onChange={e => { setDateFrom(e.target.value); if (dateTo && dateTo < e.target.value) setDateTo(e.target.value) }}
                   min={today}
-                  className="w-full rounded-xl border-0 bg-slate-50 px-3 py-2.5 text-sm ring-1 ring-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className="w-full rounded-xl border-0 bg-slate-50 px-3 py-2.5 text-sm ring-1 ring-gray-200 focus:ring-2 focus:ring-[#0a5048] outline-none transition-all"
                 />
               </div>
               <div className="space-y-1">
@@ -221,7 +221,7 @@ export default function DiscoverClient() {
                   value={dateTo}
                   onChange={e => setDateTo(e.target.value)}
                   min={dateFrom || today}
-                  className="w-full rounded-xl border-0 bg-slate-50 px-3 py-2.5 text-sm ring-1 ring-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className="w-full rounded-xl border-0 bg-slate-50 px-3 py-2.5 text-sm ring-1 ring-gray-200 focus:ring-2 focus:ring-[#0a5048] outline-none transition-all"
                 />
               </div>
             </div>
@@ -236,7 +236,7 @@ export default function DiscoverClient() {
                   onChange={e => handleLocationChange(e.target.value)}
                   onFocus={() => locationSuggestions.length > 0 && setShowSuggestions(true)}
                   placeholder={t.discover.locationPlaceholder}
-                  className="w-full rounded-xl border-0 bg-slate-50 pl-9 pr-9 py-2.5 text-sm ring-1 ring-gray-200 placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className="w-full rounded-xl border-0 bg-slate-50 pl-9 pr-9 py-2.5 text-sm ring-1 ring-gray-200 placeholder:text-gray-300 focus:ring-2 focus:ring-[#0a5048] outline-none transition-all"
                 />
                 <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -254,7 +254,7 @@ export default function DiscoverClient() {
                 <div className="absolute z-20 left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-lg ring-1 ring-gray-100 overflow-hidden animate-fade-in">
                   {locationSuggestions.map((loc, i) => (
                     <button key={loc + i} type="button" onClick={() => selectLocation(loc)}
-                      className="w-full text-left px-4 py-3 text-sm hover:bg-blue-50 transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0">
+                      className="w-full text-left px-4 py-3 text-sm hover:bg-[#f0f7f5] transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0">
                       <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -274,7 +274,7 @@ export default function DiscoverClient() {
                   <button key={tc.value} type="button" onClick={() => setTimeOfDay(tc.value)}
                     className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-200 ${
                       timeOfDay === tc.value
-                        ? 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white shadow-sm shadow-blue-400/20'
+                        ? 'bg-[#0a5048] text-white shadow-sm shadow-[#0a5048]/20'
                         : 'bg-slate-50 text-gray-500 ring-1 ring-gray-200 hover:ring-gray-300'
                     }`}
                   >{tc.label}</button>
@@ -286,7 +286,7 @@ export default function DiscoverClient() {
             <div className="flex gap-2 pt-1">
               <button
                 onClick={handleApplyFilters}
-                className="flex-1 bg-gradient-to-br from-blue-400 to-indigo-500 text-white text-sm font-bold rounded-2xl py-3 shadow-sm shadow-blue-400/20 active:scale-[0.97] transition-transform"
+                className="flex-1 bg-[#0a5048] text-white text-sm font-bold rounded-2xl py-3 shadow-sm shadow-[#0a5048]/20 active:scale-[0.97] transition-transform"
               >
                 Apply Filters
               </button>
@@ -306,19 +306,19 @@ export default function DiscoverClient() {
         {!showFilters && activeFilterCount > 0 && (
           <div className="flex flex-wrap gap-2 mb-1">
             {locationName && (
-              <span className="flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">
+              <span className="flex items-center gap-1 bg-[#f0f7f5] text-[#0a5048] text-xs font-bold px-3 py-1 rounded-full">
                 📍 {locationName}
                 <button onClick={() => { setLocationName(''); applyFilters({ date_from: dateFrom || undefined, date_to: dateTo || undefined, time_of_day: timeOfDay || undefined }) }} className="ml-0.5 opacity-60 hover:opacity-100">✕</button>
               </span>
             )}
             {dateFrom && (
-              <span className="flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">
+              <span className="flex items-center gap-1 bg-[#f0f7f5] text-[#0a5048] text-xs font-bold px-3 py-1 rounded-full">
                 📅 {dateFrom}{dateTo && dateTo !== dateFrom ? ` → ${dateTo}` : ''}
                 <button onClick={() => { setDateFrom(''); setDateTo(''); applyFilters({ location_name: locationName || undefined, time_of_day: timeOfDay || undefined }) }} className="ml-0.5 opacity-60 hover:opacity-100">✕</button>
               </span>
             )}
             {timeOfDay && (
-              <span className="flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">
+              <span className="flex items-center gap-1 bg-[#f0f7f5] text-[#0a5048] text-xs font-bold px-3 py-1 rounded-full">
                 ⏰ {TIME_CHIPS.find(c => c.value === timeOfDay)?.label}
                 <button onClick={() => { setTimeOfDay(''); applyFilters({ date_from: dateFrom || undefined, date_to: dateTo || undefined, location_name: locationName || undefined }) }} className="ml-0.5 opacity-60 hover:opacity-100">✕</button>
               </span>
@@ -357,7 +357,7 @@ export default function DiscoverClient() {
                     Your Post
                   </span>
                   {(applicantCounts[post.id] ?? 0) > 0 && (
-                    <span className="flex-shrink-0 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+                    <span className="flex-shrink-0 text-[10px] font-bold text-[#0a5048] bg-[#f0f7f5] border border-[#0a5048]/15 px-2 py-0.5 rounded-full">
                       {applicantCounts[post.id]} {t.discover.interested}
                     </span>
                   )}
@@ -370,7 +370,7 @@ export default function DiscoverClient() {
                   <span className="truncate">{post.location_name}</span>
                 </div>
                 <div className="flex items-center gap-1 mt-0.5 text-xs font-bold text-slate-700">
-                  <svg className="w-3 h-3 flex-shrink-0 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-3 h-3 flex-shrink-0 text-[#0a5048]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   {new Date(post.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
@@ -379,7 +379,7 @@ export default function DiscoverClient() {
                   )}
                 </div>
                 {post.desired_grade_range && (
-                  <span className="inline-block mt-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+                  <span className="inline-block mt-1 text-[10px] font-bold text-[#0a5048] bg-[#f0f7f5] px-2 py-0.5 rounded-full">
                     {post.desired_grade_range}
                   </span>
                 )}
@@ -431,10 +431,10 @@ export default function DiscoverClient() {
               onClick={() => setDetailCard(card)}
               className={`w-full text-left bg-white rounded-3xl card-shadow overflow-hidden transition-all duration-200 active:scale-[0.98] ${
                 card.swiped
-                  ? 'opacity-60 border-l-4 border-l-blue-300 border border-gray-50'
+                  ? 'opacity-60 border-l-4 border-l-[#0a5048]/30 border border-gray-50'
                   : isPast
                     ? 'border-l-4 border-l-amber-300 border border-gray-50'
-                    : 'border border-gray-50 hover:shadow-md hover:border-blue-100'
+                    : 'border border-gray-50 hover:shadow-md hover:border-[#0a5048]/10'
               }`}
             >
               <div className="flex items-center gap-3 p-3.5">
@@ -454,7 +454,7 @@ export default function DiscoverClient() {
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-slate-900 truncate">{card.profile.display_name}</span>
                     {card.swiped && (
-                      <span className="flex-shrink-0 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+                      <span className="flex-shrink-0 text-[10px] font-bold text-[#0a5048] bg-[#f0f7f5] border border-[#0a5048]/15 px-2 py-0.5 rounded-full">
                         {t.cardDetails.interestSent} ✓
                       </span>
                     )}
@@ -472,7 +472,7 @@ export default function DiscoverClient() {
                     <span className="truncate">{card.request.location_name}</span>
                   </div>
                   <div className="flex items-center gap-1 mt-0.5 text-xs font-bold text-slate-700">
-                    <svg className="w-3 h-3 flex-shrink-0 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className="w-3 h-3 flex-shrink-0 text-[#0a5048]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     {new Date(card.request.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
@@ -481,7 +481,7 @@ export default function DiscoverClient() {
                     )}
                   </div>
                   {card.request.desired_grade_range && (
-                    <span className="inline-block mt-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+                    <span className="inline-block mt-1 text-[10px] font-bold text-[#0a5048] bg-[#f0f7f5] px-2 py-0.5 rounded-full">
                       {card.request.desired_grade_range}
                     </span>
                   )}
@@ -516,7 +516,7 @@ export default function DiscoverClient() {
         {/* Infinite scroll sentinel */}
         {cards.length > displayCount && (
           <div ref={sentinelRef} className="py-4 flex justify-center">
-            <div className="w-6 h-6 rounded-full border-2 border-blue-300 border-t-blue-600 animate-spin" />
+            <div className="w-6 h-6 rounded-full border-2 border-[#0a5048]/25 border-t-[#0a5048] animate-spin" />
           </div>
         )}
       </div>

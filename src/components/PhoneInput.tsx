@@ -57,10 +57,10 @@ export function PhoneInput({ label, value, onChange, required }: PhoneInputProps
     <div className="space-y-1.5">
       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">
         {label}
-        {required && <span className="text-blue-500 ml-0.5">*</span>}
+        {required && <span className="text-[#0a5048] ml-0.5">*</span>}
       </label>
 
-      <div className="flex rounded-2xl overflow-visible ring-1 ring-gray-200 bg-white shadow-sm focus-within:ring-2 focus-within:ring-blue-500 transition-all relative" ref={dropdownRef}>
+      <div className="flex rounded-2xl overflow-visible ring-1 ring-gray-200 bg-white shadow-sm focus-within:ring-2 focus-within:ring-[#0a5048] transition-all relative" ref={dropdownRef}>
         {/* Country trigger button */}
         <button
           type="button"
@@ -133,7 +133,7 @@ export function PhoneInput({ label, value, onChange, required }: PhoneInputProps
                         onClick={() => pick(c)}
                         className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors ${
                           isActive
-                            ? 'bg-blue-50 text-blue-700'
+                            ? 'bg-[#f0f7f5] text-[#0a5048]'
                             : 'hover:bg-slate-50 text-gray-700'
                         }`}
                       >
@@ -143,7 +143,7 @@ export function PhoneInput({ label, value, onChange, required }: PhoneInputProps
                           {c.code}
                         </span>
                         {isActive && (
-                          <svg className="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <svg className="w-4 h-4 text-[#0a5048] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                           </svg>
                         )}

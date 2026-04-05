@@ -161,7 +161,7 @@ export function ProfileForm({ profile, userEmail, prefill }: Props) {
         </div>
         <Input label="" type="number" value={weightKg} onChange={e => setWeightKg(e.target.value)} placeholder={t.profile.weightPlaceholder} min={30} max={200} />
         <label className="flex items-center gap-3 cursor-pointer">
-          <input type="checkbox" checked={shareWeight} onChange={e => setShareWeight(e.target.checked)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-5 h-5" />
+          <input type="checkbox" checked={shareWeight} onChange={e => setShareWeight(e.target.checked)} className="rounded border-gray-300 text-[#0a5048] focus:ring-[#0a5048] w-5 h-5" />
           <div>
             <span className="text-sm font-semibold text-gray-700">{t.profile.showWeight}</span>
             <p className="text-[11px] text-gray-400 mt-0.5">
@@ -174,14 +174,14 @@ export function ProfileForm({ profile, userEmail, prefill }: Props) {
       <GearCheckboxes label={t.profile.gearIHave} gear={gear} onChange={setGear} />
 
       <label className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm ring-1 ring-gray-100 cursor-pointer">
-        <input type="checkbox" checked={hasCar} onChange={e => setHasCar(e.target.checked)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-5 h-5" />
+        <input type="checkbox" checked={hasCar} onChange={e => setHasCar(e.target.checked)} className="rounded border-gray-300 text-[#0a5048] focus:ring-[#0a5048] w-5 h-5" />
         <span className="text-sm font-semibold text-gray-700">{t.profile.hasCar}</span>
       </label>
 
       <div className="space-y-1.5">
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">{t.profile.bio}</label>
         <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3}
-          className="w-full rounded-2xl border-0 bg-white px-4 py-3.5 text-sm shadow-sm ring-1 ring-gray-200 placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all"
+          className="w-full rounded-2xl border-0 bg-white px-4 py-3.5 text-sm shadow-sm ring-1 ring-gray-200 placeholder:text-gray-300 focus:ring-2 focus:ring-[#0a5048] outline-none resize-none transition-all"
           placeholder={t.profile.bioPlaceholder}
         />
       </div>

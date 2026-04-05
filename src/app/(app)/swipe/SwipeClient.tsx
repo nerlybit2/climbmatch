@@ -115,7 +115,7 @@ export default function SwipeClient() {
       <div className="flex-1 relative mx-4 mt-2 mb-3 min-h-0">
         {loading ? (
           <div className="absolute inset-0 rounded-3xl bg-white animate-pulse card-shadow-lg flex items-center justify-center">
-            <div className="w-12 h-12 rounded-full border-3 border-blue-300 border-t-blue-600 animate-spin" />
+            <div className="w-12 h-12 rounded-full border-3 border-[#0a5048]/25 border-t-[#0a5048] animate-spin" />
           </div>
         ) : visibleCards.length === 0 ? (
           <div className="flex items-center justify-center h-full">
@@ -188,9 +188,9 @@ export default function SwipeClient() {
           </button>
           <button
             onClick={() => setDetailCard(topCard)}
-            className="w-12 h-12 rounded-full bg-white shadow-lg shadow-blue-100 border border-blue-100 flex items-center justify-center active:scale-90 transition-transform"
+            className="w-12 h-12 rounded-full bg-white shadow-lg shadow-[#0a5048]/10 border border-[#0a5048]/10 flex items-center justify-center active:scale-90 transition-transform"
           >
-            <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <svg className="w-5 h-5 text-[#0a5048]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </button>
@@ -247,7 +247,7 @@ export default function SwipeClient() {
                 <button
                   key={post.id}
                   onClick={() => handlePostSelect(postSheet.profile, post)}
-                  className="w-full text-left bg-blue-50 rounded-2xl p-3.5 active:scale-[0.98] transition-all border border-blue-100"
+                  className="w-full text-left bg-[#f0f7f5] rounded-2xl p-3.5 active:scale-[0.98] transition-all border border-[#0a5048]/10"
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -260,19 +260,19 @@ export default function SwipeClient() {
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         {post.start_time && (
-                          <span className="text-[10px] font-bold text-blue-600">
+                          <span className="text-[10px] font-bold text-[#0a5048]">
                             {post.start_time.slice(0, 5)}{post.end_time ? ` – ${post.end_time.slice(0, 5)}` : ''}
                           </span>
                         )}
                         {post.goal_type && post.goal_type !== 'any' && (
-                          <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full capitalize">{post.goal_type}</span>
+                          <span className="text-[10px] font-bold text-[#0a5048] bg-[#f0f7f5] px-2 py-0.5 rounded-full capitalize">{post.goal_type}</span>
                         )}
                         {post.desired_grade_range && (
-                          <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{post.desired_grade_range}</span>
+                          <span className="text-[10px] font-bold text-[#0a5048] bg-[#f0f7f5] px-2 py-0.5 rounded-full">{post.desired_grade_range}</span>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 text-blue-500">
+                    <div className="flex items-center gap-1 text-[#0a5048]">
                       <span className="text-xs font-bold">Join</span>
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                     </div>

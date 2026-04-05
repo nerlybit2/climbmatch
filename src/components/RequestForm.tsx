@@ -127,7 +127,7 @@ export function RequestForm({ existing }: Props) {
       <Input label={t.newRequest.date} type="date" value={date} onChange={e => setDate(e.target.value)} min={today} required />
 
       <label className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm ring-1 ring-gray-100 cursor-pointer">
-        <input type="checkbox" checked={flexible} onChange={e => setFlexible(e.target.checked)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-5 h-5" />
+        <input type="checkbox" checked={flexible} onChange={e => setFlexible(e.target.checked)} className="rounded border-gray-300 text-[#0a5048] focus:ring-[#0a5048] w-5 h-5" />
         <span className="text-sm font-semibold text-gray-700">{t.newRequest.flexibleTime}</span>
       </label>
 
@@ -148,7 +148,7 @@ export function RequestForm({ existing }: Props) {
               onClick={() => { setLocationType(opt.value as 'gym' | 'crag'); setLocationName('') }}
               className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-150 ${
                 locationType === opt.value
-                  ? 'bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-sm shadow-blue-400/25'
+                  ? 'bg-[#0a5048] text-white shadow-sm shadow-[#0a5048]/25'
                   : 'text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -164,7 +164,7 @@ export function RequestForm({ existing }: Props) {
       <div className="space-y-1.5">
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">{t.newRequest.notes}</label>
         <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={4}
-          className="w-full rounded-2xl border-0 bg-white px-4 py-3.5 text-sm shadow-sm ring-1 ring-gray-200 placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all"
+          className="w-full rounded-2xl border-0 bg-white px-4 py-3.5 text-sm shadow-sm ring-1 ring-gray-200 placeholder:text-gray-300 focus:ring-2 focus:ring-[#0a5048] outline-none resize-none transition-all"
           placeholder={t.newRequest.notesPlaceholder} maxLength={500} />
         {notes.length > 400 && (
           <p className="text-right text-xs text-gray-400">{notes.length}/500</p>
@@ -174,12 +174,12 @@ export function RequestForm({ existing }: Props) {
       <GearCheckboxes label={t.newRequest.gearNeeded} gear={needsGear} onChange={setNeedsGear} />
 
       <label className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm ring-1 ring-gray-100 cursor-pointer">
-        <input type="checkbox" checked={carpoolNeeded} onChange={e => setCarpoolNeeded(e.target.checked)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-5 h-5" />
+        <input type="checkbox" checked={carpoolNeeded} onChange={e => setCarpoolNeeded(e.target.checked)} className="rounded border-gray-300 text-[#0a5048] focus:ring-[#0a5048] w-5 h-5" />
         <span className="text-sm font-semibold text-gray-700">{t.newRequest.carpoolNeeded}</span>
       </label>
 
       <label className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm ring-1 ring-gray-100 cursor-pointer">
-        <input type="checkbox" checked={weightRelevant} onChange={e => setWeightRelevant(e.target.checked)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-5 h-5" />
+        <input type="checkbox" checked={weightRelevant} onChange={e => setWeightRelevant(e.target.checked)} className="rounded border-gray-300 text-[#0a5048] focus:ring-[#0a5048] w-5 h-5" />
         <span className="text-sm font-semibold text-gray-700">{t.newRequest.weightRelevant}</span>
       </label>
 

@@ -17,7 +17,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <MyPostsProvider>
       <ProfileProvider>
       <AppSplashWrapper>
-      <div className="h-[100dvh] overflow-hidden flex flex-col bg-[#EDF1F7]">
+      <div className="h-[100dvh] overflow-hidden flex flex-col bg-[#F5F5F5]">
         <ToastProvider>
           <CapacitorHandlers />
           <main className="flex-1 overflow-hidden flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>

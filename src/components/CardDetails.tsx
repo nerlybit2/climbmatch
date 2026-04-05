@@ -98,7 +98,7 @@ export function CardDetails({ profile, request, compatibility, swiped, onClose, 
             />
           ) : (
             /* Gradient placeholder with initials */
-            <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+            <div className="w-full h-full bg-[#0a5048] flex items-center justify-center">
               <span className="text-5xl font-extrabold text-white/80 select-none">{initials}</span>
             </div>
           )}
@@ -161,9 +161,9 @@ export function CardDetails({ profile, request, compatibility, swiped, onClose, 
 
             {/* Status banners */}
             {swiped && (
-              <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-2xl px-4 py-2.5">
-                <span className="text-blue-500 font-bold">✓</span>
-                <span className="text-sm font-semibold text-blue-700">{t.cardDetails.alreadyInterested}</span>
+              <div className="flex items-center gap-2 bg-[#f0f7f5] border border-[#0a5048]/15 rounded-2xl px-4 py-2.5">
+                <span className="text-[#0a5048] font-bold">✓</span>
+                <span className="text-sm font-semibold text-[#0a5048]">{t.cardDetails.alreadyInterested}</span>
               </div>
             )}
             {isPast && (
@@ -312,13 +312,13 @@ export function CardDetails({ profile, request, compatibility, swiped, onClose, 
             {t.cardDetails.pass}
           </button>
           {swiped ? (
-            <div className="flex-1 py-3.5 rounded-2xl bg-blue-100 text-blue-400 font-bold text-sm text-center">
+            <div className="flex-1 py-3.5 rounded-2xl bg-[#f0f7f5] text-[#0a5048]/50 font-bold text-sm text-center">
               {t.cardDetails.interestSent} ✓
             </div>
           ) : (
             <button
               onClick={onInterested}
-              className="flex-1 py-3.5 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-sm shadow-md shadow-blue-400/25 active:scale-[0.97] transition-transform"
+              className="flex-1 py-3.5 rounded-2xl bg-[#0a5048] text-white font-bold text-sm shadow-md shadow-[#0a5048]/25 active:scale-[0.97] transition-transform"
             >
               {t.cardDetails.interested}
             </button>
@@ -331,8 +331,8 @@ export function CardDetails({ profile, request, compatibility, swiped, onClose, 
 
 function Pill({ icon, label, color }: { icon: string; label: string; color: 'blue' | 'indigo' | 'slate' }) {
   const cls = {
-    blue:   'bg-blue-50 text-blue-700 border-blue-100',
-    indigo: 'bg-indigo-50 text-indigo-700 border-indigo-100',
+    blue:   'bg-[#f0f7f5] text-[#0a5048] border-[#0a5048]/15',
+    indigo: 'bg-[#f0f7f5] text-[#0a5048] border-[#0a5048]/15',
     slate:  'bg-slate-100 text-slate-600 border-slate-200',
   }[color]
   return (
@@ -353,8 +353,8 @@ function SectionLabel({ children, className = '' }: { children: React.ReactNode;
 
 function InfoTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl p-3 bg-blue-50">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">{label}</p>
+    <div className="rounded-2xl p-3 bg-[#f0f7f5]">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-[#0a5048]/60">{label}</p>
       <p className="font-semibold text-sm mt-0.5 text-slate-800">{value}</p>
     </div>
   )

@@ -138,7 +138,7 @@ export function SwipeCard({ profile, request, compatibility, onSwipeRight, onSwi
                 </span>
               ) : null}
               {compatibility.timeMatch && (
-                <span className="bg-blue-500/90 backdrop-blur-sm text-white text-[10px] px-2.5 py-1 rounded-full font-bold tracking-wide">
+                <span className="bg-[#0a5048]/90 backdrop-blur-sm text-white text-[10px] px-2.5 py-1 rounded-full font-bold tracking-wide">
                   ⏰ Time match
                 </span>
               )}

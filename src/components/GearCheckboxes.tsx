@@ -26,7 +26,7 @@ export function GearCheckboxes({ label, gear, onChange }: Props) {
             key={item.key}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold cursor-pointer transition-all duration-200 ${
               gear[item.key]
-                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/20'
+                ? 'bg-[#0a5048] text-white shadow-md shadow-[#0a5048]/20'
                 : 'bg-white text-gray-500 ring-1 ring-gray-200 hover:ring-gray-300'
             }`}
           >

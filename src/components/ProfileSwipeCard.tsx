@@ -119,7 +119,7 @@ export function ProfileSwipeCard({ profile, posts, onSwipeRight, onSwipeLeft, on
             onClick={(e) => { e.stopPropagation(); onPostTap?.() }}
             className="post-banner absolute top-12 left-3 right-3 z-[15] bg-white/95 backdrop-blur-2xl rounded-2xl p-2.5 flex items-center gap-2.5 shadow-lg active:scale-[0.98] transition-transform"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-[#0a5048] flex items-center justify-center flex-shrink-0">
               <svg className="w-[18px] h-[18px] text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
@@ -134,7 +134,7 @@ export function ProfileSwipeCard({ profile, posts, onSwipeRight, onSwipeLeft, on
               </p>
             </div>
             {posts.length > 1 && (
-              <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-500 text-white text-[11px] font-black flex items-center justify-center flex-shrink-0">
+              <span className="w-6 h-6 rounded-lg bg-[#0a5048] text-white text-[11px] font-black flex items-center justify-center flex-shrink-0">
                 {posts.length}
               </span>
             )}

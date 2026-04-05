@@ -13,7 +13,7 @@ interface MatchCelebrationProps {
   closeLabel?: string
 }
 
-const CONFETTI_COLORS = ['#2563eb', '#4f46e5', '#818cf8', '#ffffff', '#bfdbfe', '#6366f1']
+const CONFETTI_COLORS = ['#0a5048', '#e48b34', '#1b7a6a', '#ffffff', '#f5e3cf', '#2f4f4f']
 
 export function MatchCelebration({ result, onClose, closeLabel }: MatchCelebrationProps) {
   const [imgSrc, setImgSrc] = useState(result.matchedProfile?.photo_url || '/logo.png')
@@ -64,7 +64,7 @@ export function MatchCelebration({ result, onClose, closeLabel }: MatchCelebrati
           </>
         )}
 
-        <div className="w-32 h-32 rounded-full border-4 border-blue-500 shadow-2xl shadow-blue-500/30 overflow-hidden mb-4 relative">
+        <div className="w-32 h-32 rounded-full border-4 border-[#0a5048] shadow-2xl shadow-[#0a5048]/30 overflow-hidden mb-4 relative">
           <Image
             src={imgSrc}
             alt={result.matchedProfile?.display_name || 'Match'}

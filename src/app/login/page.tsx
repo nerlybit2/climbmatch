@@ -55,8 +55,8 @@ function OtpInput({ onComplete, disabled }: { onComplete: (code: string) => void
           onKeyDown={e => handleKeyDown(i, e)}
           onFocus={e => e.target.select()}
           className={`w-11 h-14 text-center text-xl font-bold rounded-2xl border-2 transition-all outline-none
-            ${digit ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 bg-gray-50 text-gray-800'}
-            focus:border-indigo-500 focus:bg-white disabled:opacity-40`}
+            ${digit ? 'border-[#0a5048] bg-[#f0f7f5] text-[#0a5048]' : 'border-gray-200 bg-gray-50 text-gray-800'}
+            focus:border-[#0a5048] focus:bg-white disabled:opacity-40`}
         />
       ))}
     </div>
@@ -76,7 +76,7 @@ function PasswordInput({ value, onChange, placeholder, show, onToggle }: {
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-gray-200 px-4 py-3 pr-11 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+        className="w-full rounded-xl border border-gray-200 px-4 py-3 pr-11 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0a5048] focus:border-transparent transition-all"
       />
       <button type="button" onClick={onToggle} tabIndex={-1}
         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
@@ -246,10 +246,10 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700" />
+      <div className="absolute inset-0 bg-[#0a5048]" />
       <div className="absolute top-16 -left-16 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-24 -right-16 w-72 h-72 bg-blue-300/20 rounded-full blur-3xl" />
-      <div className="absolute top-1/3 right-8 w-32 h-32 bg-indigo-400/20 rounded-full blur-2xl" />
+      <div className="absolute bottom-24 -right-16 w-72 h-72 bg-[#0a5048]/10 rounded-full blur-3xl" />
+      <div className="absolute top-1/3 right-8 w-32 h-32 bg-[#e48b34]/10 rounded-full blur-2xl" />
 
       <div className="relative z-10 w-full max-w-sm">
         {/* Logo */}
@@ -267,8 +267,8 @@ export default function LoginPage() {
           {awaitingOtp ? (
             <div className="space-y-5">
               <div className="text-center">
-                <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-7 h-7 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <div className="w-14 h-14 bg-[#f0f7f5] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-7 h-7 text-[#0a5048]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
@@ -282,7 +282,7 @@ export default function LoginPage() {
               <OtpInput onComplete={handleOtpComplete} disabled={otpLoading} />
 
               {otpLoading && (
-                <p className="text-center text-sm text-indigo-500 font-medium animate-pulse">Verifying…</p>
+                <p className="text-center text-sm text-[#0a5048] font-medium animate-pulse">Verifying…</p>
               )}
 
               <div className="text-center space-y-2">
@@ -290,7 +290,7 @@ export default function LoginPage() {
                 <button
                   onClick={handleResendOtp}
                   disabled={resendCooldown > 0}
-                  className="text-sm font-semibold text-indigo-500 hover:text-indigo-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                  className="text-sm font-semibold text-[#0a5048] hover:text-[#0b3c35] disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
                 >
                   {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
                 </button>
@@ -313,7 +313,7 @@ export default function LoginPage() {
                 </div>
                 <p className="font-bold text-gray-800">Reset link sent</p>
                 <p className="text-sm text-gray-500">Check your inbox at <strong>{email}</strong></p>
-                <button onClick={() => switchMode('signin')} className="text-sm font-semibold text-indigo-500 hover:text-indigo-700">
+                <button onClick={() => switchMode('signin')} className="text-sm font-semibold text-[#0a5048] hover:text-[#0b3c35]">
                   Back to sign in
                 </button>
               </div>
@@ -326,9 +326,9 @@ export default function LoginPage() {
                 {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
                 <form onSubmit={handleReset} className="space-y-3">
                   <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email"
-                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0a5048] focus:border-transparent transition-all" />
                   <button type="submit" disabled={loading}
-                    className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-3.5 text-sm font-semibold text-white hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50">
+                    className="w-full rounded-2xl bg-[#0a5048] px-4 py-3.5 text-sm font-semibold text-white hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50">
                     {loading ? 'Sending…' : 'Send reset link'}
                   </button>
                 </form>
@@ -359,19 +359,19 @@ export default function LoginPage() {
               {mode === 'signin' && (
                 <form onSubmit={handleSignIn} className="space-y-3">
                   <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email"
-                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0a5048] focus:border-transparent transition-all" />
                   <div className="space-y-1">
                     <PasswordInput value={password} onChange={setPassword} placeholder="Password"
                       show={showPassword} onToggle={() => setShowPassword(p => !p)} />
                     <div className="text-right">
                       <button type="button" onClick={() => switchMode('reset')}
-                        className="text-xs font-semibold text-indigo-500 hover:text-indigo-700">
+                        className="text-xs font-semibold text-[#0a5048] hover:text-[#0b3c35]">
                         Forgot password?
                       </button>
                     </div>
                   </div>
                   <button type="submit" disabled={loading}
-                    className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-3.5 text-sm font-semibold text-white hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50">
+                    className="w-full rounded-2xl bg-[#0a5048] px-4 py-3.5 text-sm font-semibold text-white hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50">
                     {loading ? 'Signing in…' : 'Sign In'}
                   </button>
                 </form>
@@ -381,16 +381,16 @@ export default function LoginPage() {
               {mode === 'signup' && (
                 <form onSubmit={handleSignUp} className="space-y-3">
                   <input type="text" required value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Your name"
-                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0a5048] focus:border-transparent transition-all" />
                   <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email"
-                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0a5048] focus:border-transparent transition-all" />
                   <PasswordInput value={password} onChange={setPassword} placeholder="Password (min 6 chars)"
                     show={showPassword} onToggle={() => setShowPassword(p => !p)} />
                   <PasswordInput value={confirmPassword} onChange={setConfirmPassword} placeholder="Confirm password"
                     show={showConfirm} onToggle={() => setShowConfirm(p => !p)} />
                   <p className="text-xs text-gray-400">You'll complete your climbing profile after signing up.</p>
                   <button type="submit" disabled={loading}
-                    className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-3.5 text-sm font-semibold text-white hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50">
+                    className="w-full rounded-2xl bg-[#0a5048] px-4 py-3.5 text-sm font-semibold text-white hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50">
                     {loading ? 'Creating account…' : 'Create Account'}
                   </button>
                 </form>

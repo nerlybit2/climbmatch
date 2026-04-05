@@ -20,7 +20,7 @@ export function EmptyState({ icon, title, subtitle, actionLabel, actionHref }: E
       {actionLabel && actionHref && (
         <Link
           href={actionHref}
-          className="bg-gradient-to-br from-blue-500 to-indigo-700 text-white font-bold rounded-2xl px-7 py-3.5 text-sm shadow-lg shadow-blue-500/30 active:scale-[0.96] transition-transform"
+          className="bg-[#0a5048] text-white font-bold rounded-2xl px-7 py-3.5 text-sm shadow-lg shadow-[#0a5048]/25 active:scale-[0.96] transition-transform"
         >
           {actionLabel}
         </Link>

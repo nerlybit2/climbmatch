@@ -74,14 +74,14 @@ export default function InboxPage() {
           onClick={() => setTab('applicants')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${
             tab === 'applicants'
-              ? 'bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-md shadow-blue-400/25'
+              ? 'bg-[#0a5048] text-white shadow-md shadow-[#0a5048]/25'
               : 'text-slate-500 hover:text-slate-700'
           }`}
         >
           {t.inbox.applicants}
           {pendingCount > 0 && (
             <span className={`text-[10px] font-black min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 ${
-              tab === 'applicants' ? 'bg-white/25 text-white' : 'bg-blue-500 text-white'
+              tab === 'applicants' ? 'bg-white/25 text-white' : 'bg-[#0a5048] text-white'
             }`}>
               {pendingCount}
             </span>
@@ -91,7 +91,7 @@ export default function InboxPage() {
           onClick={() => setTab('applications')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${
             tab === 'applications'
-              ? 'bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-md shadow-blue-400/25'
+              ? 'bg-[#0a5048] text-white shadow-md shadow-[#0a5048]/25'
               : 'text-slate-500 hover:text-slate-700'
           }`}
         >
@@ -239,7 +239,7 @@ function InboxCard({
             <p className="text-[12px] font-medium text-slate-500 truncate">{item.request?.location_name ?? 'Profile connection'}</p>
           </div>
           <div className="flex items-center gap-1">
-            <svg className="w-3 h-3 text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-3 h-3 text-[#0a5048]/50 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <span className="text-[11px] font-bold text-slate-700">
@@ -267,7 +267,7 @@ function InboxCard({
               <button
                 onClick={async () => { setActioning(true); await onAccept(item.interest.id); setActioning(false) }}
                 disabled={actioning}
-                className="bg-gradient-to-br from-blue-400 to-indigo-500 text-white text-[12px] font-bold rounded-xl px-6 py-2.5 shadow-sm shadow-blue-400/20 active:scale-[0.97] transition-transform disabled:opacity-60 disabled:scale-100"
+                className="bg-[#0a5048] text-white text-[12px] font-bold rounded-xl px-6 py-2.5 shadow-sm shadow-[#0a5048]/20 active:scale-[0.97] transition-transform disabled:opacity-60 disabled:scale-100"
               >
                 {actioning ? '…' : t.inbox.accept}
               </button>
