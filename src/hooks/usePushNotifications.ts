@@ -18,6 +18,13 @@ export function usePushNotifications() {
 
     async function init() {
       try {
+        // Short delay so Firebase finishes initializing on the native side before
+        // we call into PushNotificationsPlugin. Without this, rapid startup can
+        // hit checkPermissions() before the Firebase context is ready, causing a
+        // NullPointerException on the CapacitorPlugins thread (unrecoverable crash).
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        if (!mounted) return
+
         // Lazy import — avoids touching the native bridge at module load time
         const { PushNotifications } = await import('@capacitor/push-notifications')
 

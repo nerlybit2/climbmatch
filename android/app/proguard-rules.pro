@@ -5,17 +5,32 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# ── Preserve runtime annotations ─────────────────────────────────────────────
+# R8 strips annotations by default. Without this, @CapacitorPlugin on plugin
+# classes becomes null at runtime, causing NullPointerException in
+# Plugin.getPermissionStates() → fatal crash on the CapacitorPlugins thread.
+-keepattributes *Annotation*
+-keepattributes Signature
+-keepattributes Exceptions
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# ── Capacitor core ────────────────────────────────────────────────────────────
+-keep class com.getcapacitor.** { *; }
+-keep @com.getcapacitor.annotation.CapacitorPlugin class * { *; }
+-keepclassmembers class * {
+    @com.getcapacitor.annotation.PluginMethod public *;
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# ── Capacitor plugins ─────────────────────────────────────────────────────────
+-keep class com.capacitorjs.plugins.** { *; }
+
+# ── Firebase / Google services ────────────────────────────────────────────────
+# Firebase includes its own consumer ProGuard rules, but R8 in full-mode can
+# still strip initializers. Keeping these prevents "FirebaseApp not initialized".
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.firebase.**
+-dontwarn com.google.android.gms.**
+
+# ── Debugging: preserve line numbers in stack traces ──────────────────────────
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
