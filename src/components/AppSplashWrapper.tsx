@@ -29,6 +29,18 @@ export function AppSplashWrapper({ children }: { children: React.ReactNode }) {
     }
   }, [isLoading, visible])
 
+  // Safety valve: never block the UI for more than 8 seconds regardless of loading state
+  useEffect(() => {
+    const t = setTimeout(() => {
+      import('@capacitor/splash-screen').then(({ SplashScreen }) => {
+        SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => {})
+      })
+      setFading(true)
+      setTimeout(() => setVisible(false), 500)
+    }, 8000)
+    return () => clearTimeout(t)
+  }, [])
+
   return (
     <>
       {children}

@@ -16,9 +16,8 @@ interface SwipeDiscoverContextValue {
 const SwipeDiscoverContext = createContext<SwipeDiscoverContextValue | null>(null)
 
 export function SwipeDiscoverProvider({ children }: { children: React.ReactNode }) {
-  const cached = readCacheT<ProfileCard[]>(CACHE_KEYS.swipeDiscover)
-  const [profiles, setProfiles] = useState<ProfileCard[]>(cached?.data ?? [])
-  const [loading, setLoading] = useState(cached === null)
+  const [profiles, setProfiles] = useState<ProfileCard[]>([])
+  const [loading, setLoading] = useState(true)
   const fetchingRef = useRef(false)
   const lastFetchRef = useRef(0)
 
@@ -40,11 +39,15 @@ export function SwipeDiscoverProvider({ children }: { children: React.ReactNode 
     }
   }, [])
 
+  // Read cache client-side only (avoids SSR/hydration mismatch), then stale-while-revalidate
   useEffect(() => {
-    if (cached === null) {
+    const cached = readCacheT<ProfileCard[]>(CACHE_KEYS.swipeDiscover)
+    if (cached !== null) {
+      setProfiles(cached.data)
+      setLoading(false)
+      if (!isCacheFresh(cached.ts)) fetchProfiles(true)
+    } else {
       fetchProfiles()
-    } else if (!isCacheFresh(cached.ts)) {
-      fetchProfiles(true)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

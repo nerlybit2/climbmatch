@@ -18,10 +18,9 @@ interface InboxContextValue {
 const InboxContext = createContext<InboxContextValue | null>(null)
 
 export function InboxProvider({ children }: { children: React.ReactNode }) {
-  const cached                    = readCacheT<InboxCache>(CACHE_KEYS.inbox)
-  const [received, setReceived]   = useState<InboxItem[]>(cached?.data.received ?? [])
-  const [sent, setSent]           = useState<InboxItem[]>(cached?.data.sent ?? [])
-  const [loading, setLoading]     = useState(cached === null)
+  const [received, setReceived]   = useState<InboxItem[]>([])
+  const [sent, setSent]           = useState<InboxItem[]>([])
+  const [loading, setLoading]     = useState(true)
   const fetchingRef               = useRef(false)
   const lastFetchRef              = useRef(0)
 
@@ -44,12 +43,16 @@ export function InboxProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Stale-while-revalidate: show cache instantly, refresh in background if stale
+  // Read cache client-side only (avoids SSR/hydration mismatch), then stale-while-revalidate
   useEffect(() => {
-    if (cached === null) {
+    const cached = readCacheT<InboxCache>(CACHE_KEYS.inbox)
+    if (cached !== null) {
+      setReceived(cached.data.received)
+      setSent(cached.data.sent)
+      setLoading(false)
+      if (!isCacheFresh(cached.ts)) fetchInbox(true)
+    } else {
       fetchInbox()
-    } else if (!isCacheFresh(cached.ts)) {
-      fetchInbox(true)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

@@ -18,9 +18,8 @@ interface DiscoverContextValue {
 const DiscoverContext = createContext<DiscoverContextValue | null>(null)
 
 export function DiscoverProvider({ children }: { children: React.ReactNode }) {
-  const cached                = readCacheT<ScoredCard[]>(CACHE_KEYS.discover)
-  const [cards, setCards]     = useState<ScoredCard[]>(cached?.data ?? [])
-  const [loading, setLoading] = useState(cached === null) // only show spinner on first ever load
+  const [cards, setCards]     = useState<ScoredCard[]>([])
+  const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<DiscoverFilters>({})
   const fetchingRef           = useRef(false)
   const lastFetchRef          = useRef(0)
@@ -45,12 +44,15 @@ export function DiscoverProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Stale-while-revalidate: show cache instantly, refresh in background if stale
+  // Read cache client-side only (avoids SSR/hydration mismatch), then stale-while-revalidate
   useEffect(() => {
-    if (cached === null) {
+    const cached = readCacheT<ScoredCard[]>(CACHE_KEYS.discover)
+    if (cached !== null) {
+      setCards(cached.data)
+      setLoading(false)
+      if (!isCacheFresh(cached.ts)) fetchCards({}, true)
+    } else {
       fetchCards({})
-    } else if (!isCacheFresh(cached.ts)) {
-      fetchCards({}, true)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

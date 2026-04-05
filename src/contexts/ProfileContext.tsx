@@ -27,11 +27,10 @@ const ProfileContext = createContext<ProfileContextValue>({
 })
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
-  const cached                    = readCacheT<ProfileCache>(CACHE_KEYS.profile)
-  const [profile, setProfile]     = useState<Profile | null>(cached?.data.profile ?? null)
-  const [userEmail, setUserEmail] = useState(cached?.data.userEmail ?? '')
-  const [userMeta, setUserMeta]   = useState<UserMeta | null>(cached?.data.userMeta ?? null)
-  const [loading, setLoading]     = useState(cached === null)
+  const [profile, setProfile]     = useState<Profile | null>(null)
+  const [userEmail, setUserEmail] = useState('')
+  const [userMeta, setUserMeta]   = useState<UserMeta | null>(null)
+  const [loading, setLoading]     = useState(true)
   const fetchingRef               = useRef(false)
   const lastFetchRef              = useRef(0)
 
@@ -65,10 +64,16 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    if (cached === null) {
+    // Read cache client-side only (avoids SSR/hydration mismatch), then stale-while-revalidate
+    const cached = readCacheT<ProfileCache>(CACHE_KEYS.profile)
+    if (cached !== null) {
+      setProfile(cached.data.profile)
+      setUserEmail(cached.data.userEmail)
+      setUserMeta(cached.data.userMeta)
+      setLoading(false)
+      if (!isCacheFresh(cached.ts)) load(true)
+    } else {
       load(false)
-    } else if (!isCacheFresh(cached.ts)) {
-      load(true)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

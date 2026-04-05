@@ -20,10 +20,9 @@ interface MyPostsContextValue {
 const MyPostsContext = createContext<MyPostsContextValue | null>(null)
 
 export function MyPostsProvider({ children }: { children: React.ReactNode }) {
-  const cached                                = readCacheT<MyPostsCache>(CACHE_KEYS.myPosts)
-  const [posts, setPosts]                     = useState<PartnerRequest[]>(cached?.data.posts ?? [])
-  const [applicantCounts, setApplicantCounts] = useState<Record<string, number>>(cached?.data.applicantCounts ?? {})
-  const [loading, setLoading]                 = useState(cached === null)
+  const [posts, setPosts]                     = useState<PartnerRequest[]>([])
+  const [applicantCounts, setApplicantCounts] = useState<Record<string, number>>({})
+  const [loading, setLoading]                 = useState(true)
   const fetchingRef                           = useRef(false)
   const lastFetchRef                          = useRef(0)
 
@@ -48,12 +47,16 @@ export function MyPostsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Stale-while-revalidate: show cache instantly, refresh in background if stale
+  // Read cache client-side only (avoids SSR/hydration mismatch), then stale-while-revalidate
   useEffect(() => {
-    if (cached === null) {
+    const cached = readCacheT<MyPostsCache>(CACHE_KEYS.myPosts)
+    if (cached !== null) {
+      setPosts(cached.data.posts)
+      setApplicantCounts(cached.data.applicantCounts)
+      setLoading(false)
+      if (!isCacheFresh(cached.ts)) fetchPosts(true)
+    } else {
       fetchPosts()
-    } else if (!isCacheFresh(cached.ts)) {
-      fetchPosts(true)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
