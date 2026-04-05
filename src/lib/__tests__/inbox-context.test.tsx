@@ -55,6 +55,30 @@ function Probe() {
 describe('InboxContext', () => {
   beforeEach(() => vi.clearAllMocks())
 
+  describe('hydration safety — server-consistent initial state', () => {
+    it('first render is always loading=true even when cache has data', () => {
+      // Regression test: readCacheT must only be called inside useEffect, never
+      // during the render phase. If it's called during render, the server (which
+      // has no localStorage) would start with loading=true but the client would
+      // start with loading=false, causing a React hydration mismatch.
+      const firstRenderLoading: boolean[] = []
+
+      function StateCapture() {
+        const { loading } = useInbox()
+        if (firstRenderLoading.length === 0) firstRenderLoading.push(loading)
+        return null
+      }
+
+      const item = makeItem('+1')
+      vi.mocked(readCacheT).mockReturnValue({ data: { received: [item], sent: [] }, ts: Date.now() })
+      vi.mocked(getInboxData).mockResolvedValue({ received: [item], sent: [] })
+
+      render(<InboxProvider><StateCapture /></InboxProvider>)
+
+      expect(firstRenderLoading[0]).toBe(true)
+    })
+  })
+
   describe('no cache — initial load', () => {
     it('shows loading state while fetching, then renders data', async () => {
       vi.mocked(readCacheT).mockReturnValue(null)

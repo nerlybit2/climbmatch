@@ -69,4 +69,48 @@ describe('AppSplashWrapper', () => {
     render(<AppSplashWrapper><div>App</div></AppSplashWrapper>)
     expect(SplashScreen.hide).not.toHaveBeenCalled()
   })
+
+  describe('safety timeout — never blocks the UI forever', () => {
+    it('force-hides after 8 seconds even when all contexts stay loading', async () => {
+      // Regression test: if a context gets stuck in loading=true (e.g. network
+      // error, dev server unreachable), the splash must still disappear so the
+      // app is not permanently blocked.
+      vi.useFakeTimers()
+      setLoading(true, true, true, true) // all contexts stuck
+      render(<AppSplashWrapper><div>App</div></AppSplashWrapper>)
+
+      // Before 8 seconds — still visible, no hide called
+      await act(async () => { vi.advanceTimersByTime(7999) })
+      expect(SplashScreen.hide).not.toHaveBeenCalled()
+      expect(screen.getByText('ClimbMatch')).toBeTruthy()
+
+      // At 8 seconds — force-hide triggers
+      await act(async () => { vi.advanceTimersByTime(1) })
+      expect(SplashScreen.hide).toHaveBeenCalledWith({ fadeOutDuration: 300 })
+
+      // After fade animation (500ms) — overlay removed
+      await act(async () => { vi.advanceTimersByTime(500) })
+      expect(screen.queryByText('ClimbMatch')).toBeNull()
+
+      vi.useRealTimers()
+    })
+
+    it('normal hide (contexts finish) cancels the safety timeout', async () => {
+      // When loading finishes before the timeout, the safety timeout must be
+      // cleared so SplashScreen.hide is only called once.
+      vi.useFakeTimers()
+      setLoading(false, false, false, false)
+      render(<AppSplashWrapper><div>App</div></AppSplashWrapper>)
+
+      // Normal hide fires immediately
+      await act(async () => { await Promise.resolve() })
+      expect(SplashScreen.hide).toHaveBeenCalledTimes(1)
+
+      // Fast-forward past the 8-second mark — no second call
+      await act(async () => { vi.advanceTimersByTime(10000) })
+      expect(SplashScreen.hide).toHaveBeenCalledTimes(1)
+
+      vi.useRealTimers()
+    })
+  })
 })

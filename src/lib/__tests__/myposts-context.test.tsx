@@ -75,6 +75,34 @@ describe('MyPostsContext', () => {
     onSubscribe.mockClear()
   })
 
+  describe('hydration safety — server-consistent initial state', () => {
+    it('first render is always loading=true even when cache has data', () => {
+      // Regression test: readCacheT must only be called inside useEffect, never
+      // during the render phase. If it's called during render, the server (which
+      // has no localStorage) would start with loading=true but the client would
+      // start with loading=false, causing a React hydration mismatch.
+      const firstRenderLoading: boolean[] = []
+
+      function StateCapture() {
+        const { loading } = useMyPosts()
+        if (firstRenderLoading.length === 0) firstRenderLoading.push(loading)
+        return null
+      }
+
+      const post = makePost('p1')
+      vi.mocked(readCacheT).mockReturnValue({
+        data: { posts: [post], applicantCounts: { p1: 2 } }, ts: Date.now(),
+      })
+      vi.mocked(isCacheFresh).mockReturnValue(true)
+      vi.mocked(getMyRequests).mockResolvedValue([post])
+      vi.mocked(getApplicantCounts).mockResolvedValue({ p1: 2 })
+
+      render(<MyPostsProvider><StateCapture /></MyPostsProvider>)
+
+      expect(firstRenderLoading[0]).toBe(true)
+    })
+  })
+
   describe('no cache — cold start', () => {
     it('shows loading then renders posts after fetch', async () => {
       vi.mocked(readCacheT).mockReturnValue(null)

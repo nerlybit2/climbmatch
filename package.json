@@ -11,6 +11,9 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "cap:sync": "cap sync",
+    "cap:sync:dev": "CAPACITOR_DEV_URL=http://localhost:3000 cap sync",
+    "cap:sync:dev:emulator": "CAPACITOR_DEV_URL=http://10.0.2.2:3000 cap sync",
+    "cap:build:android": "cd android && ./gradlew bundleRelease",
     "cap:open:ios": "cap open ios",
     "cap:open:android": "cap open android"
   },

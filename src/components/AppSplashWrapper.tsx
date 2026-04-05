@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useProfile } from '@/contexts/ProfileContext'
 import { useDiscover } from '@/contexts/DiscoverContext'
@@ -17,28 +17,30 @@ export function AppSplashWrapper({ children }: { children: React.ReactNode }) {
 
   const [visible, setVisible] = useState(true)
   const [fading, setFading] = useState(false)
+  const hiddenRef = useRef(false)
+
+  const hide = () => {
+    if (hiddenRef.current) return
+    hiddenRef.current = true
+    import('@capacitor/splash-screen').then(({ SplashScreen }) => {
+      SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => {})
+    })
+    setFading(true)
+    setTimeout(() => setVisible(false), 500)
+  }
 
   useEffect(() => {
     if (!isLoading && visible) {
-      import('@capacitor/splash-screen').then(({ SplashScreen }) => {
-        SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => {})
-      })
-      setFading(true)
-      const t = setTimeout(() => setVisible(false), 500)
-      return () => clearTimeout(t)
+      hide()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, visible])
 
   // Safety valve: never block the UI for more than 8 seconds regardless of loading state
   useEffect(() => {
-    const t = setTimeout(() => {
-      import('@capacitor/splash-screen').then(({ SplashScreen }) => {
-        SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => {})
-      })
-      setFading(true)
-      setTimeout(() => setVisible(false), 500)
-    }, 8000)
+    const t = setTimeout(hide, 8000)
     return () => clearTimeout(t)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

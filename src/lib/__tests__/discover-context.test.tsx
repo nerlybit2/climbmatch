@@ -69,6 +69,31 @@ describe('DiscoverContext', () => {
     onSubscribe.mockClear()
   })
 
+  describe('hydration safety — server-consistent initial state', () => {
+    it('first render is always loading=true even when cache has data', () => {
+      // Regression test: readCacheT must only be called inside useEffect, never
+      // during the render phase. If it's called during render, the server (which
+      // has no localStorage) would start with loading=true but the client would
+      // start with loading=false, causing a React hydration mismatch.
+      const firstRenderLoading: boolean[] = []
+
+      function StateCapture() {
+        const { loading } = useDiscover()
+        if (firstRenderLoading.length === 0) firstRenderLoading.push(loading)
+        return null
+      }
+
+      const card = makeCard('r1')
+      vi.mocked(readCacheT).mockReturnValue({ data: [card], ts: Date.now() })
+      vi.mocked(isCacheFresh).mockReturnValue(true)
+      vi.mocked(discoverRequests).mockResolvedValue([card])
+
+      render(<DiscoverProvider><StateCapture /></DiscoverProvider>)
+
+      expect(firstRenderLoading[0]).toBe(true)
+    })
+  })
+
   describe('no cache — cold start', () => {
     it('shows loading state, fetches, then renders cards', async () => {
       vi.mocked(readCacheT).mockReturnValue(null)

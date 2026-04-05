@@ -1,6 +1,16 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
-const isDev = process.env.NODE_ENV !== 'production';
+// Production is the default — no env var needed for Play Store builds.
+// Dev requires explicit opt-in via CAPACITOR_DEV_URL to prevent accidentally
+// shipping an APK that points at localhost.
+//
+// Dev server URL options (set CAPACITOR_DEV_URL before running cap:sync):
+//   Real device (USB):  CAPACITOR_DEV_URL=http://localhost:3000  (+ adb reverse tcp:3000 tcp:3000)
+//   Android emulator:   CAPACITOR_DEV_URL=http://10.0.2.2:3000
+//
+// Production URL: defaults to Vercel; override with CAPACITOR_SERVER_URL.
+const devUrl = process.env.CAPACITOR_DEV_URL
+const isDev = !!devUrl
 
 const config: CapacitorConfig = {
   appId: 'com.climbmatch.app',
@@ -8,10 +18,8 @@ const config: CapacitorConfig = {
   // webDir is required by the CLI but ignored at runtime when server.url is set
   webDir: 'public',
   server: {
-    // Dev: 10.0.2.2 is the Android emulator alias for localhost
-    // Prod: set CAPACITOR_SERVER_URL env var or replace with your Vercel URL
     url: isDev
-      ? 'http://10.0.2.2:3000'
+      ? devUrl!
       : (process.env.CAPACITOR_SERVER_URL ?? 'https://climbmatch.vercel.app'),
     cleartext: isDev,
   },
