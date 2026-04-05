@@ -164,7 +164,7 @@ export default function LoginPage() {
       if (data.user && displayName.trim()) {
         await supabase.from('profiles').upsert({ id: data.user.id, display_name: displayName.trim() })
       }
-      window.location.href = '/profile'
+      router.replace('/profile')
     } catch {
       setError('Something went wrong. Please try again.')
       setOtpLoading(false)
@@ -192,7 +192,7 @@ export default function LoginPage() {
     setLoading(true); setError('')
     try {
       const { error: err } = await createClient().auth.signInWithPassword({ email, password })
-      if (!err) { window.location.href = '/discover'; return }
+      if (!err) { router.replace('/discover'); return }
       if (err.message === 'Email not confirmed') {
         await createClient().auth.resend({ type: 'signup', email })
         setAwaitingOtp(true); setResendCooldown(30); setLoading(false); return
@@ -217,7 +217,7 @@ export default function LoginPage() {
         if (err.message.includes('already registered')) throw new Error('An account with this email already exists. Try signing in.')
         throw err
       }
-      if (data.session) { window.location.href = '/discover'; return }
+      if (data.session) { router.replace('/discover'); return }
       setAwaitingOtp(true)
       setResendCooldown(30)
       setLoading(false)
