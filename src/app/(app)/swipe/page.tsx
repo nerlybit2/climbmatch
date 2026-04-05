@@ -1,5 +1,10 @@
 import SwipeClient from './SwipeClient'
+import { SwipeDiscoverProvider } from '@/contexts/SwipeDiscoverContext'
 
 export default function SwipePage() {
-  return <SwipeClient />
+  return (
+    <SwipeDiscoverProvider>
+      <SwipeClient />
+    </SwipeDiscoverProvider>
+  )
 }
