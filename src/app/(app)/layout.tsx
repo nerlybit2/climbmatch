@@ -2,7 +2,6 @@ import { Navbar } from '@/components/Navbar'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import { DiscoverProvider } from '@/contexts/DiscoverContext'
-import { SwipeDiscoverProvider } from '@/contexts/SwipeDiscoverContext'
 import { InboxProvider } from '@/contexts/InboxContext'
 import { MyPostsProvider } from '@/contexts/MyPostsContext'
 import { ProfileProvider } from '@/contexts/ProfileContext'
@@ -13,7 +12,6 @@ import { AppSplashWrapper } from '@/components/AppSplashWrapper'
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <LanguageProvider>
-      <SwipeDiscoverProvider>
       <DiscoverProvider>
       <InboxProvider>
       <MyPostsProvider>
@@ -34,7 +32,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </MyPostsProvider>
       </InboxProvider>
       </DiscoverProvider>
-      </SwipeDiscoverProvider>
     </LanguageProvider>
   )
 }
