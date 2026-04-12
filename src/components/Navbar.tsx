@@ -11,7 +11,7 @@ export function Navbar() {
   const { t } = useLanguage()
 
   const tabs = [
-    { href: '/swipe', label: t.nav.swipeDiscover, icon: 'swipeDiscover' },
+    // { href: '/swipe', label: t.nav.swipeDiscover, icon: 'swipeDiscover' },
     { href: '/discover', label: t.nav.discover, icon: 'discover' },
     { href: '/requests/new', label: t.nav.post, icon: 'post' },
     { href: '/inbox', label: t.nav.inbox, icon: 'inbox' },
