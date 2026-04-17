@@ -512,6 +512,11 @@ export default function DiscoverClient() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                     <span className="truncate">{card.request.location_name}</span>
+                    {card.distanceKm != null && (
+                      <span className="flex-shrink-0 ml-1 text-[10px] font-bold text-teal-700 bg-teal-50 border border-teal-100 px-1.5 py-0.5 rounded-full">
+                        ~{card.distanceKm} km
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-1 mt-0.5 text-xs font-bold text-slate-700">
                     <svg className="w-3 h-3 flex-shrink-0 text-[#0a5048]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

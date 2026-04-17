@@ -14,6 +14,8 @@ import { signOut, deleteAccount, markProfileComplete } from '@/lib/actions/auth'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useProfile } from '@/contexts/ProfileContext'
 import { clearCache, CACHE_KEYS } from '@/lib/cache'
+import { getCurrentPosition } from '@/lib/geolocation'
+import { Capacitor } from '@capacitor/core'
 
 const DEFAULT_GEAR: GearSet = { rope: false, quickdraws: false, belayDevice: false, crashPad: false, helmet: false }
 
@@ -47,6 +49,9 @@ export function ProfileForm({ profile, userEmail, prefill }: Props) {
   const [phone, setPhone] = useState(profile?.phone || '')
   const [instagram, setInstagram] = useState(profile?.instagram || '')
   const [facebook, setFacebook] = useState(profile?.facebook || '')
+  const [lat, setLat] = useState<number | null>(profile?.lat ?? null)
+  const [lng, setLng] = useState<number | null>(profile?.lng ?? null)
+  const [locationStatus, setLocationStatus] = useState<'idle' | 'loading' | 'saved' | 'error' | 'denied'>('idle')
   const [uploading, setUploading] = useState(false)
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,6 +72,18 @@ export function ProfileForm({ profile, userEmail, prefill }: Props) {
       setError('Failed to upload photo: ' + (err instanceof Error ? err.message : 'Unknown error'))
     } finally {
       setUploading(false)
+    }
+  }
+
+  const handleUseLocation = async () => {
+    setLocationStatus('loading')
+    const { position, error } = await getCurrentPosition()
+    if (position) {
+      setLat(position.lat)
+      setLng(position.lng)
+      setLocationStatus('saved')
+    } else {
+      setLocationStatus(error === 'denied' ? 'denied' : 'error')
     }
   }
 
@@ -99,6 +116,8 @@ export function ProfileForm({ profile, userEmail, prefill }: Props) {
         phone: phone.trim() || null,
         instagram: instagram.trim() || null,
         facebook: facebook.trim() || null,
+        lat: lat,
+        lng: lng,
       }
       const { error: upsertError } = await supabase.from('profiles').upsert(profileData)
       if (upsertError) throw upsertError
@@ -146,6 +165,34 @@ export function ProfileForm({ profile, userEmail, prefill }: Props) {
         <Input label={t.profile.facebook} value={facebook} onChange={e => setFacebook(e.target.value)} placeholder={t.profile.facebookPlaceholder} />
       </div>
       <Input label={t.profile.homeArea} value={homeArea} onChange={e => setHomeArea(e.target.value)} placeholder={t.profile.homeAreaPlaceholder} />
+
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={handleUseLocation}
+          disabled={locationStatus === 'loading'}
+          className="flex items-center gap-2 text-sm font-semibold text-[#0a5048] bg-[#0a5048]/8 hover:bg-[#0a5048]/15 disabled:opacity-50 rounded-xl px-4 py-2.5 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+          </svg>
+          {locationStatus === 'loading' ? 'Getting location…' : 'Use my current location'}
+        </button>
+        {locationStatus === 'saved' && (
+          <span className="text-xs font-medium text-emerald-600">Location saved</span>
+        )}
+        {locationStatus === 'denied' && (
+          <span className="text-xs font-medium text-red-500">
+            {Capacitor.isNativePlatform()
+              ? 'Denied — enable in device Settings'
+              : 'Blocked in browser — tap the lock icon in your address bar → Allow Location'}
+          </span>
+        )}
+        {locationStatus === 'error' && (
+          <span className="text-xs font-medium text-amber-500">Could not get location, try again</span>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Input label={t.profile.sportGrade} value={sportGrade} onChange={e => setSportGrade(e.target.value)} placeholder={t.profile.sportGradePlaceholder} />

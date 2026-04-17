@@ -24,6 +24,16 @@ export interface ScoredCard {
   profile: Profile
   compatibility: CompatibilityInfo
   swiped: boolean
+  distanceKm: number | null
+}
+
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLng = (lng2 - lng1) * Math.PI / 180
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
 export async function searchLocations(query: string): Promise<string[]> {
@@ -172,14 +182,22 @@ export async function discoverRequests(filters: DiscoverFilters): Promise<Scored
         timeMatch: timeOverlap(request, filters.time_of_day) >= 30,
       }
 
+      const distanceKm =
+        myProfile?.lat != null && myProfile?.lng != null && profile.lat != null && profile.lng != null
+          ? Math.round(haversineKm(myProfile.lat, myProfile.lng, profile.lat, profile.lng))
+          : null
+
       const sanitizedProfile = { ...profile }
       if (!sanitizedProfile.share_weight) sanitizedProfile.weight_kg = null
       sanitizedProfile.phone = null
+      sanitizedProfile.lat = null
+      sanitizedProfile.lng = null
 
-      return { request, profile: sanitizedProfile, compatibility, swiped: swipedRequestIds.has(request.id) }
+      return { request, profile: sanitizedProfile, compatibility, swiped: swipedRequestIds.has(request.id), distanceKm }
     })
 
   // Sort: future unswiped → future swiped → past unswiped → past swiped
+  // Within each bucket: nearby first (null distance sorts last), then by date
   cards.sort((a, b) => {
     const aPast = a.request.date < today ? 1 : 0
     const bPast = b.request.date < today ? 1 : 0
@@ -187,6 +205,9 @@ export async function discoverRequests(filters: DiscoverFilters): Promise<Scored
     const aSwiped = a.swiped ? 1 : 0
     const bSwiped = b.swiped ? 1 : 0
     if (aSwiped !== bSwiped) return aSwiped - bSwiped
+    const aDist = a.distanceKm ?? Infinity
+    const bDist = b.distanceKm ?? Infinity
+    if (Math.abs(aDist - bDist) > 1) return aDist - bDist
     return a.request.date.localeCompare(b.request.date)
   })
 

@@ -31,6 +31,8 @@ export interface Profile {
   phone: string | null
   instagram: string | null
   facebook: string | null
+  lat: number | null
+  lng: number | null
   created_at: string
   updated_at: string
 }
