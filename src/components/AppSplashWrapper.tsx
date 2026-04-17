@@ -22,9 +22,6 @@ export function AppSplashWrapper({ children }: { children: React.ReactNode }) {
   const hide = () => {
     if (hiddenRef.current) return
     hiddenRef.current = true
-    import('@capacitor/splash-screen').then(({ SplashScreen }) => {
-      SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => {})
-    })
     setFading(true)
     setTimeout(() => setVisible(false), 500)
   }

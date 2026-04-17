@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
+import { NativeSplashHider } from '@/components/NativeSplashHider'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
       <body suppressHydrationWarning className={`${inter.className} bg-stone-50 text-gray-900 antialiased`}>
+        <NativeSplashHider />
         {children}
       </body>
     </html>
